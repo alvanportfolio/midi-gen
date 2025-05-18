@@ -11,13 +11,13 @@
 
 ## ✨ Key Features
 
-- 🎹 **Modern Piano Roll** with grid lines, time ruler, and MIDI notes
-- 🧩 **Plugin Manager** to run motif, Markov, and custom generation logic
-- 🔌 **Drop-in Python Plugins** – Easily extend the app with your own .py files
-- 🛠️ **Dynamic Parameter Dialogs** – Each plugin has its own customizable settings
-- 📤 **Export to MIDI** with velocity/pitch embedded (even if not shown in UI)
-- ⏯ **Playback Controls** with beat-synced transport
-- 🪟 **Dockable Plugin Panel** – Plugin Manager can be dragged and reattached freely
+- 🎹 **Modern Piano Roll** with grid lines, time ruler, and MIDI notes  
+- 🧩 **Plugin Manager** to run motif, Markov, and custom generation logic  
+- 🔌 **Drop-in Python Plugins** – Easily extend the app with your own `.py` files  
+- 🛠️ **Dynamic Parameter Dialogs** – Each plugin has its own customizable settings  
+- 📤 **Export to MIDI** with velocity/pitch embedded (even if not shown in UI)  
+- ⏯ **Playback Controls** with beat-synced transport  
+- 🪟 **Dockable Plugin Panel** – Plugin Manager can be dragged, floated, and reattached  
 
 ---
 
@@ -31,10 +31,11 @@
 
 ---
 
-🧩 Plugin System
+## 🧩 Plugin System
 
 The plugin system is modular and developer-friendly:
 
+```python
 class MyCustomGenerator(PluginBase):
     def generate(self, **params):
         return [
@@ -45,15 +46,18 @@ class MyCustomGenerator(PluginBase):
                 end=0.5
             )
         ]
+```
 
+Define `generate()` and return a list of PrettyMIDI notes.  
+Add an optional `get_parameter_info()` to customize UI controls per plugin.
 
-Define generate() and return a list of PrettyMIDI notes.
-Add an optional get_parameter_info() to customize UI controls per plugin.
+📖 Full developer reference: [docs/plugin-docs.md](./docs/plugin-docs.md)
 
-📖 Full developer reference: docs/plugin-docs.md
+---
 
-🛠️ Project Structure
+## 🛠️ Project Structure
 
+```
 piano_roll_project/
 ├── main.py               # Entry point
 ├── piano_roll.py         # GUI and plugin panel
@@ -69,57 +73,72 @@ piano_roll_project/
 └── docs/
     ├── project-details.md
     └── plugin-docs.md
+```
 
-🚀 Getting Started
+---
 
-1. Clone
-   
+## 🚀 Getting Started
+
+### 1. Clone the repository
+
+```bash
 git clone https://github.com/WebChatAppAi/midi-gen.git
 cd midi-gen
+```
 
-2. install
+### 2. Install dependencies
 
+```bash
 pip install PySide6 pretty_midi numpy
+```
 
-3. Run it
+### 3. Run the app
 
+```bash
 python main.py
+```
 
-🎛 How To Use
-Open the app
+---
 
-Pick a plugin from the Plugin Manager
+## 🎛 How To Use
 
-Click Configure to tweak its settings
+1. Open the app  
+2. Pick a plugin from the Plugin Manager  
+3. Click **Configure** to tweak plugin settings  
+4. Click **Generate** to add notes  
+5. Press **Play** or **Export MIDI** when ready  
 
-Click Generate to add notes
+---
 
-Press Play or Export MIDI when ready
+## 💎 Extra Capabilities
 
-💎 Extra Capabilities
-🧩 Easily add your own plugins via plugins/*.py
+- 🧩 Easily add your own plugins via `plugins/*.py`  
+- 🖱 Plugin Manager can be docked, floated, and re-attached  
+- 🎼 Generated notes contain pitch and velocity info embedded in exported `.mid`  
+- 🔄 Real-time preview + loopable playback coming soon  
 
-🖱 Dock or float the Plugin Manager anywhere
+---
 
-🎼 Generated notes contain pitch and velocity info embedded in exported .mid
+## 🌟 What’s Next?
 
-🔄 Real-time preview + loopable playback coming soon
+- Plugin Marketplace (auto-discovery from GitHub)  
+- AI Plugin Support (HuggingFace, LLaMA, MusicGen)  
+- Auto-chord, Arp, and Drum Pattern generators  
+- Import `.mid` files for editing  
 
-🌟 What’s Next?
-Plugin Marketplace (auto-discovery from GitHub)
+---
 
-AI Plugin Support (HuggingFace, LLaMA, MusicGen)
+## 🧠 Want to Contribute?
 
-Auto-chord, Arp, and Drum Pattern plugins
+- Read the full guide: [docs/project-details.md](./docs/project-details.md)  
+- Fork → Build your plugin → Open a Pull Request  
 
-Import .mid for editing🧠
+---
 
-Want to Contribute?
-Read the full guide: docs/project-details.md
+## 📄 License
 
-Fork → Build your plugin → Open a Pull Request
+MIT © [WebChatAppAi](https://github.com/WebChatAppAi)
 
-📄 License
-MIT © WebChatAppAi
+---
 
-✨ Built with a love for generative music, modular design, and open creativity.
+> ✨ Built with a love for generative music, modular design, and open creativity.
