@@ -47,7 +47,7 @@ class MyCustomGenerator(PluginBase):
             )
         ]
 
-
+```
 
 Define generate() and return a list of PrettyMIDI notes
 
