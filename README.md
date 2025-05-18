@@ -59,20 +59,40 @@ Add an optional `get_parameter_info()` to customize UI controls per plugin.
 
 ```
 piano_roll_project/
-├── main.py               # Entry point
-├── piano_roll.py         # GUI and plugin panel
-├── note_display.py       # Piano roll renderer
-├── plugin_api.py         # Plugin contract
-├── plugin_manager.py     # Dynamic plugin loader
-├── export_utils.py       # MIDI writer
-├── midi_player.py        # Internal MIDI sequencer
+├── app.py                     # Main application entry point
+├── note_display.py            # Piano roll grid and note visualization (QWidget)
+├── midi_player.py             # Facade for MIDI playback
+├── plugin_manager.py          # Plugin discovery and management system
+├── plugin_api.py              # Base classes and API for plugins
+├── export_utils.py            # MIDI export functionality
+├── start.bat                  # Windows startup script
+├── start.sh                   # Linux/macOS startup script
+├── config/
+│   ├── __init__.py
+│   ├── constants.py
+│   └── theme.py
+├── ui/
+│   ├── __init__.py
+│   ├── custom_widgets.py      # ModernSlider, ModernButton
+│   ├── drawing_utils.py       # PianoRollDisplay drawing functions
+│   ├── event_handlers.py      # MainWindowEventHandlersMixin
+│   ├── main_window.py         # PianoRollMainWindow (QMainWindow)
+│   ├── plugin_dialogs.py      # PluginParameterDialog
+│   └── plugin_panel.py        # PluginManagerPanel (QDockWidget)
+├── midi/
+│   ├── __init__.py
+│   ├── device_manager.py
+│   ├── midi_event_utils.py
+│   ├── note_scheduler.py
+│   └── playback_controller.py
 ├── plugins/
+│   ├── __init__.py
 │   ├── markov_generator.py
-│   ├── motif_generator.py
-│   └── melody_generator.py
+│   ├── melody_generator.py
+│   └── motif_generator.py
 └── docs/
-    ├── project-details.md
-    └── plugin-docs.md
+    ├── project-details.md     # This file
+    └── plugin-docs.md         # Documentation for plugin developers
 ```
 
 ---
@@ -89,14 +109,17 @@ cd midi-gen
 ### 2. Install dependencies
 
 ```bash
-pip install PySide6 pretty_midi numpy
+pip install PySide6 pretty_midi numpy pygame
 ```
 
 ### 3. Run the app
 
 ```bash
-python main.py
+python app.py
 ```
+Alternatively, use the startup scripts:
+- Windows: `start.bat`
+- Linux/macOS: `sh start.sh` (or `./start.sh` after `chmod +x start.sh`)
 
 ---
 

@@ -34,38 +34,58 @@ The architecture follows a modular plugin-based design:
 
 ```
 piano_roll_project/
-├── main.py                    # Main application entry point
-├── piano_roll.py              # Piano roll window implementation with plugin manager integration
-├── note_display.py            # Piano roll grid and note visualization
-├── midi_player.py             # MIDI playback implementation
+├── app.py                     # Main application entry point
+├── note_display.py            # Piano roll grid and note visualization (QWidget)
+├── midi_player.py             # Facade for MIDI playback
 ├── plugin_manager.py          # Plugin discovery and management system
 ├── plugin_api.py              # Base classes and API for plugins
 ├── export_utils.py            # MIDI export functionality
-├── docs/                      # Documentation
-│   ├── project_details.md     # This file
-│   └── plugin_docs.md         # Documentation for plugin developers
-└── plugins/                   # Plugin directory
-    ├── __init__.py            # Package initialization
-    ├── motif_generator.py     # Example motif-based generator
-    ├── markov_generator.py    # Example Markov-chain generator
-    └── melody_generator.py    # Generator inspired by FL Studio script
+├── start.bat                  # Windows startup script
+├── start.sh                   # Linux/macOS startup script
+├── config/
+│   ├── __init__.py
+│   ├── constants.py
+│   └── theme.py
+├── ui/
+│   ├── __init__.py
+│   ├── custom_widgets.py      # ModernSlider, ModernButton
+│   ├── drawing_utils.py       # PianoRollDisplay drawing functions
+│   ├── event_handlers.py      # MainWindowEventHandlersMixin
+│   ├── main_window.py         # PianoRollMainWindow (QMainWindow)
+│   ├── plugin_dialogs.py      # PluginParameterDialog
+│   └── plugin_panel.py        # PluginManagerPanel (QDockWidget)
+├── midi/
+│   ├── __init__.py
+│   ├── device_manager.py
+│   ├── midi_event_utils.py
+│   ├── note_scheduler.py
+│   └── playback_controller.py
+├── plugins/
+│   ├── __init__.py
+│   ├── markov_generator.py
+│   ├── melody_generator.py
+│   └── motif_generator.py
+└── docs/
+    ├── project-details.md     # This file
+    └── plugin-docs.md         # Documentation for plugin developers
 ```
 
 ## File Details
 
 ### Core Files
 
-#### `main.py`
+#### `app.py`
 - **Purpose**: Application entry point
 - **Key Functions**: 
-  - Creates the main application
-  - Sets up the UI system
-  - Launches the piano roll window
+  - Initializes QApplication
+  - Sets application style
+  - Creates and shows the main application window (`PianoRollMainWindow` from `ui.main_window`)
+  - Runs the application event loop
 
-#### `piano_roll.py`
-- **Purpose**: Main application window
+#### `ui/main_window.py` (formerly parts of `piano_roll.py`)
+- **Purpose**: Main application window (`PianoRollMainWindow`)
 - **Key Classes**:
-  - `PianoRollWindow`: Main window with piano roll display and transport controls
+  - `PianoRollMainWindow`: Main window with piano roll display and transport controls
   - `PluginManagerPanel`: Dockable panel for plugin management
   - `PluginParameterDialog`: Dialog for configuring plugin parameters
   - `ModernSlider` and `ModernButton`: Custom UI elements for better appearance
@@ -237,8 +257,11 @@ piano_roll_project/
 
 ### Setting Up Development Environment
 1. Clone the repository
-2. Install dependencies: `pip install PySide6 pretty_midi numpy`
-3. Run the application: `python main.py`
+2. Install dependencies: `pip install PySide6 pretty_midi numpy pygame` (pygame is used by midi_player)
+3. Run the application:
+   - Using the script: `python app.py`
+   - On Windows: `start.bat`
+   - On Linux/macOS: `sh start.sh` or `./start.sh` (after `chmod +x start.sh`)
 
 ## Testing
 
