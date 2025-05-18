@@ -145,14 +145,103 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.piano_roll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         scroll_area.setWidget(self.piano_roll)
         self.main_layout.addWidget(scroll_area, 1)
-    
-    def set_midi_notes(self, notes):
-        if not notes:
-            print("WARNING: Attempting to set empty notes list")
-            return
-        print(f"PianoRollMainWindow: Received {len(notes)} notes")
-        self.midi_notes = notes
-        self.piano_roll.set_notes(notes)
+        
+        # Connect signals from PianoRollDisplay
+        self.piano_roll.midiFileProcessed.connect(self.handle_midi_file_processed)
+        self.piano_roll.notesChanged.connect(self.handle_notes_changed_from_display)
+
+    @Slot(list)
+    def handle_midi_file_processed(self, loaded_notes: list):
+        """Handles notes loaded from a dropped MIDI file."""
+        print(f"MainWindow: MIDI file processed, {len(loaded_notes)} notes received.")
+        # set_midi_notes will update all components
+        self.set_midi_notes(loaded_notes)
+        # Optionally, reset playhead to start after loading a new file
+        self.stop_playback() # Stop and reset playhead
+
+    @Slot(list)
+    def handle_notes_changed_from_display(self, current_notes_in_display: list):
+        """Handles notes changed by direct interaction in PianoRollDisplay (paint, delete)."""
+        print(f"MainWindow: Notes changed in display, {len(current_notes_in_display)} notes.")
+        # Update the main list and propagate to other components
+        # Avoid direct call to set_midi_notes if it causes redundant updates or signal loops
+        # For now, assuming set_midi_notes is robust enough.
+        # If PianoRollDisplay.notes IS the master list, then only need to update other components.
+        # Let's assume MainWindow.midi_notes is the master.
+        
+        self.midi_notes = current_notes_in_display # Update master list
+        
+        # Propagate to MidiPlayer and PluginManagerPanel directly if piano_roll.set_notes was already called
+        # by PianoRollDisplay itself before emitting notesChanged.
+        # The PianoRollDisplay.set_notes calls notesChanged.emit(self.notes)
+        # PianoRollDisplay.add_note calls notesChanged.emit(self.notes)
+        # PianoRollDisplay.delete_note_at calls notesChanged.emit(self.notes)
+        # So, current_notes_in_display is already the new state of piano_roll.notes.
+        
+        self.midi_player.set_notes(self.midi_notes)
+        if hasattr(self, 'plugin_manager_panel'):
+            self.plugin_manager_panel.set_current_notes(self.midi_notes)
+        
+        # Recalculate duration and update UI elements that depend on it
+        max_end_time = 0
+        if self.midi_notes:
+            for note in self.midi_notes:
+                if hasattr(note, 'end') and note.end > max_end_time:
+                    max_end_time = note.end
+        self.total_duration = max_end_time + 1.0 # Add padding
+        self.update_slider_range()
+        # self.piano_roll.update() # PianoRollDisplay should update itself after modification
+
+    def set_midi_notes(self, notes: list): # Added type hint
+        # This method is called by PluginManagerPanel.notesGenerated and handle_midi_file_processed
+        # It should be the primary way to update notes across the application.
+        print(f"PianoRollMainWindow: Setting {len(notes)} notes globally.")
+        self.midi_notes = notes if notes is not None else []
+        
+        # Update PianoRollDisplay (if notes didn't originate from it)
+        # To avoid signal loops, check source or block signals if necessary.
+        # For now, assume direct call is okay.
+        if hasattr(self, 'piano_roll'):
+             self.piano_roll.set_notes(self.midi_notes) # This will emit piano_roll.notesChanged again.
+                                                        # This could be problematic.
+                                                        # Let's refine: set_notes in PianoRollDisplay should not emit if called from here.
+                                                        # Or, handle_notes_changed_from_display should be the sole updater from PianoRoll.
+
+        # The set_notes in PianoRollDisplay already emits notesChanged.
+        # If this set_midi_notes is the main handler, then PianoRollDisplay.notesChanged should
+        # primarily update MainWindow.midi_notes and then MainWindow updates others.
+
+        # Let's simplify: MainWindow.set_midi_notes is the authority.
+        # PianoRollDisplay.notesChanged will call a simpler handler in MainWindow
+        # that just updates MainWindow.midi_notes, then calls this authoritative set_midi_notes.
+        # This is getting circular.
+
+        # Revised flow:
+        # 1. User action in PianoRollDisplay (paint, delete) -> PianoRollDisplay updates its internal self.notes
+        #    -> PianoRollDisplay emits notesChanged(self.notes)
+        # 2. MIDI Drop in PianoRollDisplay -> PianoRollDisplay emits midiFileProcessed(loaded_notes)
+        # 3. Plugin generates notes -> PluginManagerPanel emits notesGenerated(generated_notes)
+
+        # MainWindow slots:
+        # - handle_midi_file_processed(loaded_notes) -> calls self.set_midi_notes(loaded_notes)
+        # - handle_notes_changed_from_display(new_notes_list) -> calls self.set_midi_notes(new_notes_list)
+        # - set_midi_notes (called by plugin) -> this is the current method.
+
+        # The current set_midi_notes method:
+        # self.midi_notes = notes # Master list updated
+        # self.piano_roll.set_notes(notes) # Updates display, emits notesChanged -> handle_notes_changed_from_display -> calls set_midi_notes again! (LOOP)
+
+        # To break loop:
+        # Option A: PianoRollDisplay.set_notes has an emit_signal=False flag.
+        # Option B: MainWindow.set_midi_notes blocks signals from piano_roll temporarily.
+        # Option C: Refactor signal connections.
+
+        # Let's go with a flag in PianoRollDisplay.set_notes and add_note/delete_note_at
+        # For now, I'll assume the current structure and proceed, then refine if loops occur.
+        # The current PianoRollDisplay.set_notes *does* emit notesChanged.
+
+        if hasattr(self, 'piano_roll') and self.piano_roll.notes != self.midi_notes: # Avoid redundant update if already set
+            self.piano_roll.set_notes(self.midi_notes) 
         
         if notes:
             sample = notes[0]

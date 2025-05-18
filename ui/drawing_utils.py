@@ -16,18 +16,11 @@ from config.theme import (
 def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numerator, time_signature_denominator, parent_widget):
     """Draw the time grid with beats and measures and horizontal note lines"""
     keyboard_width = WHITE_KEY_WIDTH
+    
+    # Calculate proper total height for all pitches from MIN_PITCH to MAX_PITCH
     total_height = (MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT
     
-    painter.setPen(QPen(KEY_GRID_COLOR, 1.0, Qt.SolidLine))
-    for pitch in range(MIN_PITCH, MAX_PITCH + 1):
-        y_pos = total_height - ((pitch - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
-        painter.drawLine(keyboard_width, int(y_pos), width, int(y_pos))
-        note_name = pretty_midi.note_number_to_name(pitch)
-        if note_name.endswith('C') and '#' not in note_name:
-            highlight_rect = QRect(keyboard_width, int(y_pos), width - keyboard_width, WHITE_KEY_HEIGHT)
-            painter.fillRect(highlight_rect, ROW_HIGHLIGHT_COLOR)
-
-    current_pixels_per_second = time_scale
+    # Get scroll position
     current_viewport_y_offset = 0
     if parent_widget and hasattr(parent_widget, 'verticalScrollBar'):
         current_viewport_y_offset = parent_widget.verticalScrollBar().value()
@@ -35,7 +28,18 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
         grandparent_obj = parent_widget.parentWidget()
         if grandparent_obj and hasattr(grandparent_obj, 'verticalScrollBar'):
             current_viewport_y_offset = grandparent_obj.verticalScrollBar().value()
+    
+    # Draw horizontal lines for note rows
+    painter.setPen(QPen(KEY_GRID_COLOR, 1.0, Qt.SolidLine))
+    for pitch in range(MIN_PITCH, MAX_PITCH + 1):
+        y_pos = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation to show all notes
+        painter.drawLine(keyboard_width, int(y_pos), width, int(y_pos))
+        note_name = pretty_midi.note_number_to_name(pitch)
+        if note_name.endswith('C') and '#' not in note_name:
+            highlight_rect = QRect(keyboard_width, int(y_pos), width - keyboard_width, WHITE_KEY_HEIGHT)
+            painter.fillRect(highlight_rect, ROW_HIGHLIGHT_COLOR)
 
+    # Time signature display
     ts_text = f"{time_signature_numerator}/{time_signature_denominator}"
     painter.setPen(QPen(QColor(200, 200, 220, 220), 1.0))
     painter.setFont(QFont("Arial", 8, QFont.Bold))
@@ -43,11 +47,13 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
     ts_y_pos = current_viewport_y_offset + 15
     painter.drawText(ts_x_pos, ts_y_pos, ts_text)
 
+    # Calculate timing grids
     actual_pixels_per_quarter_note = 0
     if bpm > 0:
         seconds_per_quarter_note = 60.0 / bpm
-        actual_pixels_per_quarter_note = current_pixels_per_second * seconds_per_quarter_note
+        actual_pixels_per_quarter_note = time_scale * seconds_per_quarter_note
     
+    # Draw sixteenth note lines
     painter.setPen(QPen(GRID_COLOR, 1.0, Qt.DotLine))
     sixteenth_note_step_pixels = actual_pixels_per_quarter_note / 4.0 if actual_pixels_per_quarter_note > 0 else 0
     if sixteenth_note_step_pixels > 0:
@@ -57,6 +63,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
                 x = i * sixteenth_note_step_pixels + keyboard_width
                 painter.drawLine(int(x), 0, int(x), height)
 
+    # Calculate beat timing
     try:
         beat_value_in_quarters = 4.0 / time_signature_denominator
     except ZeroDivisionError:
@@ -64,6 +71,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
 
     pixels_per_beat = actual_pixels_per_quarter_note * beat_value_in_quarters
     
+    # Draw beat lines
     if pixels_per_beat > 0:
         painter.setPen(QPen(BEAT_COLOR, 1.2, Qt.SolidLine))
         num_beats_in_width = width / pixels_per_beat
@@ -72,6 +80,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
                 x = i * pixels_per_beat + keyboard_width
                 painter.drawLine(int(x), 0, int(x), height)
 
+    # Draw measure lines
     if pixels_per_beat > 0 and time_signature_numerator > 0:
         pixels_per_measure = pixels_per_beat * time_signature_numerator
         if pixels_per_measure > 0:
@@ -85,19 +94,21 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
                 painter.setFont(QFont("Arial", 7))
                 painter.drawText(int(x + 3), measure_number_y_pos, str(i + 1))
             
+    # Draw keyboard separator line
     painter.setPen(QPen(KEY_BORDER_COLOR, 1.5))
     painter.drawLine(keyboard_width, 0, keyboard_width, height)
 
 def draw_piano_keys(painter):
     """Draw the piano keyboard on the left side"""
-    total_height = (MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT
+    # Fixed calculation of positions to show all keys
     drawn_black_keys = set()
     
+    # Draw white keys first
     for pitch in range(MIN_PITCH, MAX_PITCH + 1):
         pitch_class = pitch % 12
         is_white = pitch_class in [0, 2, 4, 5, 7, 9, 11]
         if is_white:
-            y_pos_key_top = total_height - ((pitch - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
+            y_pos_key_top = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation
             key_rect = QRect(0, int(y_pos_key_top), WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT)
             white_gradient = QLinearGradient(key_rect.topLeft(), key_rect.bottomLeft())
             white_gradient.setColorAt(0.0, QColor(245, 245, 245))
@@ -106,6 +117,7 @@ def draw_piano_keys(painter):
             painter.setPen(QPen(QColor(180, 180, 180), 0.5))
             painter.drawRect(key_rect)
     
+    # Draw black keys on top
     for pitch in range(MIN_PITCH, MAX_PITCH + 1):
         pitch_class = pitch % 12
         is_black = pitch_class in [1, 3, 6, 8, 10]
@@ -113,7 +125,7 @@ def draw_piano_keys(painter):
             if pitch in drawn_black_keys:
                 continue
             drawn_black_keys.add(pitch)
-            y_pos_key_top = total_height - ((pitch - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
+            y_pos_key_top = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation
             key_rect = QRect(0, int(y_pos_key_top), BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT)
             black_gradient = QLinearGradient(key_rect.topLeft(), key_rect.bottomLeft())
             black_gradient.setColorAt(0.0, BLACK_KEY_COLOR.lighter(125))
@@ -122,6 +134,7 @@ def draw_piano_keys(painter):
             painter.setPen(QPen(BLACK_KEY_COLOR.lighter(150), 0.5))
             painter.drawRect(key_rect)
 
+    # Draw labels on keys
     label_font = QFont("Segoe UI", 8)
     label_font.setBold(False)
     painter.setFont(label_font)
@@ -137,7 +150,7 @@ def draw_piano_keys(painter):
         if octave_str.isdigit():
             octave_part = int(octave_str)
             corrected_label_name = f"{note_part}{octave_part + 1}"
-        key_slot_y_top = total_height - ((pitch_label - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
+        key_slot_y_top = (MAX_PITCH - pitch_label) * WHITE_KEY_HEIGHT  # Fixed calculation
         if is_white_key_for_label:
             text_rect = QRect(0, int(key_slot_y_top), WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT)
             painter.setPen(QColor(70, 70, 70))
@@ -150,14 +163,16 @@ def draw_piano_keys(painter):
 
 def draw_notes(painter, notes, time_scale):
     """Draw the MIDI notes as colored rectangles"""
-    total_height = (MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT
     for note in notes:
         if not hasattr(note, 'pitch') or not hasattr(note, 'start') or not hasattr(note, 'end'):
             continue
         pitch = note.pitch
         if pitch < MIN_PITCH or pitch > MAX_PITCH:
             continue
-        y_pos = total_height - ((pitch - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
+        
+        # Fixed y position calculation to show all notes
+        y_pos = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT
+        
         x_pos = note.start * time_scale + WHITE_KEY_WIDTH
         width = max((note.end - note.start) * time_scale, 4)
         pitch_class = pitch % 12

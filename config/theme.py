@@ -2,21 +2,64 @@ from PySide6.QtGui import QColor
 
 # Theme Colors - Dark professional theme
 BG_COLOR = QColor(28, 28, 32)
-GRID_COLOR = QColor(40, 40, 45, 150)  # Increased opacity for better visibility
-BEAT_COLOR = QColor(60, 60, 65, 180)  # Increased opacity
-MEASURE_COLOR = QColor(95, 95, 100)  # Slightly brighter
-ROW_HIGHLIGHT_COLOR = QColor(45, 45, 50, 100)  # More visible
-KEY_GRID_COLOR = QColor(50, 50, 55, 120)  # Increased opacity
+GRID_COLOR = QColor(40, 40, 45, 150)
+BEAT_COLOR = QColor(60, 60, 65, 180)
+MEASURE_COLOR = QColor(95, 95, 100)
+ROW_HIGHLIGHT_COLOR = QColor(45, 45, 50, 100)
+KEY_GRID_COLOR = QColor(50, 50, 55, 120)
 PLAYHEAD_COLOR = QColor(255, 120, 0, 180)
 
 # Piano key colors
 WHITE_KEY_COLOR = QColor(240, 240, 240)
 BLACK_KEY_COLOR = QColor(30, 30, 35)
-KEY_BORDER_COLOR = QColor(100, 100, 100, 80)  # Thinner, semi-transparent
+KEY_BORDER_COLOR = QColor(100, 100, 100, 80)
 
-# Note colors based on velocity with better aesthetics
+# Note colors
 NOTE_COLORS = {
-    'low': QColor(80, 200, 120),     # Softer green for low velocity
-    'med': QColor(70, 180, 210),     # Soft blue for medium velocity
-    'high': QColor(230, 120, 190)    # Purple-pink for high velocity
+    'low': QColor(80, 200, 120),
+    'med': QColor(70, 180, 210),
+    'high': QColor(230, 120, 190)
 }
+
+# --- Modern UI Colors ---
+PRIMARY_TEXT_COLOR = QColor(220, 220, 220)
+SECONDARY_TEXT_COLOR = QColor(150, 150, 150)
+ACCENT_COLOR = QColor(0, 120, 215)  # A modern blue
+ACCENT_HOVER_COLOR = QColor(0, 100, 180)
+ACCENT_PRESSED_COLOR = QColor(0, 80, 150)
+
+BUTTON_COLOR = QColor(45, 45, 50)
+BUTTON_HOVER_COLOR = QColor(60, 60, 65)
+BUTTON_PRESSED_COLOR = QColor(35, 35, 40)
+BUTTON_TEXT_COLOR = PRIMARY_TEXT_COLOR
+
+HIGHLIGHT_COLOR = QColor(55, 55, 60)  # For hover states on list items/cards
+SELECTION_COLOR = ACCENT_COLOR  # For active selection
+SELECTION_TEXT_COLOR = QColor(255, 255, 255)
+
+DIALOG_BG_COLOR = QColor(35, 35, 40)
+INPUT_BG_COLOR = QColor(40, 40, 45)
+INPUT_BORDER_COLOR = QColor(60, 60, 65)
+INPUT_TEXT_COLOR = PRIMARY_TEXT_COLOR
+INPUT_SELECTED_BORDER_COLOR = ACCENT_COLOR
+
+SLIDER_TRACK_COLOR = QColor(50, 50, 55)
+SLIDER_HANDLE_COLOR = ACCENT_COLOR
+SLIDER_HANDLE_HOVER_COLOR = ACCENT_HOVER_COLOR
+SLIDER_HANDLE_PRESSED_COLOR = ACCENT_PRESSED_COLOR
+
+# --- Fonts ---
+FONT_FAMILY = "Segoe UI"
+FONT_SIZE_NORMAL = 9  # 9pt
+FONT_SIZE_LARGE = 10 # 10pt
+FONT_WEIGHT_BOLD = "bold"
+
+# --- Spacing & Sizing (can be moved to constants.py if preferred) ---
+BORDER_RADIUS = 6 # px
+PADDING_SMALL = 5 # px
+PADDING_MEDIUM = 10 # px
+PADDING_LARGE = 15 # px
+
+ICON_SIZE = 16 # px for general icons
+PLUGIN_ICON_SIZE = 24 # px for plugin list/dialog headers
+PLUGIN_ROW_HEIGHT = 44 # px for plugin list items
