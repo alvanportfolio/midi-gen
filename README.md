@@ -31,11 +31,10 @@
 
 ---
 
-## 🧩 Plugin System
+🧩 Plugin System
 
 The plugin system is modular and developer-friendly:
 
-```python
 class MyCustomGenerator(PluginBase):
     def generate(self, **params):
         return [
@@ -47,24 +46,22 @@ class MyCustomGenerator(PluginBase):
             )
         ]
 
-```
 
-Define generate() and return a list of PrettyMIDI notes
-
-Add optional get_parameter_info() to customize UI controls per plugin
+Define generate() and return a list of PrettyMIDI notes.
+Add an optional get_parameter_info() to customize UI controls per plugin.
 
 📖 Full developer reference: docs/plugin-docs.md
 
 🛠️ Project Structure
 
 piano_roll_project/
-├── main.py              # Entry point
-├── piano_roll.py        # GUI and plugin panel
-├── note_display.py      # Piano roll renderer
-├── plugin_api.py        # Plugin contract
-├── plugin_manager.py    # Dynamic plugin loader
-├── export_utils.py      # MIDI writer
-├── midi_player.py       # Internal MIDI sequencer
+├── main.py               # Entry point
+├── piano_roll.py         # GUI and plugin panel
+├── note_display.py       # Piano roll renderer
+├── plugin_api.py         # Plugin contract
+├── plugin_manager.py     # Dynamic plugin loader
+├── export_utils.py       # MIDI writer
+├── midi_player.py        # Internal MIDI sequencer
 ├── plugins/
 │   ├── markov_generator.py
 │   ├── motif_generator.py
@@ -74,12 +71,18 @@ piano_roll_project/
     └── plugin-docs.md
 
 🚀 Getting Started
-1. Clone and install
+
+1. Clone
+   
 git clone https://github.com/WebChatAppAi/midi-gen.git
 cd midi-gen
+
+2. install
+
 pip install PySide6 pretty_midi numpy
 
-2. Run it
+3. Run it
+
 python main.py
 
 🎛 How To Use
