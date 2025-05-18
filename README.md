@@ -171,17 +171,5 @@ This project is licensed under a custom Non-Commercial Software License. See the
 - You must notify the copyright holder of any distribution or modification
 - Attribution to the copyright holder (Jonas) is required in all copies
 
-### Adding License Headers
-
-Add the following header to the top of all source code files:
-
-```python
-# MIDI Generator Piano Roll
-# Copyright (c) 2025 Jonas
-# Licensed under Non-Commercial Software License v1.0
-# See LICENSE file for details.
-```
-
----
 
 > ✨ Built with a love for generative music, modular design, and open creativity.
