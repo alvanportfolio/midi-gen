@@ -1,7 +1,7 @@
 # 🎹 MIDI Generator Piano Roll
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square)
-![License](https://img.shields.io/github/license/WebChatAppAi/midi-gen?style=flat-square)
+![License](https://img.shields.io/badge/License-Non--Commercial-red?style=flat-square)
 ![PySide6](https://img.shields.io/badge/GUI-PySide6-green?style=flat-square)
 ![MIDI](https://img.shields.io/badge/MIDI-pretty__midi-orange?style=flat-square)
 
@@ -59,6 +59,7 @@ Add an optional `get_parameter_info()` to customize UI controls per plugin.
 
 ```
 piano_roll_project/
+├── LICENSE                    # Non-Commercial License file
 ├── app.py                     # Main application entry point
 ├── note_display.py            # Piano roll grid and note visualization (QWidget)
 ├── midi_player.py             # Facade for MIDI playback
@@ -142,7 +143,7 @@ Alternatively, use the startup scripts:
 
 ---
 
-## 🌟 What’s Next?
+## 🌟 What's Next?
 
 - Plugin Marketplace (auto-discovery from GitHub)  
 - AI Plugin Support (HuggingFace, LLaMA, MusicGen)  
@@ -160,7 +161,26 @@ Alternatively, use the startup scripts:
 
 ## 📄 License
 
-MIT © [WebChatAppAi](https://github.com/WebChatAppAi)
+Non-Commercial Software License © [Jonas](https://github.com/WebChatAppAi)
+
+This project is licensed under a custom Non-Commercial Software License. See the [LICENSE](LICENSE) file in the root directory for complete license details.
+
+### Key License Terms:
+- You may use and modify this software for personal and non-commercial purposes
+- Commercial use is strictly prohibited without explicit permission from Jonas
+- You must notify the copyright holder of any distribution or modification
+- Attribution to the copyright holder (Jonas) is required in all copies
+
+### Adding License Headers
+
+Add the following header to the top of all source code files:
+
+```python
+# MIDI Generator Piano Roll
+# Copyright (c) 2025 Jonas
+# Licensed under Non-Commercial Software License v1.0
+# See LICENSE file for details.
+```
 
 ---
 
