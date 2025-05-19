@@ -272,15 +272,6 @@ When contributing new features or plugins, ensure:
 4. Plugins generate valid notes
 5. MIDI export produces valid files
 
-## 📄 License
+## License
 
-Non-Commercial Software License © [Jonas](https://github.com/WebChatAppAi)
-
-This project is licensed under a custom Non-Commercial Software License. See the [LICENSE](LICENSE) file in the root directory for complete license details.
-
-### Key License Terms:
-- You may use and modify this software for personal and non-commercial purposes
-- Commercial use is strictly prohibited without explicit permission from Jonas
-- You must notify the copyright holder of any distribution or modification
-- Attribution to the copyright holder (Jonas) is required in all copies
-
+This project is open-source and available under the MIT License. See the LICENSE file for details.

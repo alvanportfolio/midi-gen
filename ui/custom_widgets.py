@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QSlider, QPushButton, QToolButton
-from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QFont, QIcon
-from typing import Optional # Import Optional
+from PySide6.QtWidgets import QSlider, QPushButton, QToolButton, QApplication
+from PySide6.QtCore import Qt, QSize, Signal, QPoint
+from PySide6.QtGui import QFont, QIcon, QMouseEvent # Added QMouseEvent
+from typing import Optional
 from config import theme
 
 class ModernSlider(QSlider):
@@ -186,3 +186,81 @@ class ModernIconButton(QToolButton):
                 background-color: {theme.BUTTON_COLOR.darker(120).name()};
             }}
         """)
+
+class DragExportButton(ModernButton):
+    """
+    A ModernButton that supports both click and drag-initiation.
+    Emits 'clicked' for a normal click.
+    Emits 'dragInitiated' when a drag gesture is detected.
+    """
+    dragInitiated = Signal()
+    # 'clicked' signal is inherited from QPushButton
+
+    def __init__(self, text="", icon: Optional[QIcon] = None, tooltip="", parent=None, accent=False, fixed_size=None):
+        super().__init__(text, icon, tooltip, parent, accent, fixed_size)
+        self.drag_start_position: Optional[QPoint] = None
+        self.is_dragging = False
+
+    def mousePressEvent(self, e: QMouseEvent): # Changed 'event' to 'e'
+        if e.button() == Qt.LeftButton:
+            self.drag_start_position = e.pos()
+            self.is_dragging = False # Reset dragging state
+        super().mousePressEvent(e) # Call base class to handle press styling etc.
+
+    def mouseMoveEvent(self, arg__1: QMouseEvent): # Changed 'e' to 'arg__1'
+        if not (arg__1.buttons() & Qt.LeftButton) or self.drag_start_position is None:
+            super().mouseMoveEvent(arg__1)
+            return
+
+        # If already dragging, let the QDrag object handle events primarily
+        if self.is_dragging:
+            super().mouseMoveEvent(arg__1) # Allow base class to see it, but drag is active
+            return
+
+        # Check if the mouse has moved enough to start a drag
+        if (arg__1.pos() - self.drag_start_position).manhattanLength() >= QApplication.startDragDistance():
+            self.is_dragging = True
+            self.dragInitiated.emit()
+            # Once drag is initiated, we don't want to re-emit for this press-drag sequence.
+            # The actual QDrag object will be created by the receiver of dragInitiated.
+        
+        super().mouseMoveEvent(arg__1) # Call base class
+
+    def mouseReleaseEvent(self, e: QMouseEvent): # Changed 'event' to 'e'
+        # The 'clicked' signal is emitted by QPushButton if mousePressEvent and mouseReleaseEvent
+        # happen on the same button without a drag in between.
+        # Our self.is_dragging flag helps differentiate.
+        
+        if e.button() == Qt.LeftButton:
+            # If a drag was started, we don't want this to also be a click.
+            # The base QPushButton handles emitting 'clicked' if it wasn't a drag.
+            # We just need to reset our state.
+            if self.is_dragging:
+                # If a drag occurred, we ensure the button doesn't also process this as a click.
+                # One way is to ensure the base class doesn't think it's a click.
+                # However, simply setting is_dragging and letting super().mouseReleaseEvent run
+                # might be enough if QPushButton checks internal state that we haven't disrupted.
+                # For safety, we can temporarily unset 'pressed' state if needed,
+                # but usually, QDrag takes over mouse events.
+                pass # Drag was handled, base class might still try to click
+
+            # Reset drag state whether it was a drag or a click
+            self.drag_start_position = None
+            self.is_dragging = False
+        
+        # Call super's mouseReleaseEvent. This is crucial for the 'clicked' signal to be emitted
+        # by QPushButton if it was a genuine click (i.e., not a drag).
+        current_is_pressed = self.isDown()
+        super().mouseReleaseEvent(e)
+
+        # If it was a click (not a drag) and the button was pressed and now released over the button
+        if not self.is_dragging and \
+           self.drag_start_position is not None and \
+           self.rect().contains(e.pos()) and \
+           current_is_pressed and not self.isDown():
+            # This condition attempts to ensure 'clicked' is emitted for a simple click.
+            # QPushButton's own logic is usually robust.
+            # If 'clicked' signal is not working as expected, this area might need refinement
+            # or ensuring that mousePressEvent doesn't interfere with base class state.
+            # For now, relying on super() to emit 'clicked' correctly if not self.is_dragging.
+            pass

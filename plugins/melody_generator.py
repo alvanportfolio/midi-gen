@@ -9,7 +9,6 @@ class MelodyGenerator(PluginBase):
     MIDI generator plugin that creates emotional melodies
     Inspired by the FL Studio Melody.pyscript
     """
-    
     def __init__(self):
         super().__init__()
         self.name = "Emotional Melody Generator"
@@ -82,8 +81,7 @@ class MelodyGenerator(PluginBase):
                 "max": 1.0,
                 "default": 0.8,
                 "description": "Base duration of notes"
-            },
-            "density": {
+            },            "density": {
                 "type": "float",
                 "min": 0.1,
                 "max": 1.0,
@@ -92,10 +90,10 @@ class MelodyGenerator(PluginBase):
             },
             "seed": {
                 "type": "int",
-                "min": 1,
+                "min": 0,
                 "max": 1000,
-                "default": random.randint(1, 1000),
-                "description": "Random seed for reproducible melodies"
+                "default": 0,
+                "description": "Random seed for reproducible melodies (0 = new random melody each time)"
             }
         }
         
@@ -345,6 +343,10 @@ class MelodyGenerator(PluginBase):
         duration = kwargs.get("duration", 0.8)
         density = kwargs.get("density", 1.0)
         seed = kwargs.get("seed", random.randint(1, 1000))
+        
+        # If seed is 0, use a random seed for each generation
+        if seed == 0:
+            seed = random.randint(1, 1000)
         
         # Set random seed for reproducibility
         random.seed(seed)

@@ -171,6 +171,16 @@ class PlaybackController:
         # which might differ slightly from the scheduler thread's instantaneous state.
         return self._is_playing_internal and not self.paused
 
+    def toggle_playback(self):
+        """Toggles playback between play and pause."""
+        if self.is_playing:
+            if self.log_events: print("PlaybackController: Toggling playback (was playing, now pausing).")
+            self.pause()
+        else:
+            # If it was paused, play will resume. If stopped, play will start from current_playback_time_sec (usually 0).
+            if self.log_events: print("PlaybackController: Toggling playback (was not playing, now playing).")
+            self.play()
+
     def set_tempo(self, bpm: float):
         if bpm <= 0:
             if self.log_events: print("PlaybackController: BPM must be positive.")

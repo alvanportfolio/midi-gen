@@ -259,8 +259,19 @@ class PluginParameterDialog(QDialog):
                 values[param_name] = widget.value()
             elif param_type == "bool":
                 values[param_name] = widget.isChecked()
-            elif param_type == "list" or param_type == "str":
+            elif param_type == "list": # Explicitly for QComboBox from "list" type
                 if isinstance(widget, QComboBox):
                     values[param_name] = widget.currentText()
+                else:
+                    print(f"Warning: Expected QComboBox for param '{param_name}' (type 'list') but got {type(widget)}. Skipping.")
+            elif param_type == "str":
+                if isinstance(widget, QComboBox): # "str" type with "options"
+                    values[param_name] = widget.currentText()
+                elif isinstance(widget, QLineEdit): # "str" type as free text
+                    values[param_name] = widget.text()
+                else:
+                    print(f"Warning: Unknown widget type {type(widget)} for param '{param_name}' (type 'str'). Skipping.")
+            else: # Fallback for unknown param_type
+                print(f"Warning: Unknown parameter type '{param_type}' for param '{param_name}' with widget {type(widget)}. Skipping.")
             
         return values

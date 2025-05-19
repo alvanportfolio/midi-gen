@@ -18,7 +18,7 @@ from config.constants import (
 from config.theme import (
     BG_COLOR, GRID_COLOR, BEAT_COLOR, MEASURE_COLOR, ROW_HIGHLIGHT_COLOR, 
     KEY_GRID_COLOR, PLAYHEAD_COLOR, WHITE_KEY_COLOR, BLACK_KEY_COLOR, 
-    KEY_BORDER_COLOR, NOTE_COLORS, ACCENT_COLOR 
+    KEY_BORDER_COLOR, NOTE_COLORS, ACCENT_COLOR, DRAG_OVERLAY_COLOR
 )
 from ui.drawing_utils import (
     draw_time_grid, draw_piano_keys, draw_notes, draw_playhead
@@ -139,22 +139,25 @@ class PianoRollDisplay(QWidget):
         bg_gradient.setColorAt(1, theme.BG_COLOR)
         painter.fillRect(event.rect(), bg_gradient)
 
+        # Draw drag overlay BEFORE notes to prevent pink glitch
+        if self._is_dragging_midi:
+            painter.save()
+            # Use the dedicated theme color for drag overlay
+            painter.fillRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1), theme.DRAG_OVERLAY_COLOR)
+            
+            # Keep the border distinct
+            border_pen = QPen(theme.ACCENT_COLOR.lighter(130), 2, Qt.DashLine)
+            painter.setPen(border_pen)
+            painter.drawRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1))
+            painter.restore()
+
+        # Draw regular UI elements after the overlay
         draw_time_grid(painter, self.width(), self.height(), self.time_scale, self.bpm,
                        self.time_signature_numerator, self.time_signature_denominator, 
                        self.parentWidget())
         draw_piano_keys(painter) 
         draw_notes(painter, self.notes, self.time_scale) 
         draw_playhead(painter, self.playhead_position, self.time_scale, self.height())
-
-        if self._is_dragging_midi: # New drag feedback
-            painter.save()
-            overlay_color = QColor(theme.ACCENT_COLOR) 
-            overlay_color.setAlpha(30) 
-            painter.fillRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1), overlay_color)
-            border_pen = QPen(theme.ACCENT_COLOR.lighter(150), 2, Qt.SolidLine) 
-            painter.setPen(border_pen)
-            painter.drawRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1))
-            painter.restore()
 
     def _pixel_to_time(self, x_pos: int) -> float:
         if x_pos <= WHITE_KEY_WIDTH: return 0.0
@@ -228,7 +231,15 @@ class PianoRollDisplay(QWidget):
                             for instrument in midi_data.instruments:
                                 all_notes.extend(instrument.notes)
                             all_notes.sort(key=lambda x: x.start)
-                            self.midiFileProcessed.emit(all_notes)
+                            
+                            # Update internal notes and repaint PianoRollDisplay first
+                            self.set_notes(all_notes) # This calls self.update() and emits notesChanged
+                            
+                            # midiFileProcessed can still be used if MainWindow needs a distinct signal for "file loaded"
+                            # vs. "notes changed by any means". If notesChanged is sufficient, this can be removed.
+                            # For now, let's assume MainWindow might want to differentiate.
+                            self.midiFileProcessed.emit(all_notes) # Emitting with the same notes set
+                            
                             event.acceptProposedAction()
                         else:
                             QMessageBox.warning(self, "MIDI Parse Error", "No instruments found in MIDI file.")

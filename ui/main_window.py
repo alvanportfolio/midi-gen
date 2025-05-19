@@ -22,7 +22,7 @@ from .custom_widgets import ModernSlider, ModernButton
 from .plugin_dialogs import PluginParameterDialog
 from .plugin_panel import PluginManagerPanel
 from .transport_controls import TransportControls
-from .event_handlers import MainWindowEventHandlersMixin
+from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter # Added GlobalPlaybackHotkeyFilter
 
 
 class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
@@ -55,8 +55,20 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         
         self.create_plugin_manager()
         
-        self.installEventFilter(self)
+        # self.installEventFilter(self) # MainWindow's own event filter is now secondary
         
+        # Install the global event filter
+        # Pass the main window's toggle_playback method directly
+        app_instance = QApplication.instance()
+        if app_instance:
+            # Pass self.toggle_playback which handles UI updates (timer)
+            self.global_hotkey_filter = GlobalPlaybackHotkeyFilter(self.toggle_playback, self) 
+            app_instance.installEventFilter(self.global_hotkey_filter)
+            print("Global playback hotkey filter installed with MainWindow.toggle_playback.")
+        else:
+            print("Error: QApplication.instance() is None. Global hotkey filter not installed.")
+            self.global_hotkey_filter = None
+            
         self.playback_timer = QTimer(self)
         self.update_timer_interval()
         self.playback_timer.timeout.connect(self.update_playback_position)
@@ -304,8 +316,18 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
     
     def toggle_playback(self):
         if self.midi_player.is_playing:
-            self.pause_playback()
+            # User wants pause to behave like stop: reset playhead to 0
+            print("MainWindow: Toggle playback - was playing, now stopping and resetting.")
+            self.stop_playback() 
         else:
+            # If stopped or "paused" (which is now stop), start from beginning
+            print("MainWindow: Toggle playback - was stopped/paused, now starting from beginning.")
+            # Ensure playback position is at 0 before starting
+            if self.midi_player.get_current_position() != 0.0:
+                 self.midi_player.seek(0.0) # Ensure player is at start
+                 self.piano_roll.set_playhead_position(0.0) # Ensure UI is at start
+                 self.transport_controls.update_time_slider_value(0)
+                 self.transport_controls.update_position_label(0)
             self.start_playback()
     
     def start_playback(self):
