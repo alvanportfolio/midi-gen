@@ -5,7 +5,7 @@ from PySide6.QtCore import Qt, QRect, QSize, QPoint, Signal, QRectF, QMimeData, 
 from PySide6.QtGui import (
     QPainter, QColor, QPen, QBrush, QLinearGradient, QFont, 
     QRadialGradient, QFontMetrics, QDragEnterEvent, QDropEvent, QMouseEvent, QDragLeaveEvent, QDragMoveEvent,
-    QPaintEvent # Import QPaintEvent
+    QPaintEvent, QWheelEvent, QKeyEvent # Import QWheelEvent and QKeyEvent
 )
 import pretty_midi
 import math # Import math
@@ -31,12 +31,19 @@ class PianoRollDisplay(QWidget):
     notesChanged = Signal(list) 
     midiFileProcessed = Signal(list) 
 
+    MIN_HORIZONTAL_ZOOM = 0.1
+    MAX_HORIZONTAL_ZOOM = 10.0
+    MIN_VERTICAL_ZOOM = 0.25
+    MAX_VERTICAL_ZOOM = 4.0
+
     def __init__(self, notes=None, parent=None):
         super().__init__(parent)
         self.notes: list[pretty_midi.Note] = notes or []
         self.playhead_position = 0.0
         self.bpm = DEFAULT_BPM
-        self.time_scale = BASE_TIME_SCALE 
+        self.horizontal_zoom_factor = 1.0
+        self.vertical_zoom_factor = 1.0
+        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
         self.time_signature_numerator = 4
         self.time_signature_denominator = 4
         
@@ -44,7 +51,7 @@ class PianoRollDisplay(QWidget):
         for i in range(MIN_PITCH, MAX_PITCH + 1):
             if i % 12 not in [1, 3, 6, 8, 10]: 
                 num_white_keys +=1
-        self.setMinimumHeight((MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT)
+        self.setMinimumHeight(int((MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT * self.vertical_zoom_factor))
 
         
         self.calculate_total_width()
@@ -52,7 +59,9 @@ class PianoRollDisplay(QWidget):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setAcceptDrops(True) 
         self._is_dragging_midi = False 
-        self._grid_quantize_value_seconds = (60.0 / self.bpm) / 4 
+        self._grid_quantize_value_seconds = (60.0 / self.bpm) / 4
+        self.setFocusPolicy(Qt.StrongFocus) # Ensure widget can receive key events
+
 
     def _update_quantization_value(self):
         beats_per_second = self.bpm / 60.0
@@ -95,7 +104,7 @@ class PianoRollDisplay(QWidget):
     def set_bpm(self, bpm):
         if bpm <= 0 or self.bpm == bpm: return
         self.bpm = bpm
-        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm)
+        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
         self._update_quantization_value()
         self.calculate_total_width()
         self.update()
@@ -128,7 +137,8 @@ class PianoRollDisplay(QWidget):
         for i in range(MIN_PITCH, MAX_PITCH + 1):
             if i % 12 not in [1, 3, 6, 8, 10]:
                 num_white_keys +=1
-        return QSize(self.minimumWidth(), num_white_keys * WHITE_KEY_HEIGHT)
+        effective_white_key_height = WHITE_KEY_HEIGHT * self.vertical_zoom_factor
+        return QSize(self.minimumWidth(), int(num_white_keys * effective_white_key_height))
     
     def paintEvent(self, event: QPaintEvent):
         painter = QPainter(self)
@@ -154,9 +164,9 @@ class PianoRollDisplay(QWidget):
         # Draw regular UI elements after the overlay
         draw_time_grid(painter, self.width(), self.height(), self.time_scale, self.bpm,
                        self.time_signature_numerator, self.time_signature_denominator, 
-                       self.parentWidget())
-        draw_piano_keys(painter) 
-        draw_notes(painter, self.notes, self.time_scale) 
+                       self.parentWidget(), self.vertical_zoom_factor)
+        draw_piano_keys(painter, self.vertical_zoom_factor) 
+        draw_notes(painter, self.notes, self.time_scale, self.vertical_zoom_factor) 
         draw_playhead(painter, self.playhead_position, self.time_scale, self.height())
 
     def _pixel_to_time(self, x_pos: int) -> float:
@@ -164,18 +174,21 @@ class PianoRollDisplay(QWidget):
         return (x_pos - WHITE_KEY_WIDTH) / self.time_scale
 
     def _pixel_to_pitch(self, y_pos: int) -> int:
-        num_white_keys = 0
-        for i in range(MIN_PITCH, MAX_PITCH + 1):
-            if i % 12 not in [1, 3, 6, 8, 10]:
-                num_white_keys +=1
-        full_content_height = num_white_keys * WHITE_KEY_HEIGHT
-        if full_content_height == 0: return MIN_PITCH
-        num_total_pitches_display_range = MAX_PITCH - MIN_PITCH + 1
-        clamped_y_pos = max(0, min(y_pos, full_content_height -1))
-        proportion = clamped_y_pos / float(full_content_height)
-        calculated_pitch = MAX_PITCH - (proportion * (num_total_pitches_display_range - 1))
-        final_pitch = int(round(calculated_pitch))
-        return max(MIN_PITCH, min(MAX_PITCH, final_pitch))
+        effective_white_key_height = WHITE_KEY_HEIGHT * self.vertical_zoom_factor
+        if effective_white_key_height <= 0: return MIN_PITCH
+        # Calculate pitch index from the top. Each key slot (white or black) effectively occupies `effective_white_key_height` vertically.
+        # The y_pos is relative to the start of the piano roll content.
+        pitch_offset = math.floor(y_pos / effective_white_key_height)
+        # Convert this offset to an actual MIDI pitch number (higher y means lower pitch)
+        pitch = MAX_PITCH - pitch_offset
+        return max(MIN_PITCH, min(MAX_PITCH, pitch))
+
+    def _pitch_to_pixel_y(self, pitch: int) -> float:
+        effective_white_key_height = WHITE_KEY_HEIGHT * self.vertical_zoom_factor
+        # Calculate y position from the top for a given pitch
+        # Higher pitch means smaller y value
+        y_pos = (MAX_PITCH - pitch) * effective_white_key_height
+        return y_pos
 
     def _quantize_time(self, time_sec: float) -> float:
         if self._grid_quantize_value_seconds <= 0: return time_sec
@@ -250,3 +263,190 @@ class PianoRollDisplay(QWidget):
                         event.ignore()
                     return # Processed or ignored
         event.ignore()
+
+    def wheelEvent(self, event: QWheelEvent):
+        if event.modifiers() == Qt.ControlModifier:
+            mouse_x = event.position().x()
+
+            if mouse_x <= WHITE_KEY_WIDTH:
+                # Ignore zoom if cursor is over piano keys for horizontal zoom
+                # but allow vertical zoom or other handling by parent
+                super().wheelEvent(event)
+                return
+
+            old_scroll_x = 0
+            parent_scroll_area = self.parentWidget()
+            while parent_scroll_area and not hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                parent_scroll_area = parent_scroll_area.parentWidget()
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                old_scroll_x = parent_scroll_area.horizontalScrollBar().value()
+
+            # Time at cursor before zoom (absolute time)
+            time_at_cursor = self._pixel_to_time(mouse_x + old_scroll_x)
+
+            delta = event.angleDelta().y()
+            zoom_speed_factor = 1.1
+
+            if delta > 0:  # Zoom in
+                new_zoom_factor = self.horizontal_zoom_factor * zoom_speed_factor
+            elif delta < 0:  # Zoom out
+                new_zoom_factor = self.horizontal_zoom_factor / zoom_speed_factor
+            else: # No change
+                event.accept()
+                return
+
+            self.horizontal_zoom_factor = max(self.MIN_HORIZONTAL_ZOOM, min(self.MAX_HORIZONTAL_ZOOM, new_zoom_factor))
+            
+            self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+            
+            # This recalculates minimum width based on new time_scale and total_time
+            self.calculate_total_width() 
+
+            # New pixel X for the time_at_cursor with the new time_scale (relative to grid start)
+            new_pixel_x_for_time_at_cursor = time_at_cursor * self.time_scale
+            
+            # Calculate new scrollbar value to keep time_at_cursor under the mouse
+            # mouse_x is relative to widget, WHITE_KEY_WIDTH is offset of grid from widget start
+            new_scroll_x = new_pixel_x_for_time_at_cursor - (mouse_x - WHITE_KEY_WIDTH)
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                parent_scroll_area.horizontalScrollBar().setValue(int(new_scroll_x))
+            
+            self.update() # Redraw with new zoom and scroll
+            event.accept()
+        elif event.modifiers() == Qt.ShiftModifier: # Vertical zoom
+            mouse_y = event.position().y()
+            old_scroll_y = 0
+            parent_scroll_area = self.parentWidget()
+            while parent_scroll_area and not hasattr(parent_scroll_area, 'verticalScrollBar'):
+                parent_scroll_area = parent_scroll_area.parentWidget()
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'verticalScrollBar'):
+                old_scroll_y = parent_scroll_area.verticalScrollBar().value()
+
+            pitch_at_cursor = self._pixel_to_pitch(mouse_y + old_scroll_y)
+
+            delta = event.angleDelta().y()
+            zoom_speed_factor = 1.1
+
+            if delta > 0:  # Zoom in
+                new_zoom_factor = self.vertical_zoom_factor * zoom_speed_factor
+            elif delta < 0:  # Zoom out
+                new_zoom_factor = self.vertical_zoom_factor / zoom_speed_factor
+            else: # No change
+                event.accept()
+                return
+            
+            self.vertical_zoom_factor = max(self.MIN_VERTICAL_ZOOM, min(self.MAX_VERTICAL_ZOOM, new_zoom_factor))
+            
+            new_min_height = int((MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT * self.vertical_zoom_factor)
+            self.setMinimumHeight(new_min_height)
+
+            new_pixel_y_for_pitch_at_cursor = self._pitch_to_pixel_y(pitch_at_cursor)
+            new_scroll_y = new_pixel_y_for_pitch_at_cursor - mouse_y
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'verticalScrollBar'):
+                parent_scroll_area.verticalScrollBar().setValue(int(new_scroll_y))
+            
+            self.update()
+            event.accept()
+        else:
+            super().wheelEvent(event) # Default handling for other cases (e.g. vertical scroll)
+
+    def _zoom_horizontal_to_center(self, zoom_factor_change_multiplier: float):
+        parent_scroll_area = self.parentWidget()
+        while parent_scroll_area and not hasattr(parent_scroll_area, 'horizontalScrollBar'):
+            parent_scroll_area = parent_scroll_area.parentWidget()
+
+        current_scroll_x = 0
+        current_viewport_center_x_widget_relative = self.width() / 2 # Fallback if no scrollbar
+
+        if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+            scrollbar = parent_scroll_area.horizontalScrollBar()
+            viewport_width = parent_scroll_area.viewport().width()
+            current_scroll_x = scrollbar.value()
+            # Center of the viewport in viewport coordinates (relative to viewport start)
+            current_viewport_center_x_widget_relative = viewport_width / 2
+        
+        # Time at the center of the viewport (absolute time)
+        time_at_center = self._pixel_to_time(current_viewport_center_x_widget_relative + current_scroll_x)
+
+        old_horizontal_zoom_factor = self.horizontal_zoom_factor
+        new_horizontal_zoom_factor = old_horizontal_zoom_factor * zoom_factor_change_multiplier
+        
+        self.horizontal_zoom_factor = max(self.MIN_HORIZONTAL_ZOOM, min(self.MAX_HORIZONTAL_ZOOM, new_horizontal_zoom_factor))
+        
+        # Update time_scale based on the new zoom factor
+        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+        
+        # Recalculate total width which also calls updateGeometry
+        self.calculate_total_width() 
+
+        # New pixel X for the time_at_center with the new time_scale (relative to grid start)
+        new_pixel_x_for_time_at_center = time_at_center * self.time_scale
+        
+        # Calculate new scrollbar value
+        # current_viewport_center_x_widget_relative is the offset from the start of the viewport to its center
+        new_scroll_x = new_pixel_x_for_time_at_center - current_viewport_center_x_widget_relative
+        
+        if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+            parent_scroll_area.horizontalScrollBar().setValue(int(new_scroll_x))
+            
+        self.update()
+
+
+    def keyPressEvent(self, event: QKeyEvent):
+        zoom_speed_factor = 1.2 # Can be different from wheel zoom
+        if event.modifiers() == Qt.ControlModifier and not event.modifiers() & Qt.ShiftModifier: # Ctrl only
+            if event.key() == Qt.Key_Plus or event.key() == Qt.Key_Equal: 
+                self._zoom_horizontal_to_center(zoom_speed_factor)
+                event.accept()
+            elif event.key() == Qt.Key_Minus:
+                self._zoom_horizontal_to_center(1 / zoom_speed_factor)
+                event.accept()
+            else:
+                super().keyPressEvent(event)
+        elif event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier): # Ctrl + Shift
+            if event.key() == Qt.Key_Plus or event.key() == Qt.Key_Equal:
+                self._zoom_vertical_to_center(zoom_speed_factor)
+                event.accept()
+            elif event.key() == Qt.Key_Minus:
+                self._zoom_vertical_to_center(1 / zoom_speed_factor)
+                event.accept()
+            else:
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
+
+    def _zoom_vertical_to_center(self, zoom_factor_change_multiplier: float):
+        parent_scroll_area = self.parentWidget()
+        while parent_scroll_area and not hasattr(parent_scroll_area, 'verticalScrollBar'):
+            parent_scroll_area = parent_scroll_area.parentWidget()
+
+        current_scroll_y = 0
+        current_viewport_center_y_widget_relative = self.height() / 2 # Fallback
+
+        if parent_scroll_area and hasattr(parent_scroll_area, 'verticalScrollBar'):
+            scrollbar = parent_scroll_area.verticalScrollBar()
+            viewport_height = parent_scroll_area.viewport().height()
+            current_scroll_y = scrollbar.value()
+            current_viewport_center_y_widget_relative = viewport_height / 2
+        
+        pitch_at_center = self._pixel_to_pitch(current_viewport_center_y_widget_relative + current_scroll_y)
+        
+        old_vertical_zoom_factor = self.vertical_zoom_factor
+        new_vertical_zoom_factor = old_vertical_zoom_factor * zoom_factor_change_multiplier
+        
+        self.vertical_zoom_factor = max(self.MIN_VERTICAL_ZOOM, min(self.MAX_VERTICAL_ZOOM, new_vertical_zoom_factor))
+        
+        new_min_height = int((MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT * self.vertical_zoom_factor)
+        self.setMinimumHeight(new_min_height)
+
+        new_pixel_y_for_pitch_at_center = self._pitch_to_pixel_y(pitch_at_center)
+        new_scroll_y = new_pixel_y_for_pitch_at_center - current_viewport_center_y_widget_relative
+        
+        if parent_scroll_area and hasattr(parent_scroll_area, 'verticalScrollBar'):
+            parent_scroll_area.verticalScrollBar().setValue(int(new_scroll_y))
+            
+        self.update()

@@ -13,13 +13,11 @@ from config.theme import (
     KEY_BORDER_COLOR, NOTE_COLORS
 )
 
-def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numerator, time_signature_denominator, parent_widget):
+def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numerator, time_signature_denominator, parent_widget, vertical_zoom_factor=1.0):
     """Draw the time grid with beats and measures and horizontal note lines"""
     keyboard_width = WHITE_KEY_WIDTH
     
-    # Calculate proper total height for all pitches from MIN_PITCH to MAX_PITCH
-    total_height = (MAX_PITCH - MIN_PITCH + 1) * WHITE_KEY_HEIGHT
-    
+    effective_white_key_height = WHITE_KEY_HEIGHT * vertical_zoom_factor
     # Get scroll position
     current_viewport_y_offset = 0
     if parent_widget and hasattr(parent_widget, 'verticalScrollBar'):
@@ -32,11 +30,11 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
     # Draw horizontal lines for note rows
     painter.setPen(QPen(KEY_GRID_COLOR, 1.0, Qt.SolidLine))
     for pitch in range(MIN_PITCH, MAX_PITCH + 1):
-        y_pos = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation to show all notes
+        y_pos = (MAX_PITCH - pitch) * effective_white_key_height
         painter.drawLine(keyboard_width, int(y_pos), width, int(y_pos))
         note_name = pretty_midi.note_number_to_name(pitch)
         if note_name.endswith('C') and '#' not in note_name:
-            highlight_rect = QRect(keyboard_width, int(y_pos), width - keyboard_width, WHITE_KEY_HEIGHT)
+            highlight_rect = QRect(keyboard_width, int(y_pos), width - keyboard_width, int(effective_white_key_height))
             painter.fillRect(highlight_rect, ROW_HIGHLIGHT_COLOR)
 
     # Time signature display
@@ -98,8 +96,10 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
     painter.setPen(QPen(KEY_BORDER_COLOR, 1.5))
     painter.drawLine(keyboard_width, 0, keyboard_width, height)
 
-def draw_piano_keys(painter):
+def draw_piano_keys(painter, vertical_zoom_factor=1.0):
     """Draw the piano keyboard on the left side"""
+    effective_white_key_height = WHITE_KEY_HEIGHT * vertical_zoom_factor
+    effective_black_key_height = BLACK_KEY_HEIGHT * vertical_zoom_factor
     # Fixed calculation of positions to show all keys
     drawn_black_keys = set()
     
@@ -108,8 +108,8 @@ def draw_piano_keys(painter):
         pitch_class = pitch % 12
         is_white = pitch_class in [0, 2, 4, 5, 7, 9, 11]
         if is_white:
-            y_pos_key_top = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation
-            key_rect = QRect(0, int(y_pos_key_top), WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT)
+            y_pos_key_top = (MAX_PITCH - pitch) * effective_white_key_height
+            key_rect = QRect(0, int(y_pos_key_top), WHITE_KEY_WIDTH, int(effective_white_key_height))
             white_gradient = QLinearGradient(key_rect.topLeft(), key_rect.bottomLeft())
             white_gradient.setColorAt(0.0, QColor(245, 245, 245))
             white_gradient.setColorAt(1.0, QColor(220, 220, 220))
@@ -125,8 +125,8 @@ def draw_piano_keys(painter):
             if pitch in drawn_black_keys:
                 continue
             drawn_black_keys.add(pitch)
-            y_pos_key_top = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT  # Fixed calculation
-            key_rect = QRect(0, int(y_pos_key_top), BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT)
+            y_pos_key_top = (MAX_PITCH - pitch) * effective_white_key_height
+            key_rect = QRect(0, int(y_pos_key_top), BLACK_KEY_WIDTH, int(effective_black_key_height))
             black_gradient = QLinearGradient(key_rect.topLeft(), key_rect.bottomLeft())
             black_gradient.setColorAt(0.0, BLACK_KEY_COLOR.lighter(125))
             black_gradient.setColorAt(1.0, BLACK_KEY_COLOR)
@@ -150,19 +150,21 @@ def draw_piano_keys(painter):
         if octave_str.isdigit():
             octave_part = int(octave_str)
             corrected_label_name = f"{note_part}{octave_part + 1}"
-        key_slot_y_top = (MAX_PITCH - pitch_label) * WHITE_KEY_HEIGHT  # Fixed calculation
+        key_slot_y_top = (MAX_PITCH - pitch_label) * effective_white_key_height
         if is_white_key_for_label:
-            text_rect = QRect(0, int(key_slot_y_top), WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT)
+            text_rect = QRect(0, int(key_slot_y_top), WHITE_KEY_WIDTH, int(effective_white_key_height))
             painter.setPen(QColor(70, 70, 70))
             painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, corrected_label_name)
         else:
             if pitch_label in drawn_black_keys:
-                black_key_rect = QRect(0, int(key_slot_y_top), BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT)
+                black_key_rect = QRect(0, int(key_slot_y_top), BLACK_KEY_WIDTH, int(effective_black_key_height))
                 painter.setPen(QColor(210, 210, 210))
                 painter.drawText(black_key_rect, Qt.AlignCenter | Qt.AlignVCenter, corrected_label_name)
 
-def draw_notes(painter, notes, time_scale):
+def draw_notes(painter, notes, time_scale, vertical_zoom_factor=1.0):
     """Draw the MIDI notes as colored rectangles"""
+    effective_white_key_height = WHITE_KEY_HEIGHT * vertical_zoom_factor
+    effective_black_key_height = BLACK_KEY_HEIGHT * vertical_zoom_factor
     for note in notes:
         if not hasattr(note, 'pitch') or not hasattr(note, 'start') or not hasattr(note, 'end'):
             continue
@@ -170,19 +172,25 @@ def draw_notes(painter, notes, time_scale):
         if pitch < MIN_PITCH or pitch > MAX_PITCH:
             continue
         
-        # Fixed y position calculation to show all notes
-        y_pos = (MAX_PITCH - pitch) * WHITE_KEY_HEIGHT
+        y_pos = (MAX_PITCH - pitch) * effective_white_key_height 
         
         x_pos = note.start * time_scale + WHITE_KEY_WIDTH
         width = max((note.end - note.start) * time_scale, 4)
         pitch_class = pitch % 12
         is_white = pitch_class in [0, 2, 4, 5, 7, 9, 11]
+        
+        padding = 4 # Define base padding
+
         if is_white:
-            height = WHITE_KEY_HEIGHT - 4
-            y_offset = 2
+            # Scale height according to zoom, maintain padding
+            height = effective_white_key_height - padding 
+            y_offset = padding / 2
         else:
-            height = WHITE_KEY_HEIGHT - 8
-            y_offset = 4
+            # Scale height for black keys, maintain padding
+            height = effective_black_key_height - padding 
+            # Adjust y_offset to center black key notes within the visual space of a scaled white key row
+            y_offset = (effective_white_key_height - effective_black_key_height) / 2 + (padding / 2)
+            
         velocity = getattr(note, 'velocity', 64)
         if velocity < 50:
             color = NOTE_COLORS['low']
