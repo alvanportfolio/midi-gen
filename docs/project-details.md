@@ -86,7 +86,7 @@ piano_roll_project/
 - **Purpose**: Main application window (`PianoRollMainWindow`)
 - **Key Classes**:
   - `PianoRollMainWindow`: Main window with piano roll display and transport controls
-  - `PluginManagerPanel`: Dockable panel for plugin management
+  - `PluginManagerPanel`: Dockable panel for plugin management with smooth animations
   - `PluginParameterDialog`: Dialog for configuring plugin parameters
   - `ModernSlider` and `ModernButton`: Custom UI elements for better appearance
 - **Key Functions**:
@@ -94,6 +94,7 @@ piano_roll_project/
   - MIDI note management
   - Time and position tracking
   - Integration with plugin manager
+  - Zoom controls for viewing longer note sequences
 
 #### `note_display.py`
 - **Purpose**: Piano roll grid and note visualization
@@ -230,8 +231,9 @@ piano_roll_project/
 - Themes and color schemes
 - Customizable keyboard shortcuts
 - Multi-track support
-- Zoom and navigation improvements
+- Further zoom and navigation improvements
 - Note editing tools
+- Additional animation refinements
 
 ### Generation Enhancements
 - AI-based generation using machine learning models

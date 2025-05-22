@@ -1,39 +1,49 @@
-# 🎹 MIDI Generator Piano Roll
+# 🎹✨ MIDI Generator Piano Roll
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square)
-![License](https://img.shields.io/badge/License-Non--Commercial-red?style=flat-square)
-![PySide6](https://img.shields.io/badge/GUI-PySide6-green?style=flat-square)
-![MIDI](https://img.shields.io/badge/MIDI-pretty__midi-orange?style=flat-square)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square" alt="Python"/>
+  <img src="https://img.shields.io/badge/License-Non--Commercial-red?style=flat-square" alt="License"/>
+  <img src="https://img.shields.io/badge/GUI-PySide6-green?style=flat-square" alt="PySide6"/>
+  <img src="https://img.shields.io/badge/MIDI-pretty__midi-orange?style=flat-square" alt="MIDI"/>
+</p>
 
-> 🎼 A plugin-powered standalone piano roll app written in Python that lets you generate MIDI using motif and Markov algorithms, visualize them, play them, and export to `.mid`.
+<blockquote>
+  <b>🎼 A plugin-powered standalone piano roll app written in Python that lets you generate MIDI using motif and Markov algorithms, visualize them, play them, and export to <code>.mid</code>.</b>
+</blockquote>
 
----
+<hr/>
 
-## ✨ Key Features
+## ✨ <span style="color:#ffb300;">Key Features</span>
 
-- 🎹 **Modern Piano Roll** with grid lines, time ruler, and MIDI notes  
-- 🧩 **Plugin Manager** to run motif, Markov, and custom generation logic  
-- 🔌 **Drop-in Python Plugins** – Easily extend the app with your own `.py` files  
-- 🛠️ **Dynamic Parameter Dialogs** – Each plugin has its own customizable settings  
-- 📤 **Export to MIDI** with velocity/pitch embedded (even if not shown in UI)  
-- ⏯ **Playback Controls** with beat-synced transport  
-- 🪟 **Dockable Plugin Panel** – Plugin Manager can be dragged, floated, and reattached  
-
----
-
-## 🖼️ Screenshots
-
-### 🎼 Generated MIDI using Motif Generator  
-![Piano Roll Screenshot 1](./image1.png)
-
-### 🧠 Markov Chain Plugin Output + Plugin Panel Floating  
-![Piano Roll Screenshot 2](./image2.png)
+- 🎹 <b>Modern Piano Roll</b> with grid lines, time ruler, and MIDI notes  
+- 🧩 <b>Plugin Manager</b> to run motif, Markov, and custom generation logic  
+- 🔌 <b>Drop-in Python Plugins</b> – Easily extend the app with your own <code>.py</code> files  
+- 🛠️ <b>Dynamic Parameter Dialogs</b> – Each plugin has its own customizable settings  
+- 📤 <b>Export to MIDI</b> with velocity/pitch embedded (even if not shown in UI)  
+- ⏯ <b>Playback Controls</b> with beat-synced transport  
+- 🪟 <b>Smooth Dockable Plugin Panel</b> – Plugin Manager with fluid animations when dragged, floated, and reattached
+- 🔍 <b>Zoom Functionality</b> – Easily view and edit longer note sequences
 
 ---
 
-## 🧩 Plugin System
+## 🖼️ <span style="color:#6ec6ff;">Screenshots</span>
 
-The plugin system is modular and developer-friendly:
+<div align="center">
+  <img src="./image1.png" alt="Piano Roll Screenshot 1" width="60%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
+  <br/>
+  <sub>🎼 Generated MIDI using Motif Generator</sub>
+  <br/><br/>
+  <img src="./image2.png" alt="Piano Roll Screenshot 2" width="60%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
+  <br/>
+  <sub>🧠 Markov Chain Plugin Output + Plugin Panel Floating</sub>
+</div>
+
+---
+
+## 🧩 <span style="color:#b39ddb;">Plugin System</span>
+
+<details>
+<summary>🔍 <b>How to create a plugin?</b></summary>
 
 ```python
 class MyCustomGenerator(PluginBase):
@@ -48,16 +58,18 @@ class MyCustomGenerator(PluginBase):
         ]
 ```
 
-Define `generate()` and return a list of PrettyMIDI notes.  
-Add an optional `get_parameter_info()` to customize UI controls per plugin.
+Define <code>generate()</code> and return a list of PrettyMIDI notes.  
+Add an optional <code>get_parameter_info()</code> to customize UI controls per plugin.
 
-📖 Full developer reference: [docs/plugin-docs.md](./docs/plugin-docs.md)
+📖 <b>Full developer reference:</b> [docs/plugin-docs.md](./docs/plugin-docs.md)
+
+</details>
 
 ---
 
-## 🛠️ Project Structure
+## 🛠️ <span style="color:#ffd54f;">Project Structure</span>
 
-```
+```text
 piano_roll_project/
 ├── LICENSE                    # Non-Commercial License file
 ├── app.py                     # Main application entry point
@@ -98,70 +110,86 @@ piano_roll_project/
 
 ---
 
-## 🚀 Getting Started
+## 🚀 <span style="color:#81c784;">Getting Started</span>
 
-### 1. Clone the repository
+<ol>
+<li>Clone the repository</li>
+</ol>
 
 ```bash
 git clone https://github.com/WebChatAppAi/midi-gen.git
 cd midi-gen
 ```
 
-### 2. Install dependencies
+<ol start="2">
+<li>Install dependencies</li>
+</ol>
 
 ```bash
 pip install PySide6 pretty_midi numpy pygame
 ```
 
-### 3. Run the app
+<ol start="3">
+<li>Run the app</li>
+</ol>
 
 ```bash
 python app.py
 ```
-Alternatively, use the startup scripts:
-- Windows: `start.bat`
-- Linux/macOS: `sh start.sh` (or `./start.sh` after `chmod +x start.sh`)
+
+<details>
+<summary>💡 <b>Tip:</b> Use the startup scripts for convenience</summary>
+<ul>
+<li>Windows: <code>start.bat</code></li>
+<li>Linux/macOS: <code>sh start.sh</code> (or <code>./start.sh</code> after <code>chmod +x start.sh</code>)</li>
+</ul>
+</details>
 
 ---
 
-## 🎛 How To Use
+## 🎛️ <span style="color:#ffd180;">How To Use</span>
 
-1. Open the app  
-2. Pick a plugin from the Plugin Manager  
-3. Click **Configure** to tweak plugin settings  
-4. Click **Generate** to add notes  
-5. Press **Play** or **Export MIDI** when ready  
+<ol>
+<li>Open the app</li>
+<li>Pick a plugin from the <b>Plugin Manager</b></li>
+<li>Click <b>Configure</b> to tweak plugin settings</li>
+<li>Click <b>Generate</b> to add notes</li>
+<li>Press <b>Play</b> or <b>Export MIDI</b> when ready</li>
+</ol>
 
 ---
 
-## 💎 Extra Capabilities
+## 💎 <span style="color:#4dd0e1;">Extra Capabilities</span>
 
-- 🧩 Easily add your own plugins via `plugins/*.py`  
+- 🧩 Easily add your own plugins via <code>plugins/*.py</code>  
 - 🖱 Plugin Manager can be docked, floated, and re-attached  
-- 🎼 Generated notes contain pitch and velocity info embedded in exported `.mid`  
-- 🔄 Real-time preview + loopable playback coming soon  
+- 🎼 Generated notes contain pitch and velocity info embedded in exported <code>.mid</code>  
+- 🔄 Real-time preview + loopable playback <b>coming soon</b>  
+- 🤖 Support for OpenAI-compatible endpoints and Gemini model plugins (default plugins currently produce better musical results)
 
 ---
 
-## 🌟 What's Next?
+## 🌟 <span style="color:#ffd700;">What's Next?</span>
 
-- Plugin Marketplace (auto-discovery from GitHub)  
-- AI Plugin Support (HuggingFace, LLaMA, MusicGen)  
-- Auto-chord, Arp, and Drum Pattern generators  
-- Import `.mid` files for editing  
-
----
-
-## 🧠 Want to Contribute?
-
-- Read the full guide: [docs/project-details.md](./docs/project-details.md)  
-- Fork → Build your plugin → Open a Pull Request  
+- 🛒 Plugin Marketplace (auto-discovery from GitHub)  
+- 🤖 AI Plugin Support (HuggingFace, LLaMA, MusicGen)  
+- 🎹 Auto-chord, Arp, and Drum Pattern generators  
+- 📥 Import <code>.mid</code> files for editing  
 
 ---
 
-## 📄 License
+## 🧠 <span style="color:#b2dfdb;">Want to Contribute?</span>
 
-Non-Commercial Software License © [Jonas](https://github.com/WebChatAppAi)
+- 📖 Read the full guide: [docs/project-details.md](./docs/project-details.md)  
+- 🍴 Fork → 🛠️ Build your plugin → 📬 Open a Pull Request  
+
+---
+
+## 📄 <span style="color:#e57373;">License</span>
+
+<blockquote>
+  <b>Non-Commercial Software License © <a href="https://github.com/WebChatAppAi">Jonas</a></b>
+</blockquote>
 
 This project is licensed under a custom Non-Commercial Software License. See the [LICENSE](LICENSE) file in the root directory for complete license details.
 
@@ -171,5 +199,8 @@ This project is licensed under a custom Non-Commercial Software License. See the
 - You must notify the copyright holder of any distribution or modification
 - Attribution to the copyright holder (Jonas) is required in all copies
 
-
-> ✨ Built with a love for generative music, modular design, and open creativity.
+<p align="center">
+  <img src="https://em-content.zobj.net/source/microsoft-teams/363/musical-score_1f3bc.png" width="48"/>
+  <br/>
+  <i>✨ Built with a love for generative music, modular design, and open creativity.</i>
+</p>
