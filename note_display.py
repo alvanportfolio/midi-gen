@@ -16,9 +16,10 @@ from config.constants import (
     MIN_LABEL_PITCH, MAX_LABEL_PITCH
 )
 from config.theme import (
-    BG_COLOR, GRID_COLOR, BEAT_COLOR, MEASURE_COLOR, ROW_HIGHLIGHT_COLOR, 
-    KEY_GRID_COLOR, PLAYHEAD_COLOR, WHITE_KEY_COLOR, BLACK_KEY_COLOR, 
-    KEY_BORDER_COLOR, NOTE_COLORS, ACCENT_COLOR, DRAG_OVERLAY_COLOR
+    PIANO_ROLL_BG_COLOR, GRID_LINE_COLOR, GRID_BEAT_LINE_COLOR, GRID_MEASURE_LINE_COLOR, # Updated specific grid colors
+    GRID_ROW_HIGHLIGHT_COLOR, KEY_GRID_LINE_COLOR, PLAYHEAD_COLOR, PIANO_KEY_WHITE_COLOR, PIANO_KEY_BLACK_COLOR, 
+    PIANO_KEY_BORDER_COLOR, NOTE_LOW_COLOR, NOTE_MED_COLOR, NOTE_HIGH_COLOR, NOTE_BORDER_COLOR, # Updated specific note and key colors
+    ACCENT_PRIMARY_COLOR, DRAG_OVERLAY_COLOR # Updated general theme colors
 )
 from ui.drawing_utils import (
     draw_time_grid, draw_piano_keys, draw_notes, draw_playhead
@@ -144,10 +145,8 @@ class PianoRollDisplay(QWidget):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.Antialiasing | QPainter.TextAntialiasing | QPainter.SmoothPixmapTransform)
         
-        bg_gradient = QLinearGradient(0, 0, 0, self.height())
-        bg_gradient.setColorAt(0, theme.BG_COLOR.lighter(105))
-        bg_gradient.setColorAt(1, theme.BG_COLOR)
-        painter.fillRect(event.rect(), bg_gradient)
+        # Use solid PIANO_ROLL_BG_COLOR
+        painter.fillRect(event.rect(), theme.PIANO_ROLL_BG_COLOR)
 
         # Draw drag overlay BEFORE notes to prevent pink glitch
         if self._is_dragging_midi:
@@ -156,7 +155,7 @@ class PianoRollDisplay(QWidget):
             painter.fillRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1), theme.DRAG_OVERLAY_COLOR)
             
             # Keep the border distinct
-            border_pen = QPen(theme.ACCENT_COLOR.lighter(130), 2, Qt.DashLine)
+            border_pen = QPen(theme.ACCENT_PRIMARY_COLOR.lighter(130), 2, Qt.DashLine) # Use ACCENT_PRIMARY_COLOR
             painter.setPen(border_pen)
             painter.drawRect(self.rect().adjusted(WHITE_KEY_WIDTH + 1, 1, -1, -1))
             painter.restore()

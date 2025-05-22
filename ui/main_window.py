@@ -23,6 +23,7 @@ from .plugin_dialogs import PluginParameterDialog
 from .plugin_panel import PluginManagerPanel
 from .transport_controls import TransportControls
 from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter # Added GlobalPlaybackHotkeyFilter
+from config import theme # Import the theme configuration
 
 
 class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
@@ -79,46 +80,122 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
 
 
     def _apply_stylesheet(self):
-        self.setStyleSheet("""
-            QMainWindow, QWidget {
-                background-color: #1c1c20;
-                color: #e0e0e0;
-            }
-            QLabel {
-                color: #e0e0e0;
-                font-size: 11px;
-            }
-            QScrollBar {
-                background-color: #2a2a30;
-                width: 12px;
-                height: 12px;
-            }
-            QScrollBar::handle {
-                background-color: #4a4a55;
-                border-radius: 5px;
-                margin: 1px;
-            }
-            QScrollBar::add-line, QScrollBar::sub-line {
-                background: none;
+        # Global stylesheet using constants from theme.py
+        qss = f"""
+            QMainWindow, QWidget {{
+                background-color: {theme.APP_BG_COLOR.name()};
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
+            }}
+
+            QLabel {{
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
+            }}
+
+            QDockWidget::title {{
+                background-color: {theme.PANEL_BG_COLOR.darker(110).name()};
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_L}pt; /* Slightly larger for titles */
+                font-weight: {theme.FONT_WEIGHT_BOLD};
+                padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                border-bottom: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+            }}
+
+            QDockWidget {{
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                /* titlebar-close-icon and titlebar-normal-icon properties can be used
+                   if custom icons are desired for dock widget float/close buttons */
+            }}
+            
+            QScrollBar:horizontal {{
+                background-color: {theme.PANEL_BG_COLOR.lighter(110).name()};
+                height: 10px;
+                margin: 0px 0px 0px 0px;
+                border-radius: {theme.BORDER_RADIUS_S}px;
+            }}
+            QScrollBar::handle:horizontal {{
+                background-color: {theme.BORDER_COLOR_NORMAL.name()};
+                min-width: 20px;
+                border-radius: {theme.BORDER_RADIUS_S}px;
+                margin: 2px 0px 2px 0px; /* Vertical margin */
+            }}
+            QScrollBar::handle:horizontal:hover {{
+                background-color: {theme.BORDER_COLOR_HOVER.name()};
+            }}
+            QScrollBar::handle:horizontal:pressed {{
+                background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+            }}
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
                 border: none;
-            }
-            QScrollBar::add-page, QScrollBar::sub-page {
                 background: none;
-            }
-            QPushButton {
-                background-color: #2d2d35;
-                color: #e0e0e0;
+                width: 0px; /* Hide arrows */
+            }}
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+                background: none;
+            }}
+
+            QScrollBar:vertical {{
+                background-color: {theme.PANEL_BG_COLOR.lighter(110).name()};
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+                border-radius: {theme.BORDER_RADIUS_S}px;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: {theme.BORDER_COLOR_NORMAL.name()};
+                min-height: 20px;
+                border-radius: {theme.BORDER_RADIUS_S}px;
+                margin: 0px 2px 0px 2px; /* Horizontal margin */
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: {theme.BORDER_COLOR_HOVER.name()};
+            }}
+            QScrollBar::handle:vertical:pressed {{
+                background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 border: none;
-                padding: 5px 10px;
-                border-radius: 3px;
-            }
-            QPushButton:hover {
-                background-color: #3d3d45;
-            }
-            QPushButton:pressed {
-                background-color: #404050;
-            }
-        """)
+                background: none;
+                height: 0px; /* Hide arrows */
+            }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
+                background: none;
+            }}
+
+            /* Style for QScrollArea containing PianoRollDisplay - already partially styled inline */
+            /* This global style can act as a fallback or default */
+            QScrollArea {{
+                background-color: {theme.PIANO_ROLL_BG_COLOR.name()}; 
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()}; /* Or none if preferred */
+            }}
+            
+            /* Fallback QPushButton styling */
+            QPushButton {{
+                background-color: {theme.STANDARD_BUTTON_BG_COLOR.name()};
+                color: {theme.STANDARD_BUTTON_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()}; /* Adding a subtle border */
+                padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
+            }}
+            QPushButton:hover {{
+                background-color: {theme.STANDARD_BUTTON_HOVER_BG_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
+            }}
+            QPushButton:pressed {{
+                background-color: {theme.STANDARD_BUTTON_PRESSED_BG_COLOR.name()};
+            }}
+            QPushButton:disabled {{
+                background-color: {theme.DISABLED_BG_COLOR.name()};
+                color: {theme.DISABLED_TEXT_COLOR.name()};
+                border-color: {theme.DISABLED_BG_COLOR.darker(110).name()};
+            }}
+        """
+        self.setStyleSheet(qss)
 
     def _setup_central_widget(self):
         self.central_widget = QWidget()

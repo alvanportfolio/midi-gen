@@ -28,10 +28,11 @@ class PluginManagerPanel(QDockWidget):
         
         self.dock_content = QWidget()
         self.setWidget(self.dock_content)
+        self.dock_content.setStyleSheet(f"background-color: {theme.PANEL_BG_COLOR.name()};") # Panel Styling
         
         main_panel_layout = QVBoxLayout(self.dock_content)
-        main_panel_layout.setContentsMargins(theme.PADDING_MEDIUM, theme.PADDING_MEDIUM, theme.PADDING_MEDIUM, theme.PADDING_MEDIUM)
-        main_panel_layout.setSpacing(theme.PADDING_MEDIUM)
+        main_panel_layout.setContentsMargins(theme.PADDING_L, theme.PADDING_L, theme.PADDING_L, theme.PADDING_L) # Panel Styling
+        main_panel_layout.setSpacing(theme.PADDING_M) # Panel Styling
         
         self.plugin_list = QListWidget()
         # Set size policy to expand vertically
@@ -41,16 +42,19 @@ class PluginManagerPanel(QDockWidget):
                 background-color: transparent; 
                 border: none; 
                 outline: 0; 
-                spacing: {theme.PADDING_SMALL}px; 
+                spacing: {theme.PADDING_M}px;  /* Use a theme constant for spacing */
             }}
-            QListWidget::item {{ /* Item itself is just a container, no visual */
+            QListWidget::item {{
                 border: none; 
-                padding: 0px;
-                margin-bottom: {theme.PADDING_SMALL}px;
+                padding: 0px; /* Item itself is a container, padding handled by item_widget */
+                /* margin-bottom is effectively handled by QListWidget::spacing now */
             }}
-            /* Remove item:selected and item:hover, as item_widget handles visuals */
-            QListWidget::item:selected {{ background-color: transparent; }}
-            QListWidget::item:hover {{ background-color: transparent; }}
+            QListWidget::item:selected {{ 
+                background-color: transparent; /* Selection handled by item_widget */
+            }}
+            QListWidget::item:hover {{ 
+                background-color: transparent; /* Hover handled by item_widget */
+            }}
         """)
         main_panel_layout.addWidget(self.plugin_list)
         
@@ -59,56 +63,294 @@ class PluginManagerPanel(QDockWidget):
         # Buttons
         button_layout = QHBoxLayout()
         
-        self.configure_button = QPushButton("Configure") # Text only for now
-        # self.configure_button.setIcon(self.style().standardIcon(QStyle.SP_FileDialogDetailedView)) # Example QStyle
-        self.configure_button.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
-        self.configure_button.setStyleSheet(self._get_button_style())
+        self.configure_button = ModernButton("Configure") # Changed to ModernButton
         self.configure_button.clicked.connect(self._configure_plugin)
         button_layout.addWidget(self.configure_button)
         
-        self.generate_button = QPushButton("Generate")
-        self.generate_button.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
-        self.generate_button.setStyleSheet(self._get_button_style(accent=True))
+        self.generate_button = ModernButton("Generate", accent=True) # Changed to ModernButton, accent=True
         self.generate_button.clicked.connect(self._generate_notes)
         button_layout.addWidget(self.generate_button)
         
-        self.export_button = DragExportButton("Export MIDI") # Changed to DragExportButton
-        self.export_button.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
-        self.export_button.setStyleSheet(self._get_button_style()) # Assuming DragExportButton uses this or similar
-        self.export_button.setToolTip("Click to export, or drag to your DAW/folder as .mid") # Added tooltip
-        self.export_button.clicked.connect(self._handle_export_click) # Renamed method
-        self.export_button.dragInitiated.connect(self._handle_export_drag) # New connection
+        self.export_button = DragExportButton("Export MIDI") 
+        self.export_button.setToolTip("Click to export, or drag to your DAW/folder as .mid") 
+        self.export_button.clicked.connect(self._handle_export_click) 
+        self.export_button.dragInitiated.connect(self._handle_export_drag) 
         button_layout.addWidget(self.export_button)
         
         main_panel_layout.addLayout(button_layout)
         
         self.plugin_params = {}
         self.current_notes = []
-        self.temp_files_to_clean = [] # Added for temporary file management
+        self.temp_files_to_clean = [] 
         self.temp_midi_dir = os.path.join(tempfile.gettempdir(), "pianoroll_midi_exports")
         os.makedirs(self.temp_midi_dir, exist_ok=True)
         
         # Load plugins after UI setup
         self._load_plugins()
     
-    def _get_button_style(self, accent=False):
-        # This style will be applied to DragExportButton as it inherits ModernButton
-        if accent:
-            bg, hover, pressed, text_color = theme.ACCENT_COLOR, theme.ACCENT_HOVER_COLOR, theme.ACCENT_PRESSED_COLOR, theme.SELECTION_TEXT_COLOR
-        else:
-            bg, hover, pressed, text_color = theme.BUTTON_COLOR, theme.BUTTON_HOVER_COLOR, theme.BUTTON_PRESSED_COLOR, theme.BUTTON_TEXT_COLOR
-        return f"""
-            QPushButton {{
-                background-color: {bg.name()}; color: {text_color.name()}; border: none;
-                padding: {theme.PADDING_SMALL + 2}px {theme.PADDING_MEDIUM}px; border-radius: {theme.BORDER_RADIUS}px;
-                font-family: "{theme.FONT_FAMILY}"; font-size: {theme.FONT_SIZE_NORMAL}pt;
-            }}
-            QPushButton:hover {{ background-color: {hover.name()}; }}
-            QPushButton:pressed {{ background-color: {pressed.name()}; }} """
+    # _get_button_style method removed
 
     def _get_plugin_icon_data(self):
-        piano_icon_path = os.path.join("assets", "icons", "piano.svg")
-        if os.path.exists(piano_icon_path):
+        # Using a placeholder for now, will be replaced by theme.PLUGIN_ICON_PATH_DEFAULT if available
+        # For actual icon files, ensure they exist at the path specified in theme.py
+        default_icon_path = getattr(theme, 'PLUGIN_ICON_PATH_DEFAULT', os.path.join(theme.ICON_PATH, "default-plugin.svg"))
+        if os.path.exists(default_icon_path):
+            icon = QIcon(default_icon_path)
+            if not icon.isNull():
+                return icon
+        # Fallback emoji if default SVG is missing or invalid
+        return "🎛️" 
+
+    def _load_plugins(self):
+        self.plugin_list.clear()
+        # Get the default icon once, or determine per plugin if logic varies
+        default_plugin_display_icon = self._get_plugin_icon_data()
+
+        for plugin_info in self.plugin_manager.get_plugin_list():
+            item = QListWidgetItem(self.plugin_list)
+            item_widget = QWidget()
+            item_widget.setObjectName("PluginItemWidget")
+            item_widget.setAutoFillBackground(True) # Important for QSS background to work
+            item_widget.setFixedHeight(theme.PLUGIN_ROW_HEIGHT)
+            
+            item_layout = QHBoxLayout(item_widget)
+            item_layout.setContentsMargins(theme.PADDING_M, 0, theme.PADDING_M, 0) # Use theme padding
+            item_layout.setSpacing(theme.PADDING_M) # Use theme spacing
+
+            icon_label = QLabel()
+            icon_label.setObjectName("PluginItemIconLabel")
+            # Icon size should be consistent, using ICON_SIZE_XL from theme
+            icon_display_size = theme.ICON_SIZE_XL 
+            icon_label.setFixedSize(QSize(icon_display_size, icon_display_size))
+            icon_label.setAlignment(Qt.AlignCenter) # Center icon
+
+            # Logic for specific plugin icons can be added here if plugin_info contains icon path
+            # For now, using the default or emoji
+            current_icon_data = default_plugin_display_icon # Or fetch specific from plugin_info['icon_path']
+            
+            if isinstance(current_icon_data, QIcon):
+                icon_label.setPixmap(current_icon_data.pixmap(QSize(icon_display_size, icon_display_size)))
+            else: # emoji
+                icon_label.setText(current_icon_data) # Emoji or fallback text
+                # Font for emoji icons might need to be larger than general text
+                icon_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.ICON_SIZE_XL - theme.PADDING_S)) # Adjust size as needed
+            
+            name_label = QLabel(plugin_info['name'])
+            name_label.setObjectName("PluginItemNameLabel")
+            # Font styling handled by _update_item_widget_style
+            name_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+            version_label = QLabel(f"v{plugin_info['version']}")
+            version_label.setObjectName("PluginItemVersionLabel")
+            # Font styling handled by _update_item_widget_style
+            version_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
+            
+            item_layout.addWidget(icon_label)
+            item_layout.addWidget(name_label)
+            item_layout.addStretch(1)
+            item_layout.addWidget(version_label)
+            
+            # Calculate correct item size hint
+            # Width should be list width minus scrollbar allowance, height is fixed.
+            item_size = QSize(self.plugin_list.viewport().width() - (theme.PADDING_S * 2), theme.PLUGIN_ROW_HEIGHT)
+            item.setSizeHint(item_size)
+            
+            item.setData(Qt.UserRole, plugin_info['id'])
+            item.setData(Qt.UserRole + 1, item_widget) # Store item_widget reference
+            item.setToolTip(f"<b>{plugin_info['name']}</b><br>{plugin_info['description']}")
+            
+            self.plugin_list.setItemWidget(item, item_widget)
+            
+            # Apply initial style
+            self._update_item_widget_style(item_widget, item.isSelected())
+
+    def _on_plugin_selection_changed(self, current: QListWidgetItem, previous: QListWidgetItem):
+        if previous:
+            prev_widget = previous.data(Qt.UserRole + 1) # Retrieve item_widget
+            if prev_widget:
+                self._update_item_widget_style(prev_widget, False)
+        if current:
+            curr_widget = current.data(Qt.UserRole + 1) # Retrieve item_widget
+            if curr_widget:
+                self._update_item_widget_style(curr_widget, True)
+
+    def _update_item_widget_style(self, widget: QWidget, is_selected: bool):
+        if is_selected:
+            bg_color = theme.ACCENT_PRIMARY_COLOR.name()
+            text_color_primary = theme.ACCENT_TEXT_COLOR.name()
+            # For version text on accent, a slightly less prominent variant of accent text might be good.
+            text_color_secondary = theme.ACCENT_TEXT_COLOR.lighter(130).name() 
+            if theme.ACCENT_TEXT_COLOR.lightness() < 128: # If accent text is dark, lighten secondary
+                 text_color_secondary = theme.ACCENT_TEXT_COLOR.lighter(150).name()
+            else: # If accent text is light, darken secondary
+                 text_color_secondary = theme.ACCENT_TEXT_COLOR.darker(150).name()
+
+            border_style = f"border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(120).name()};"
+        else:
+            bg_color = theme.ITEM_BG_COLOR.name()
+            text_color_primary = theme.PRIMARY_TEXT_COLOR.name()
+            text_color_secondary = theme.SECONDARY_TEXT_COLOR.name()
+            border_style = f"border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};"
+
+        # Base style for the item widget (card)
+        widget.setStyleSheet(f"""
+            QWidget#PluginItemWidget {{
+                background-color: {bg_color};
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                {border_style}
+            }}
+        """)
+        
+        # Style child labels individually using object names for robustness
+        icon_label = widget.findChild(QLabel, "PluginItemIconLabel")
+        name_label = widget.findChild(QLabel, "PluginItemNameLabel")
+        version_label = widget.findChild(QLabel, "PluginItemVersionLabel")
+
+        if icon_label: # Icon color (for text/emoji based icons)
+            icon_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent; border: none;")
+        if name_label:
+            name_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
+            name_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent; border: none;")
+        if version_label:
+            version_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
+            version_label.setStyleSheet(f"color: {text_color_secondary}; background-color: transparent; border: none;")
+            
+    def resizeEvent(self, event):
+        """Handle resize events to update item sizes"""
+        super().resizeEvent(event)
+        # Update item widths when resized
+        for i in range(self.plugin_list.count()):
+            item = self.plugin_list.item(i)
+            item_widget = self.plugin_list.itemWidget(item) # Get the custom widget
+            if item_widget: # Ensure item_widget exists
+                 # Set item size hint on the QListWidgetItem for QListWidget to use
+                item.setSizeHint(QSize(self.plugin_list.viewport().width() - (theme.PADDING_S * 2), theme.PLUGIN_ROW_HEIGHT))
+
+    def set_current_notes(self, notes):
+        self.current_notes = notes
+    
+    def _configure_plugin(self):
+        selected_items = self.plugin_list.selectedItems()
+        if not selected_items: return
+        plugin_id = selected_items[0].data(Qt.UserRole)
+        plugin = self.plugin_manager.get_plugin(plugin_id)
+        if not plugin: return
+        current_params = self.plugin_params.get(plugin_id, {})
+        dialog = PluginParameterDialog(plugin, current_params, self)
+        if dialog.exec() == QDialog.Accepted:
+            self.plugin_params[plugin_id] = dialog.get_parameter_values()
+        if hasattr(self.configure_button, 'clearFocus'): # ModernButton might not have it directly
+            self.configure_button.clearFocus()
+    
+    def _generate_notes(self):
+        selected_items = self.plugin_list.selectedItems()
+        if not selected_items:
+            QMessageBox.warning(self, "No Plugin Selected", "Please select a plugin.")
+            return
+        plugin_id = selected_items[0].data(Qt.UserRole)
+        parameters = self.plugin_params.get(plugin_id, {})
+        try:
+            generated_notes = self.plugin_manager.generate_notes(plugin_id, existing_notes=self.current_notes, parameters=parameters)
+            self.notesGenerated.emit(generated_notes)
+            self.current_notes = generated_notes
+        except Exception as e:
+            QMessageBox.critical(self, "Generation Error", f"Error: {str(e)}")
+        finally:
+            if hasattr(self.generate_button, 'clearFocus'):
+                self.generate_button.clearFocus() 
+
+    def _handle_export_click(self): 
+        if not self.current_notes:
+            QMessageBox.warning(self, "No Notes", "No notes to export.")
+            return
+        
+        suggested_filename = "exported_melody.mid"
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, 
+            "Export MIDI", 
+            suggested_filename, 
+            "MIDI Files (*.mid);;All Files (*)"
+        )
+        
+        if not file_path: 
+            return
+        
+        if not file_path.lower().endswith('.mid'):
+            file_path += '.mid'
+            
+        try:
+            export_to_midi(self.current_notes, file_path)
+            QMessageBox.information(self, "Export Successful", f"Exported to:\n{file_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Error exporting MIDI: {str(e)}")
+        finally:
+            if hasattr(self.export_button, 'clearFocus'):
+                self.export_button.clearFocus()
+
+    def _handle_export_drag(self):
+        if not self.current_notes:
+            return
+
+        temp_file_path = ""
+        try:
+            with tempfile.NamedTemporaryFile(
+                dir=self.temp_midi_dir,
+                delete=False, 
+                suffix=".mid", 
+                prefix="dragged_"
+            ) as tmp_file:
+                temp_file_path = tmp_file.name
+            
+            export_to_midi(self.current_notes, temp_file_path)
+            self.temp_files_to_clean.append(temp_file_path)
+
+            mime_data = QMimeData()
+            url = QUrl.fromLocalFile(temp_file_path)
+            mime_data.setUrls([url])
+            
+            drag = QDrag(self.export_button)
+            drag.setMimeData(mime_data)
+            
+            result = drag.exec_(Qt.CopyAction)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Drag Export Error", f"Could not prepare MIDI for dragging: {str(e)}")
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.remove(temp_file_path) 
+                    if temp_file_path in self.temp_files_to_clean:
+                        self.temp_files_to_clean.remove(temp_file_path)
+                except OSError:
+                    pass 
+        finally:
+            if hasattr(self.export_button, 'clearFocus'):
+                self.export_button.clearFocus()
+
+
+    def cleanup_temporary_files(self):
+        """Cleans up temporary MIDI files created during drag operations."""
+        cleaned_count = 0
+        for f_path in list(self.temp_files_to_clean): # Iterate over a copy
+            try:
+                if os.path.exists(f_path):
+                    os.remove(f_path)
+                    cleaned_count += 1
+                if f_path in self.temp_files_to_clean:
+                    self.temp_files_to_clean.remove(f_path)
+            except Exception as e:
+                print(f"Error deleting temporary file {f_path}: {e}")
+        
+        if cleaned_count > 0:
+            print(f"Cleaned up {cleaned_count} temporary MIDI files.")
+
+        try:
+            if os.path.exists(self.temp_midi_dir) and not os.listdir(self.temp_midi_dir):
+                os.rmdir(self.temp_midi_dir)
+                print(f"Removed temporary MIDI directory: {self.temp_midi_dir}")
+        except Exception as e:
+            print(f"Could not remove temporary MIDI directory {self.temp_midi_dir} (it might not be empty or access denied): {e}")
             icon = QIcon(piano_icon_path)
             if not icon.isNull():
                 return icon

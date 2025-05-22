@@ -18,78 +18,95 @@ class TransportControls(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumHeight(50) # Use minimum height, allow expansion if needed
-        self.setMaximumHeight(65) # Max height
-        self.setStyleSheet(f"background-color: {theme.BG_COLOR.darker(115).name()}; border-radius: {theme.BORDER_RADIUS}px;") # Slightly darker than main BG
+        self.setMinimumHeight(50) 
+        self.setMaximumHeight(65) 
+        # Panel Styling: Use PANEL_BG_COLOR and add a top border
+        self.setStyleSheet(f"""
+            TransportControls {{
+                background-color: {theme.PANEL_BG_COLOR.name()};
+                border-top: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                border-radius: 0px; /* No radius for a bar */
+            }}
+        """)
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(theme.PADDING_MEDIUM, theme.PADDING_SMALL, theme.PADDING_MEDIUM, theme.PADDING_SMALL)
-        layout.setSpacing(theme.PADDING_MEDIUM)
+        # Margins & Spacing: Use consistent theme padding
+        layout.setContentsMargins(theme.PADDING_M, theme.PADDING_S, theme.PADDING_M, theme.PADDING_S)
+        layout.setSpacing(theme.PADDING_M)
 
-        # Icons (using QStyle for now, could be replaced with custom icons)
-        self.play_icon = self.style().standardIcon(QStyle.SP_MediaPlay)
-        self.pause_icon = self.style().standardIcon(QStyle.SP_MediaPause)
-        self.stop_icon = self.style().standardIcon(QStyle.SP_MediaStop)
+        # Iconography: Load icons from theme paths
+        self.play_icon = QIcon(theme.PLAY_ICON_PATH)
+        self.pause_icon = QIcon(theme.PAUSE_ICON_PATH)
+        self.stop_icon = QIcon(theme.STOP_ICON_PATH)
 
-        # Play button
-        self.play_button = ModernIconButton(icon=self.play_icon, tooltip="Play (Space)", fixed_size=(theme.ICON_SIZE * 2, theme.ICON_SIZE * 2))
-        self.play_button.setCheckable(True) # Make it checkable for play/pause state
+        # Play button - Uses ModernIconButton, should pick up its styles
+        # Icon size for transport controls might be larger, e.g., ICON_SIZE_L
+        button_size = (theme.ICON_SIZE_L + theme.PADDING_S * 2, theme.ICON_SIZE_L + theme.PADDING_S * 2) # Calculate button size based on icon + padding
+        
+        self.play_button = ModernIconButton(icon=self.play_icon, tooltip="Play (Space)", fixed_size=button_size)
+        self.play_button.setIconSize(QSize(theme.ICON_SIZE_L, theme.ICON_SIZE_L))
+        self.play_button.setCheckable(True) 
         self.play_button.clicked.connect(self._handle_play_pause)
         layout.addWidget(self.play_button)
 
-        # Stop button
-        self.stop_button = ModernIconButton(icon=self.stop_icon, tooltip="Stop", fixed_size=(theme.ICON_SIZE * 2, theme.ICON_SIZE * 2))
+        # Stop button - Uses ModernIconButton
+        self.stop_button = ModernIconButton(icon=self.stop_icon, tooltip="Stop", fixed_size=button_size)
+        self.stop_button.setIconSize(QSize(theme.ICON_SIZE_L, theme.ICON_SIZE_L))
         self.stop_button.clicked.connect(self.stopClicked)
         layout.addWidget(self.stop_button)
 
-        layout.addSpacing(theme.PADDING_SMALL)
+        layout.addSpacing(theme.PADDING_S) # Adjusted spacing
         
-        # Separator line (optional)
-        # line1 = QFrame()
-        # line1.setFrameShape(QFrame.VLine)
-        # line1.setFrameShadow(QFrame.Sunken)
-        # line1.setStyleSheet(f"color: {theme.GRID_COLOR.name()};")
-        # layout.addWidget(line1)
+        # Separator line (optional) - Uncommented and styled
+        line1 = QFrame()
+        line1.setFrameShape(QFrame.VLine)
+        line1.setFrameShadow(QFrame.Sunken)
+        line1.setStyleSheet(f"color: {theme.BORDER_COLOR_NORMAL.name()};")
+        layout.addWidget(line1)
+        layout.addSpacing(theme.PADDING_S) # Spacing after separator
 
-        # Position indicator
+        # Position indicator - Label Styling
         self.position_label = QLabel("0:00.000")
-        self.position_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
-        self.position_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()}; min-width: 70px;")
+        self.position_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
+        self.position_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()}; min-width: 75px;") # Adjusted min-width
         self.position_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.position_label)
 
-        # Time slider
+        # Time slider - Uses ModernSlider, should pick up its styles
         self.time_slider = ModernSlider(Qt.Horizontal)
         self.time_slider.setMinimum(0)
         self.time_slider.setMaximum(1000) 
         self.time_slider.valueChanged.connect(self._handle_slider_change)
         layout.addWidget(self.time_slider, 1) # Stretch factor 1
 
-        layout.addSpacing(theme.PADDING_LARGE)
+        layout.addSpacing(theme.PADDING_L) # Adjusted spacing
         
-        # Separator line (optional)
-        # line2 = QFrame()
-        # line2.setFrameShape(QFrame.VLine)
-        # line2.setFrameShadow(QFrame.Sunken)
-        # line2.setStyleSheet(f"color: {theme.GRID_COLOR.name()};")
-        # layout.addWidget(line2)
+        # Separator line (optional) - Uncommented and styled
+        line2 = QFrame()
+        line2.setFrameShape(QFrame.VLine)
+        line2.setFrameShadow(QFrame.Sunken)
+        line2.setStyleSheet(f"color: {theme.BORDER_COLOR_NORMAL.name()};")
+        layout.addWidget(line2)
+        layout.addSpacing(theme.PADDING_S) # Spacing after separator
 
-        # BPM controls
-        self.bpm_label = QLabel("BPM") # Simpler label
-        self.bpm_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
+        # BPM controls - Label Styling
+        self.bpm_label = QLabel("BPM") 
+        self.bpm_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
         self.bpm_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
         layout.addWidget(self.bpm_label)
 
+        # BPM slider - Uses ModernSlider
         self.bpm_slider = ModernSlider(Qt.Horizontal)
         self.bpm_slider.setRange(40, 240)
         self.bpm_slider.setValue(120)
-        self.bpm_slider.setFixedWidth(80) # Slightly smaller
+        self.bpm_slider.setFixedWidth(100) # Adjusted width
         self.bpm_slider.valueChanged.connect(self._handle_bpm_change)
         layout.addWidget(self.bpm_slider)
 
+        # BPM value label - Label Styling
         self.bpm_value_label = QLabel("120")
-        self.bpm_value_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL, weight=QFont.Bold if theme.FONT_WEIGHT_BOLD == "bold" else QFont.Normal))
-        self.bpm_value_label.setStyleSheet(f"color: {theme.PRIMARY_TEXT_COLOR.name()}; min-width: 25px;")
+        self.bpm_value_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
+        self.bpm_value_label.setStyleSheet(f"color: {theme.PRIMARY_TEXT_COLOR.name()}; min-width: 30px;") # Adjusted min-width
         self.bpm_value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(self.bpm_value_label)
 

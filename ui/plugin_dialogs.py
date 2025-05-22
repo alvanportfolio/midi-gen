@@ -17,132 +17,179 @@ class PluginParameterDialog(QDialog):
         self.param_widgets = {}
         
         self.setWindowTitle(f"Configure: {plugin.get_name()}")
-        self.setMinimumWidth(450) # Increased min width
-        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog) # For custom border, but can be tricky
+        self.setMinimumWidth(450)
         
-        # Main layout
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0) # Remove margins for custom header/footer
+        main_layout.setContentsMargins(0, 0, 0, 0) 
         main_layout.setSpacing(0)
+
+        # Define min_height for form elements based on font and padding
+        # Example: theme.FONT_SIZE_M (9) + theme.PADDING_S (4) * 2 for top/bottom + 2 for borders = 9 + 8 + 2 = 19.
+        # Let's use a slightly more generous calculation for visual comfort.
+        form_element_min_height = theme.FONT_SIZE_M + theme.PADDING_S * 2 + 6 
+
 
         # --- Dialog Styling ---
         self.setStyleSheet(f"""
-            QDialog {{
+            QDialog#PluginParameterDialog {{ /* Object name selector for the dialog itself */
                 background-color: {theme.DIALOG_BG_COLOR.name()};
-                border-radius: {theme.BORDER_RADIUS + 2}px; /* Slightly larger for dialog window */
+                border-radius: {theme.BORDER_RADIUS_L}px; 
                 color: {theme.PRIMARY_TEXT_COLOR.name()};
             }}
-            QLabel {{
-                color: {theme.PRIMARY_TEXT_COLOR.name()};
-                font-family: "{theme.FONT_FAMILY}";
-                font-size: {theme.FONT_SIZE_NORMAL}pt;
+            QWidget#header_widget {{
+                background-color: {theme.PANEL_BG_COLOR.lighter(110).name()}; /* Distinct header color */
+                border-top-left-radius: {theme.BORDER_RADIUS_L}px;
+                border-top-right-radius: {theme.BORDER_RADIUS_L}px;
+                padding: {theme.PADDING_M}px;
+                border-bottom: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
             }}
-            QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit {{
+            QLabel#plugin_icon_label {{
+                font-size: {theme.ICON_SIZE_XL}pt; /* Using pt for font-based icons */
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+            }}
+            QLabel#title_label {{
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_XL}pt;
+                font-weight: {theme.FONT_WEIGHT_BOLD};
+            }}
+             QWidget#content_widget {{
+                /* No specific background, inherits from QDialog */
+            }}
+            QWidget#footer_widget {{
+                background-color: {theme.PANEL_BG_COLOR.lighter(110).name()}; /* Same as header */
+                border-bottom-left-radius: {theme.BORDER_RADIUS_L}px;
+                border-bottom-right-radius: {theme.BORDER_RADIUS_L}px;
+                padding: {theme.PADDING_M}px;
+                border-top: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+            }}
+
+            /* Form Element Styling within PluginParameterDialog */
+            PluginParameterDialog QLabel {{ /* Parameter labels */
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
+                padding-top: {theme.PADDING_S}px; /* Align with input field text */
+            }}
+            PluginParameterDialog QSpinBox, 
+            PluginParameterDialog QDoubleSpinBox, 
+            PluginParameterDialog QComboBox, 
+            PluginParameterDialog QLineEdit {{
                 background-color: {theme.INPUT_BG_COLOR.name()};
-                color: {theme.INPUT_TEXT_COLOR.name()};
-                border: 1px solid {theme.INPUT_BORDER_COLOR.name()};
-                border-radius: {theme.BORDER_RADIUS}px;
-                padding: {theme.PADDING_SMALL +1}px {theme.PADDING_SMALL + 2}px;
-                font-family: "{theme.FONT_FAMILY}";
-                font-size: {theme.FONT_SIZE_NORMAL}pt;
-                min-height: {theme.FONT_SIZE_NORMAL + 18}px;
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
+                min-height: {form_element_min_height}px;
             }}
-            QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QLineEdit:focus {{
-                border: 1px solid {theme.INPUT_SELECTED_BORDER_COLOR.name()};
+            PluginParameterDialog QSpinBox:focus, 
+            PluginParameterDialog QDoubleSpinBox:focus, 
+            PluginParameterDialog QComboBox:focus, 
+            PluginParameterDialog QLineEdit:focus {{
+                border: 1px solid {theme.BORDER_COLOR_FOCUSED.name()};
+                /* Optional: Add a subtle glow or outline if supported and desired */
+                /* outline: 1px solid {theme.BORDER_COLOR_FOCUSED.lighter(150).name()}; */
             }}
-            QComboBox::drop-down {{
+            PluginParameterDialog QComboBox::drop-down {{
                 subcontrol-origin: padding;
                 subcontrol-position: top right;
-                width: 20px;
+                width: {theme.ICON_SIZE_L}px; /* Width for the dropdown area */
                 border-left-width: 1px;
-                border-left-color: {theme.INPUT_BORDER_COLOR.name()};
+                border-left-color: {theme.BORDER_COLOR_NORMAL.name()};
                 border-left-style: solid;
-                border-top-right-radius: {theme.BORDER_RADIUS}px;
-                border-bottom-right-radius: {theme.BORDER_RADIUS}px;
+                border-top-right-radius: {theme.BORDER_RADIUS_M}px;
+                border-bottom-right-radius: {theme.BORDER_RADIUS_M}px;
             }}
-            QComboBox::down-arrow {{
-                /* image: url(./assets/icons/chevron-down.svg); Removed to prevent warnings */
-                /* Qt will use a default arrow */
-                width: 12px; /* Still useful to size the default arrow area */
-                height: 12px;
+            PluginParameterDialog QComboBox::down-arrow {{
+                /* Default arrow should be fine. If custom SVG: image: url({theme.DROPDOWN_ICON_PATH}); */
+                width: {theme.ICON_SIZE_S}px; 
+                height: {theme.ICON_SIZE_S}px;
             }}
-             QComboBox QAbstractItemView {{ /* Dropdown list style */
-                background-color: {theme.INPUT_BG_COLOR.name()};
-                border: 1px solid {theme.INPUT_SELECTED_BORDER_COLOR.name()};
-                selection-background-color: {theme.ACCENT_COLOR.name()};
+            PluginParameterDialog QComboBox QAbstractItemView {{ /* Dropdown list style */
+                background-color: {theme.PANEL_BG_COLOR.name()}; /* Slightly different from input for distinction */
+                border: 1px solid {theme.BORDER_COLOR_FOCUSED.name()};
+                selection-background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
                 color: {theme.PRIMARY_TEXT_COLOR.name()};
-                padding: {theme.PADDING_SMALL}px;
+                padding: {theme.PADDING_S}px;
             }}
-            QCheckBox {{
-                spacing: {theme.PADDING_SMALL}px;
+            PluginParameterDialog QCheckBox {{
+                spacing: {theme.PADDING_S}px;
                 color: {theme.PRIMARY_TEXT_COLOR.name()};
-                font-family: "{theme.FONT_FAMILY}";
-                font-size: {theme.FONT_SIZE_NORMAL}pt;
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
             }}
-            QCheckBox::indicator {{
-                width: {theme.ICON_SIZE}px;
-                height: {theme.ICON_SIZE}px;
-                border: 1px solid {theme.INPUT_BORDER_COLOR.name()};
-                border-radius: {theme.BORDER_RADIUS // 2}px;
+            PluginParameterDialog QCheckBox::indicator {{
+                width: {theme.ICON_SIZE_M}px;
+                height: {theme.ICON_SIZE_M}px;
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                border-radius: {theme.BORDER_RADIUS_S}px;
                 background-color: {theme.INPUT_BG_COLOR.name()};
             }}
-            QCheckBox::indicator:checked {{
-                background-color: {theme.ACCENT_COLOR.name()};
-                /* image: url(./assets/icons/check.svg); Removed to prevent warnings */
-                /* A colored background for checked state is often sufficient */
+            PluginParameterDialog QCheckBox::indicator:checked {{
+                background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(120).name()};
+                /* If custom SVG: image: url({theme.CHECKMARK_ICON_PATH}); */
             }}
-            QCheckBox::indicator:hover {{
-                border: 1px solid {theme.ACCENT_COLOR.name()};
+            PluginParameterDialog QCheckBox::indicator:hover {{
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.name()};
             }}
         """)
+        self.setObjectName("PluginParameterDialog") # For QDialog specific styling
         
         # --- Header ---
         header_widget = QWidget()
-        header_widget.setFixedHeight(60)
-        header_widget.setStyleSheet(f"background-color: {theme.BG_COLOR.darker(110).name()}; border-top-left-radius: {theme.BORDER_RADIUS+2}px; border-top-right-radius: {theme.BORDER_RADIUS+2}px; padding: 0 {theme.PADDING_LARGE}px;")
+        header_widget.setObjectName("header_widget") # For QSS
+        header_widget.setFixedHeight(60) # Keep fixed height or use dynamic based on content + padding
         header_layout = QHBoxLayout(header_widget)
-        header_layout.setContentsMargins(theme.PADDING_MEDIUM, 0, theme.PADDING_MEDIUM, 0)
+        header_layout.setContentsMargins(theme.PADDING_L, 0, theme.PADDING_L, 0) # Adjusted for consistent padding
 
         plugin_icon_label = QLabel(self._get_plugin_icon(plugin.get_name()))
-        plugin_icon_label.setFont(QFont(theme.FONT_FAMILY, theme.PLUGIN_ICON_SIZE))
+        plugin_icon_label.setObjectName("plugin_icon_label")
+        # Font size for emoji/text icon set in QSS
         header_layout.addWidget(plugin_icon_label)
 
         title_label = QLabel(plugin.get_name())
-        title_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_LARGE + 2, weight=QFont.Bold if theme.FONT_WEIGHT_BOLD == "bold" else QFont.Normal))
-        title_label.setStyleSheet(f"color: {theme.PRIMARY_TEXT_COLOR.name()};")
+        title_label.setObjectName("title_label")
+        # Font and color set in QSS
         header_layout.addWidget(title_label)
         header_layout.addStretch()
         main_layout.addWidget(header_widget)
 
         # --- Content Area (Form) ---
         content_widget = QWidget()
+        content_widget.setObjectName("content_widget")
         content_layout = QVBoxLayout(content_widget)
-        content_layout.setContentsMargins(theme.PADDING_LARGE, theme.PADDING_MEDIUM, theme.PADDING_LARGE, theme.PADDING_MEDIUM)
-        content_layout.setSpacing(theme.PADDING_MEDIUM)
+        content_layout.setContentsMargins(theme.PADDING_L, theme.PADDING_L, theme.PADDING_L, theme.PADDING_L) # Consistent padding
+        content_layout.setSpacing(theme.PADDING_L) # Spacing between elements in content
         
         form_layout = QFormLayout()
-        form_layout.setSpacing(theme.PADDING_MEDIUM)
-        form_layout.setLabelAlignment(Qt.AlignRight) # Align labels to the right
+        form_layout.setSpacing(theme.PADDING_M) # Vertical spacing between rows
+        form_layout.setHorizontalSpacing(theme.PADDING_L) # Horizontal spacing between label and widget
+        form_layout.setLabelAlignment(Qt.AlignRight) 
 
         param_info = plugin.get_parameter_info()
         for param_name, param_config in param_info.items():
             widget = self._create_param_widget(param_name, param_config)
             if widget:
                 label_text = param_config.get("description", param_name)
-                label = QLabel(f"{label_text}:") # Add colon to labels
+                label = QLabel(f"{label_text}:") 
+                # Styling for these labels handled by "PluginParameterDialog QLabel" in QSS
                 form_layout.addRow(label, widget)
                 self.param_widgets[param_name] = widget
         
         content_layout.addLayout(form_layout)
-        main_layout.addWidget(content_widget, 1) # Add stretch factor
+        main_layout.addWidget(content_widget, 1) 
 
         # --- Footer (Buttons) ---
         footer_widget = QWidget()
-        footer_widget.setStyleSheet(f"background-color: {theme.BG_COLOR.darker(110).name()}; border-bottom-left-radius: {theme.BORDER_RADIUS+2}px; border-bottom-right-radius: {theme.BORDER_RADIUS+2}px; padding: {theme.PADDING_MEDIUM}px {theme.PADDING_LARGE}px;")
+        footer_widget.setObjectName("footer_widget") # For QSS
         footer_layout = QHBoxLayout(footer_widget)
-        footer_layout.setContentsMargins(0,0,0,0)
+        footer_layout.setContentsMargins(theme.PADDING_L, theme.PADDING_M, theme.PADDING_L, theme.PADDING_M) # Consistent padding
         footer_layout.addStretch()
 
+        # ModernButton instances will pick up their styles from custom_widgets.py
         self.cancel_button = ModernButton("Cancel", tooltip="Discard changes")
         self.cancel_button.clicked.connect(self.reject)
         footer_layout.addWidget(self.cancel_button)

@@ -1,68 +1,191 @@
 from PySide6.QtGui import QColor
 
-# Theme Colors - Dark professional theme
-BG_COLOR = QColor(28, 28, 32)
-GRID_COLOR = QColor(40, 40, 45, 150)
-BEAT_COLOR = QColor(60, 60, 65, 180)
-MEASURE_COLOR = QColor(95, 95, 100)
-ROW_HIGHLIGHT_COLOR = QColor(45, 45, 50, 100)
-KEY_GRID_COLOR = QColor(50, 50, 55, 120)
-PLAYHEAD_COLOR = QColor(255, 120, 0, 180)
+# =============================================================================
+# --- Color Palette ---
+# =============================================================================
 
-# Piano key colors
-WHITE_KEY_COLOR = QColor(240, 240, 240)
-BLACK_KEY_COLOR = QColor(30, 30, 35)
-KEY_BORDER_COLOR = QColor(100, 100, 100, 80)
+# --- Primary Backgrounds ---
+# Used for main application areas, panels, and dialogs.
+APP_BG_COLOR = QColor(26, 26, 26)          # #1A1A1A - Main application background
+PANEL_BG_COLOR = QColor(34, 34, 34)        # #222222 - Side panels, toolbars
+DIALOG_BG_COLOR = QColor(42, 42, 42)       # #2A2A2A - Dialog windows, pop-ups
+PIANO_ROLL_BG_COLOR = QColor(24, 24, 28)   # #18181C - Specific for the piano roll area
 
-# Note colors
-NOTE_COLORS = {
-    'low': QColor(80, 200, 120),
-    'med': QColor(70, 180, 210),
-    'high': QColor(230, 120, 190)
-}
+# --- Secondary Backgrounds / Accents (for UI elements) ---
+# Used for interactive elements like inputs, list items.
+INPUT_BG_COLOR = QColor(46, 46, 46)        # #2E2E2E - Background for text inputs, combo boxes
+ITEM_BG_COLOR = QColor(44, 44, 44)         # #2C2C2C - Background for list items, tree items
+ITEM_HOVER_BG_COLOR = QColor(56, 56, 56)   # #383838 - Hover state for list items
+ITEM_SELECTED_BG_COLOR = QColor(0, 122, 204) # #007ACC - Background for selected items (using ACCENT_PRIMARY_COLOR)
+DRAG_OVERLAY_COLOR = QColor(0, 122, 204, 30) # #007ACC with low alpha - For drag-and-drop feedback
 
-# --- Modern UI Colors ---
-PRIMARY_TEXT_COLOR = QColor(220, 220, 220)
-SECONDARY_TEXT_COLOR = QColor(150, 150, 150)
-ACCENT_COLOR = QColor(0, 120, 215)  # A modern blue
-ACCENT_HOVER_COLOR = QColor(0, 100, 180)
-ACCENT_PRESSED_COLOR = QColor(0, 80, 150)
+# --- Text Colors ---
+PRIMARY_TEXT_COLOR = QColor(224, 224, 224)    # #E0E0E0 - General text
+SECONDARY_TEXT_COLOR = QColor(160, 160, 160)  # #A0A0A0 - Less important text, hints
+ACCENT_TEXT_COLOR = QColor(255, 255, 255)     # #FFFFFF - Text on accent-colored backgrounds
+PLACEHOLDER_TEXT_COLOR = QColor(120, 120, 120) # #787878 - Placeholder text in inputs
+DISABLED_TEXT_COLOR = QColor(100, 100, 100)   # #646464 - For foreground elements like text on disabled controls
+NOTE_LABEL_COLOR = QColor(255, 255, 255, 200) # Semi-transparent white for note labels
 
-BUTTON_COLOR = QColor(45, 45, 50)
-BUTTON_HOVER_COLOR = QColor(60, 60, 65)
-BUTTON_PRESSED_COLOR = QColor(35, 35, 40)
-BUTTON_TEXT_COLOR = PRIMARY_TEXT_COLOR
+# --- Accent & State Colors ---
+# Primary brand/action colors and their states.
+ACCENT_PRIMARY_COLOR = QColor(0, 122, 204)   # #007ACC - Main accent color
+ACCENT_HOVER_COLOR = QColor(20, 142, 224)    # #148EE0 - Hover state for accent elements (lighter)
+ACCENT_PRESSED_COLOR = QColor(0, 102, 184)   # #0066B8 - Pressed state for accent elements (darker)
 
-HIGHLIGHT_COLOR = QColor(55, 55, 60)  # For hover states on list items/cards
-SELECTION_COLOR = ACCENT_COLOR  # For active selection
-SELECTION_TEXT_COLOR = QColor(255, 255, 255)
+DISABLED_BG_COLOR = QColor(50, 50, 50)       # #323232 - Background for disabled controls
 
-DIALOG_BG_COLOR = QColor(35, 35, 40)
-INPUT_BG_COLOR = QColor(40, 40, 45)
-INPUT_BORDER_COLOR = QColor(60, 60, 65)
-INPUT_TEXT_COLOR = PRIMARY_TEXT_COLOR
-INPUT_SELECTED_BORDER_COLOR = ACCENT_COLOR
+# Standard Button Colors (for non-accented buttons)
+STANDARD_BUTTON_BG_COLOR = QColor(45, 45, 50)
+STANDARD_BUTTON_HOVER_BG_COLOR = QColor(60, 60, 65)
+STANDARD_BUTTON_PRESSED_BG_COLOR = QColor(35, 35, 40)
+STANDARD_BUTTON_TEXT_COLOR = PRIMARY_TEXT_COLOR
 
-SLIDER_TRACK_COLOR = QColor(50, 50, 55)
-SLIDER_HANDLE_COLOR = ACCENT_COLOR
-SLIDER_HANDLE_HOVER_COLOR = ACCENT_HOVER_COLOR
-SLIDER_HANDLE_PRESSED_COLOR = ACCENT_PRESSED_COLOR
+# --- Borders & Lines ---
+BORDER_COLOR_NORMAL = QColor(58, 58, 58)      # #3A3A3A - Default border for inputs, containers
+BORDER_COLOR_FOCUSED = ACCENT_PRIMARY_COLOR   # Use accent color for focused input borders
+BORDER_COLOR_HOVER = QColor(85, 85, 85)       # #555555 - Border color on hover for interactive elements
 
-# MIDI Drop feedback color
-DRAG_OVERLAY_COLOR = QColor(40, 40, 55, 20)  # Dark blue-gray with very low opacity
+# Grid Lines (Piano Roll)
+GRID_LINE_COLOR = QColor(40, 40, 45, 150)                # #3C3C3C
+GRID_BEAT_LINE_COLOR = QColor(60, 60, 65, 180)           # #505050
+GRID_MEASURE_LINE_COLOR = QColor(95, 95, 100)            # #6E6E6E
+GRID_ROW_HIGHLIGHT_COLOR = QColor(PANEL_BG_COLOR.lighter(105).rgb() & 0xFFFFFF | (50 << 24)) # Panel BG lighter with low alpha
+KEY_GRID_LINE_COLOR = GRID_LINE_COLOR.darker(110)        # Subtler than main grid lines
 
+# --- Shadows ---
+# Define color, actual implementation via QSS or QGraphicsDropShadowEffect.
+SHADOW_COLOR = QColor(0, 0, 0, 70)                       # #000000 with alpha - For subtle depth
+
+# --- Piano Roll Specific Colors ---
+PLAYHEAD_COLOR = QColor(255, 120, 0)                     # #FF7800 - Opaque for clarity
+PLAYHEAD_TRIANGLE_COLOR = PLAYHEAD_COLOR.lighter(125)    # Lighter version for the triangle marker
+PIANO_KEY_SEPARATOR_COLOR = BORDER_COLOR_NORMAL          # Consistent with other borders
+
+# Piano Key Colors
+WHITE_KEY_COLOR = QColor(240, 240, 240)                  # #F0F0F0
+BLACK_KEY_COLOR = QColor(30, 30, 35)                     # #1E1E23
+KEY_BORDER_COLOR = QColor(100, 100, 100, 60)             # Slightly reduced alpha for subtlety
+PIANO_KEY_LABEL_COLOR = QColor(70, 70, 70)                 # Dark gray for text on white keys
+PIANO_KEY_BLACK_LABEL_COLOR = QColor(210, 210, 210)      # Light gray for text on black keys
+
+# Note Colors
+NOTE_LOW_COLOR = QColor(80, 200, 120)                    # #50C878
+NOTE_MED_COLOR = QColor(70, 180, 210)                    # #46B4D2
+NOTE_HIGH_COLOR = QColor(230, 120, 190)                  # #E678BE
+NOTE_BORDER_COLOR = QColor(0, 0, 0, 100)                 # #000000 with alpha - Subtle border for notes
+
+# =============================================================================
 # --- Fonts ---
-FONT_FAMILY = "Segoe UI"
-FONT_SIZE_NORMAL = 9  # 9pt
-FONT_SIZE_LARGE = 10 # 10pt
-FONT_WEIGHT_BOLD = "bold"
+# =============================================================================
+FONT_FAMILY_PRIMARY = "Segoe UI"
+FONT_FAMILY_MONOSPACE = "Consolas"
 
-# --- Spacing & Sizing (can be moved to constants.py if preferred) ---
-BORDER_RADIUS = 6 # px
-PADDING_SMALL = 5 # px
-PADDING_MEDIUM = 10 # px
-PADDING_LARGE = 15 # px
+# Font Sizes (in points)
+FONT_SIZE_XS = 7
+FONT_SIZE_S = 8
+FONT_SIZE_M = 9    # Normal / Default
+FONT_SIZE_L = 10
+FONT_SIZE_XL = 12  # Headers
 
-ICON_SIZE = 16 # px for general icons
-PLUGIN_ICON_SIZE = 24 # px for plugin list/dialog headers
-PLUGIN_ROW_HEIGHT = 44 # px for plugin list items
+# Font Weights
+FONT_WEIGHT_NORMAL = 400 # QFont.Normal
+FONT_WEIGHT_MEDIUM = 500 # QFont.Medium
+FONT_WEIGHT_BOLD = 700   # QFont.Bold
+
+# =============================================================================
+# --- Spacing & Sizing ---
+# =============================================================================
+# Border Radius (in pixels)
+BORDER_RADIUS_S = 3
+BORDER_RADIUS_M = 5  # Standard
+BORDER_RADIUS_L = 7  # For larger elements like cards or dialogs
+
+# Padding (in pixels)
+PADDING_XS = 2
+PADDING_S = 4
+PADDING_M = 8   # Standard
+PADDING_L = 12
+PADDING_XL = 16
+
+# Icon Sizes (in pixels)
+ICON_SIZE_S = 12
+ICON_SIZE_M = 16 # General icons
+ICON_SIZE_L = 20
+ICON_SIZE_XL = 24 # For plugin list/dialog headers
+
+# Specific UI Element Sizing
+PLUGIN_ROW_HEIGHT = 44
+
+# =============================================================================
+# --- Icon Paths ---
+# =============================================================================
+ICON_PATH = "assets/icons/" # Base path
+PLAY_ICON_PATH = ICON_PATH + "play.svg"
+PAUSE_ICON_PATH = ICON_PATH + "pause.svg"
+STOP_ICON_PATH = ICON_PATH + "stop.svg"
+PLUGIN_ICON_PATH_DEFAULT = ICON_PATH + "default-plugin.svg"
+# Add other specific icon paths here as needed, e.g.:
+# DROPDOWN_ICON_PATH = ICON_PATH + "chevron_down.svg"
+# CHECKMARK_ICON_PATH = ICON_PATH + "checkmark.svg"
+
+# =============================================================================
+# --- Mapping Legacy Names (Informational - to be removed or refactored in usage) ---
+# =============================================================================
+# This section is for reference during the transition. Ideally, all parts of the
+# application will be updated to use the new semantic names directly.
+
+# Old Name                     -> New Semantic Name
+# ----------------------------------------------------
+# BG_COLOR                     -> PIANO_ROLL_BG_COLOR
+# GRID_COLOR                   -> GRID_LINE_COLOR
+# BEAT_COLOR                   -> GRID_BEAT_LINE_COLOR
+# MEASURE_COLOR                -> GRID_MEASURE_LINE_COLOR
+# ROW_HIGHLIGHT_COLOR          -> GRID_ROW_HIGHLIGHT_COLOR
+# KEY_GRID_COLOR               -> KEY_GRID_LINE_COLOR
+# PLAYHEAD_COLOR (old alpha)   -> PLAYHEAD_COLOR (opaque)
+# WHITE_KEY_COLOR              -> WHITE_KEY_COLOR
+# BLACK_KEY_COLOR              -> BLACK_KEY_COLOR
+# KEY_BORDER_COLOR (old alpha) -> KEY_BORDER_COLOR (updated alpha)
+
+# NOTE_COLORS (dict)           -> NOTE_LOW_COLOR, NOTE_MED_COLOR, NOTE_HIGH_COLOR
+
+# PRIMARY_TEXT_COLOR (old val) -> PRIMARY_TEXT_COLOR (value updated)
+# SECONDARY_TEXT_COLOR (old val)-> SECONDARY_TEXT_COLOR (value updated)
+# ACCENT_COLOR (old val)       -> ACCENT_PRIMARY_COLOR
+# ACCENT_HOVER_COLOR (old val) -> ACCENT_HOVER_COLOR (value updated)
+# ACCENT_PRESSED_COLOR (old val)-> ACCENT_PRESSED_COLOR (value updated)
+
+# BUTTON_COLOR                 -> STANDARD_BUTTON_BG_COLOR
+# BUTTON_HOVER_COLOR           -> STANDARD_BUTTON_HOVER_BG_COLOR
+# BUTTON_PRESSED_COLOR         -> STANDARD_BUTTON_PRESSED_BG_COLOR
+# BUTTON_TEXT_COLOR            -> STANDARD_BUTTON_TEXT_COLOR
+
+# HIGHLIGHT_COLOR              -> ITEM_HOVER_BG_COLOR
+# SELECTION_COLOR              -> ITEM_SELECTED_BG_COLOR
+# SELECTION_TEXT_COLOR         -> ACCENT_TEXT_COLOR
+
+# DIALOG_BG_COLOR (old val)    -> DIALOG_BG_COLOR (value updated)
+# INPUT_BG_COLOR (old val)     -> INPUT_BG_COLOR (value updated)
+# INPUT_BORDER_COLOR (old val) -> BORDER_COLOR_NORMAL
+# INPUT_TEXT_COLOR (old val)   -> PRIMARY_TEXT_COLOR
+# INPUT_SELECTED_BORDER_COLOR  -> BORDER_COLOR_FOCUSED
+
+# DRAG_OVERLAY_COLOR (old val) -> DRAG_OVERLAY_COLOR (value updated with ACCENT_PRIMARY_COLOR + alpha)
+
+# FONT_FAMILY (old)            -> FONT_FAMILY_PRIMARY
+# FONT_SIZE_NORMAL             -> FONT_SIZE_M
+# FONT_SIZE_LARGE              -> FONT_SIZE_L
+# FONT_WEIGHT_BOLD (string)    -> FONT_WEIGHT_BOLD (integer)
+
+# BORDER_RADIUS (old)          -> BORDER_RADIUS_M
+# PADDING_SMALL (old)          -> PADDING_S
+# PADDING_MEDIUM (old)         -> PADDING_M
+# PADDING_LARGE (old)          -> PADDING_L
+
+# ICON_SIZE (old)              -> ICON_SIZE_M
+# PLUGIN_ICON_SIZE (old)       -> ICON_SIZE_XL
+# (PLUGIN_ROW_HEIGHT remains)
+
+# Removed old SLIDER_TRACK_COLOR, SLIDER_HANDLE_COLOR etc.
+# ModernSlider uses ACCENT colors for handle and theme.INPUT_BG_COLOR or specific for track.

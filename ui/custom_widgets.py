@@ -9,63 +9,83 @@ class ModernSlider(QSlider):
     
     def __init__(self, orientation=Qt.Horizontal, parent=None):
         super().__init__(orientation, parent)
+        # Use a darker gray for the track, like INPUT_BG_COLOR or a specific SLIDER_TRACK_BG_COLOR if defined
+        # Assuming SLIDER_TRACK_COLOR is suitable or will be updated in theme.py if needed.
+        # For now, let's use a color that's distinct from the main app background for clarity.
+        # If theme.SLIDER_TRACK_COLOR is not defined, using theme.INPUT_BG_COLOR as fallback.
+        track_bg_color = getattr(theme, 'SLIDER_TRACK_COLOR', theme.INPUT_BG_COLOR).name()
+        
+        # Filled part color - using ACCENT_PRIMARY_COLOR, possibly a bit lighter if handle is same color
+        sub_page_bg_color = theme.ACCENT_PRIMARY_COLOR.lighter(120).name()
+        if theme.ACCENT_PRIMARY_COLOR.lightness() > 200: # If accent is very light, make sub-page darker
+            sub_page_bg_color = theme.ACCENT_PRIMARY_COLOR.darker(120).name()
+
+
         self.setStyleSheet(f"""
             QSlider::groove:horizontal {{
-                height: 6px; /* Slightly thicker for better touch/click */
-                background: {theme.SLIDER_TRACK_COLOR.name()};
-                border-radius: 3px;
+                height: {theme.PADDING_S}px; /* Use theme spacing */
+                background: {track_bg_color};
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
             
             QSlider::handle:horizontal {{
-                background: {theme.SLIDER_HANDLE_COLOR.name()};
-                width: 14px; /* Slightly wider handle */
-                height: 14px;
-                margin: -4px 0; /* Adjust to center on the groove */
-                border-radius: 7px; /* Circular handle */
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {theme.ACCENT_PRIMARY_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_PRIMARY_COLOR.darker(115).name()});
+                width: {theme.ICON_SIZE_M}px; 
+                height: {theme.ICON_SIZE_M}px;
+                margin-top: -{(theme.ICON_SIZE_M - theme.PADDING_S) // 2}px; /* Center handle on groove */
+                margin-bottom: -{(theme.ICON_SIZE_M - theme.PADDING_S) // 2}px;
+                border-radius: {theme.ICON_SIZE_M // 2}px; /* Circular handle */
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(130).name()}; /* Subtle border for definition */
             }}
             QSlider::handle:horizontal:hover {{
-                background: {theme.SLIDER_HANDLE_HOVER_COLOR.name()};
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {theme.ACCENT_HOVER_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_HOVER_COLOR.darker(115).name()});
+                border: 1px solid {theme.ACCENT_HOVER_COLOR.darker(130).name()};
             }}
             QSlider::handle:horizontal:pressed {{
-                background: {theme.SLIDER_HANDLE_PRESSED_COLOR.name()};
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {theme.ACCENT_PRESSED_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_PRESSED_COLOR.darker(115).name()});
+                border: 1px solid {theme.ACCENT_PRESSED_COLOR.darker(130).name()};
             }}
             
             QSlider::add-page:horizontal {{
-                background: {theme.SLIDER_TRACK_COLOR.name()}; /* Unfilled part */
-                border-radius: 3px;
+                background: {track_bg_color}; /* Unfilled part */
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
             
             QSlider::sub-page:horizontal {{
-                background: {theme.ACCENT_COLOR.name()}; /* Filled part */
-                border-radius: 3px;
+                background: {sub_page_bg_color}; /* Filled part */
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
 
-            /* Vertical Slider Styles (if needed) */
+            /* Vertical Slider Styles */
             QSlider::groove:vertical {{
-                width: 6px;
-                background: {theme.SLIDER_TRACK_COLOR.name()};
-                border-radius: 3px;
+                width: {theme.PADDING_S}px;
+                background: {track_bg_color};
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
             QSlider::handle:vertical {{
-                background: {theme.SLIDER_HANDLE_COLOR.name()};
-                height: 14px;
-                width: 14px;
-                margin: 0 -4px;
-                border-radius: 7px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme.ACCENT_PRIMARY_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_PRIMARY_COLOR.darker(115).name()});
+                height: {theme.ICON_SIZE_M}px;
+                width: {theme.ICON_SIZE_M}px;
+                margin-left: -{(theme.ICON_SIZE_M - theme.PADDING_S) // 2}px; /* Center handle on groove */
+                margin-right: -{(theme.ICON_SIZE_M - theme.PADDING_S) // 2}px;
+                border-radius: {theme.ICON_SIZE_M // 2}px;
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(130).name()};
             }}
             QSlider::handle:vertical:hover {{
-                background: {theme.SLIDER_HANDLE_HOVER_COLOR.name()};
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme.ACCENT_HOVER_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_HOVER_COLOR.darker(115).name()});
+                border: 1px solid {theme.ACCENT_HOVER_COLOR.darker(130).name()};
             }}
             QSlider::handle:vertical:pressed {{
-                background: {theme.SLIDER_HANDLE_PRESSED_COLOR.name()};
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 {theme.ACCENT_PRESSED_COLOR.lighter(115).name()}, stop:1 {theme.ACCENT_PRESSED_COLOR.darker(115).name()});
+                border: 1px solid {theme.ACCENT_PRESSED_COLOR.darker(130).name()};
             }}
             QSlider::add-page:vertical {{
-                background: {theme.ACCENT_COLOR.name()}; /* Filled part for vertical */
-                border-radius: 3px;
+                background: {sub_page_bg_color}; /* Filled part for vertical */
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
             QSlider::sub-page:vertical {{
-                background: {theme.SLIDER_TRACK_COLOR.name()}; /* Unfilled part for vertical */
-                border-radius: 3px;
+                background: {track_bg_color}; /* Unfilled part for vertical */
+                border-radius: {theme.BORDER_RADIUS_S}px;
             }}
         """)
 
@@ -105,36 +125,54 @@ class ModernButton(QPushButton):
 
     def _update_style(self):
         if self.is_accent:
-            bg = theme.ACCENT_COLOR.name()
-            hover = theme.ACCENT_HOVER_COLOR.name()
-            pressed = theme.ACCENT_PRESSED_COLOR.name()
-            text_color = theme.SELECTION_TEXT_COLOR.name() # Often white/light for accent buttons
+            bg_base = theme.ACCENT_PRIMARY_COLOR
+            hover_base = theme.ACCENT_HOVER_COLOR
+            pressed_base = theme.ACCENT_PRESSED_COLOR
+            text_color = theme.ACCENT_TEXT_COLOR.name()
+            border_color = bg_base.darker(120).name()
+            border_hover_color = hover_base.darker(120).name()
         else:
-            bg = theme.BUTTON_COLOR.name()
-            hover = theme.BUTTON_HOVER_COLOR.name()
-            pressed = theme.BUTTON_PRESSED_COLOR.name()
-            text_color = theme.BUTTON_TEXT_COLOR.name()
+            bg_base = theme.STANDARD_BUTTON_BG_COLOR
+            hover_base = theme.STANDARD_BUTTON_HOVER_BG_COLOR
+            pressed_base = theme.STANDARD_BUTTON_PRESSED_BG_COLOR
+            text_color = theme.STANDARD_BUTTON_TEXT_COLOR.name()
+            border_color = theme.BORDER_COLOR_NORMAL.name()
+            border_hover_color = theme.BORDER_COLOR_HOVER.name()
+
+        # Subtle gradient for depth
+        bg_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {bg_base.lighter(105).name()}, stop:1 {bg_base.name()})"
+        hover_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {hover_base.lighter(105).name()}, stop:1 {hover_base.name()})"
+        pressed_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {pressed_base.name()}, stop:1 {pressed_base.darker(105).name()})"
 
         self.setStyleSheet(f"""
             QPushButton {{
-                background-color: {bg};
+                background-color: {bg_gradient};
                 color: {text_color};
-                border: none; 
-                padding: {theme.PADDING_SMALL + 2}px {theme.PADDING_MEDIUM}px;
-                border-radius: {theme.BORDER_RADIUS}px;
-                font-family: "{theme.FONT_FAMILY}";
-                font-size: {theme.FONT_SIZE_NORMAL}pt;
+                border: 1px solid {border_color}; 
+                padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                font-family: "{theme.FONT_FAMILY_PRIMARY}";
+                font-size: {theme.FONT_SIZE_M}pt;
                 text-align: center;
+                /* Attempt for subtle shadow - might not work on all platforms/styles */
+                /* box-shadow: 0px 1px 3px {theme.SHADOW_COLOR.name()}; */
             }}
             QPushButton:hover {{
-                background-color: {hover};
+                background-color: {hover_gradient};
+                border: 1px solid {border_hover_color};
             }}
             QPushButton:pressed {{
-                background-color: {pressed};
+                background-color: {pressed_gradient};
+                border: 1px solid {pressed_base.darker(120).name()};
+            }}
+            QPushButton:focus {{
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.name()};
+                /* outline: 2px solid {theme.ACCENT_PRIMARY_COLOR.name()}; */ /* Alternative focus indicator */
             }}
             QPushButton:disabled {{
-                background-color: {theme.BUTTON_COLOR.darker(120).name()}; /* Slightly darker/grayed out */
-                color: {theme.SECONDARY_TEXT_COLOR.name()};
+                background-color: {theme.DISABLED_BG_COLOR.name()}; 
+                color: {theme.DISABLED_TEXT_COLOR.name()};
+                border: 1px solid {theme.DISABLED_BG_COLOR.darker(110).name()};
             }}
         """)
 
@@ -161,29 +199,52 @@ class ModernIconButton(QToolButton):
         else:
             # Default if no fixed size, though typically icon buttons have one
             self.setFixedSize(QSize(36,36))
-            self.setIconSize(QSize(24,24))
-            border_radius = 18
+            self.setIconSize(QSize(theme.ICON_SIZE_L, theme.ICON_SIZE_L)) # Default icon size
+            border_radius = theme.BORDER_RADIUS_M # Default border radius
+        
+        # Base colors
+        bg_base = theme.STANDARD_BUTTON_BG_COLOR
+        hover_base = theme.STANDARD_BUTTON_HOVER_BG_COLOR
+        pressed_base = theme.STANDARD_BUTTON_PRESSED_BG_COLOR
+        checked_bg_base = theme.ACCENT_PRIMARY_COLOR
+        icon_color = theme.PRIMARY_TEXT_COLOR.name() # Default icon color
+        border_color = theme.BORDER_COLOR_NORMAL.name()
+
+        # Subtle gradient for depth
+        bg_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {bg_base.lighter(105).name()}, stop:1 {bg_base.name()})"
+        hover_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {hover_base.lighter(105).name()}, stop:1 {hover_base.name()})"
+        pressed_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {pressed_base.name()}, stop:1 {pressed_base.darker(105).name()})"
+        checked_gradient = f"qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {checked_bg_base.lighter(105).name()}, stop:1 {checked_bg_base.name()})"
 
 
         self.setStyleSheet(f"""
             QToolButton {{
-                background-color: {theme.BUTTON_COLOR.name()};
-                color: {theme.BUTTON_TEXT_COLOR.name()}; /* Icon color can be tricky, often part of SVG or PNG */
-                border: none;
+                background-color: {bg_gradient};
+                color: {icon_color}; /* For text if any, icon color is usually from icon itself */
+                border: 1px solid {border_color};
                 border-radius: {border_radius}px; 
-                padding: 6px; /* Padding around icon */
+                padding: {theme.PADDING_S}px; 
             }}
             QToolButton:hover {{
-                background-color: {theme.BUTTON_HOVER_COLOR.name()};
+                background-color: {hover_gradient};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
             }}
             QToolButton:pressed {{
-                background-color: {theme.BUTTON_PRESSED_COLOR.name()};
+                background-color: {pressed_gradient};
+                border: 1px solid {pressed_base.darker(120).name()};
             }}
             QToolButton:checked {{ /* For toggle buttons */
-                background-color: {theme.ACCENT_COLOR.name()};
+                background-color: {checked_gradient};
+                border: 1px solid {checked_bg_base.darker(120).name()};
+                color: {theme.ACCENT_TEXT_COLOR.name()}; /* Icon color for checked state */
+            }}
+            QToolButton:focus {{
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.name()};
             }}
             QToolButton:disabled {{
-                background-color: {theme.BUTTON_COLOR.darker(120).name()};
+                background-color: {theme.DISABLED_BG_COLOR.name()};
+                border: 1px solid {theme.DISABLED_BG_COLOR.darker(110).name()};
+                /* Icon might need to be a different disabled version or QSS might not colorize it directly */
             }}
         """)
 

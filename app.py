@@ -6,7 +6,7 @@ import pretty_midi
 
 def main():
     app = QApplication(sys.argv)
-    app.setStyle('Fusion') # Added from old main.py
+    # app.setStyle('Fusion') # Commented out to allow custom QSS to take full effect
 
     # Optional: Load initial MIDI data if a file is specified via an environment variable or argument
     # For simplicity, this example does not load initial data by default.
