@@ -11,7 +11,7 @@ from PySide6.QtGui import QFont, QIcon, QPixmap, QFontMetrics, QDrag # Added QDr
 from plugin_manager import PluginManager
 from export_utils import export_to_midi
 from ui.plugin_dialogs import PluginParameterDialog
-from .custom_widgets import DragExportButton # Added
+from .custom_widgets import DragExportButton, ModernButton # Added ModernButton
 from config import theme
 
 class PluginManagerPanel(QDockWidget):
@@ -103,47 +103,41 @@ class PluginManagerPanel(QDockWidget):
 
     def _load_plugins(self):
         self.plugin_list.clear()
-        # Get the default icon once, or determine per plugin if logic varies
-        default_plugin_display_icon = self._get_plugin_icon_data()
+        icon_data = self._get_plugin_icon_data()
 
         for plugin_info in self.plugin_manager.get_plugin_list():
             item = QListWidgetItem(self.plugin_list)
             item_widget = QWidget()
             item_widget.setObjectName("PluginItemWidget")
-            item_widget.setAutoFillBackground(True) # Important for QSS background to work
+            item_widget.setAutoFillBackground(True)
             item_widget.setFixedHeight(theme.PLUGIN_ROW_HEIGHT)
             
             item_layout = QHBoxLayout(item_widget)
-            item_layout.setContentsMargins(theme.PADDING_M, 0, theme.PADDING_M, 0) # Use theme padding
-            item_layout.setSpacing(theme.PADDING_M) # Use theme spacing
+            item_layout.setContentsMargins(theme.PADDING_M, 0, theme.PADDING_M, 0)
+            item_layout.setSpacing(theme.PADDING_S)
 
             icon_label = QLabel()
             icon_label.setObjectName("PluginItemIconLabel")
-            # Icon size should be consistent, using ICON_SIZE_XL from theme
-            icon_display_size = theme.ICON_SIZE_XL 
+            icon_display_size = theme.ICON_SIZE_XL - 8 
             icon_label.setFixedSize(QSize(icon_display_size, icon_display_size))
-            icon_label.setAlignment(Qt.AlignCenter) # Center icon
+            icon_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
 
-            # Logic for specific plugin icons can be added here if plugin_info contains icon path
-            # For now, using the default or emoji
-            current_icon_data = default_plugin_display_icon # Or fetch specific from plugin_info['icon_path']
-            
-            if isinstance(current_icon_data, QIcon):
-                icon_label.setPixmap(current_icon_data.pixmap(QSize(icon_display_size, icon_display_size)))
+            if isinstance(icon_data, QIcon):
+                icon_label.setPixmap(icon_data.pixmap(QSize(icon_display_size, icon_display_size)))
             else: # emoji
-                icon_label.setText(current_icon_data) # Emoji or fallback text
-                # Font for emoji icons might need to be larger than general text
-                icon_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.ICON_SIZE_XL - theme.PADDING_S)) # Adjust size as needed
+                icon_label.setText(icon_data)
+                icon_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M + 1))
             
             name_label = QLabel(plugin_info['name'])
             name_label.setObjectName("PluginItemNameLabel")
-            # Font styling handled by _update_item_widget_style
+            name_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
             name_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+            # name_label.setWordWrap(True) # Disabled for compact row, ensure PLUGIN_ROW_HEIGHT is sufficient
 
             version_label = QLabel(f"v{plugin_info['version']}")
             version_label.setObjectName("PluginItemVersionLabel")
-            # Font styling handled by _update_item_widget_style
+            version_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
             version_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             
             item_layout.addWidget(icon_label)
@@ -152,12 +146,11 @@ class PluginManagerPanel(QDockWidget):
             item_layout.addWidget(version_label)
             
             # Calculate correct item size hint
-            # Width should be list width minus scrollbar allowance, height is fixed.
-            item_size = QSize(self.plugin_list.viewport().width() - (theme.PADDING_S * 2), theme.PLUGIN_ROW_HEIGHT)
+            item_size = QSize(self.plugin_list.width() - 10, theme.PLUGIN_ROW_HEIGHT + theme.PADDING_S)
             item.setSizeHint(item_size)
             
             item.setData(Qt.UserRole, plugin_info['id'])
-            item.setData(Qt.UserRole + 1, item_widget) # Store item_widget reference
+            item.setData(Qt.UserRole + 1, item_widget)
             item.setToolTip(f"<b>{plugin_info['name']}</b><br>{plugin_info['description']}")
             
             self.plugin_list.setItemWidget(item, item_widget)
@@ -167,11 +160,11 @@ class PluginManagerPanel(QDockWidget):
 
     def _on_plugin_selection_changed(self, current: QListWidgetItem, previous: QListWidgetItem):
         if previous:
-            prev_widget = previous.data(Qt.UserRole + 1) # Retrieve item_widget
+            prev_widget = previous.data(Qt.UserRole + 1)
             if prev_widget:
                 self._update_item_widget_style(prev_widget, False)
         if current:
-            curr_widget = current.data(Qt.UserRole + 1) # Retrieve item_widget
+            curr_widget = current.data(Qt.UserRole + 1)
             if curr_widget:
                 self._update_item_widget_style(curr_widget, True)
 
@@ -368,12 +361,12 @@ class PluginManagerPanel(QDockWidget):
             item_widget.setFixedHeight(theme.PLUGIN_ROW_HEIGHT)
             
             item_layout = QHBoxLayout(item_widget)
-            item_layout.setContentsMargins(theme.PADDING_MEDIUM, 0, theme.PADDING_MEDIUM, 0)
-            item_layout.setSpacing(theme.PADDING_SMALL)
+            item_layout.setContentsMargins(theme.PADDING_M, 0, theme.PADDING_M, 0)
+            item_layout.setSpacing(theme.PADDING_S)
 
             icon_label = QLabel()
             icon_label.setObjectName("PluginItemIconLabel")
-            icon_display_size = theme.PLUGIN_ICON_SIZE - 8 
+            icon_display_size = theme.ICON_SIZE_XL - 8 
             icon_label.setFixedSize(QSize(icon_display_size, icon_display_size))
             icon_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
 
@@ -381,18 +374,18 @@ class PluginManagerPanel(QDockWidget):
                 icon_label.setPixmap(icon_data.pixmap(QSize(icon_display_size, icon_display_size)))
             else: # emoji
                 icon_label.setText(icon_data)
-                icon_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL + 1))
+                icon_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M + 1))
             
             name_label = QLabel(plugin_info['name'])
             name_label.setObjectName("PluginItemNameLabel")
-            name_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL, weight=QFont.Bold if theme.FONT_WEIGHT_BOLD == "bold" else QFont.Normal))
+            name_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
             name_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             name_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
             # name_label.setWordWrap(True) # Disabled for compact row, ensure PLUGIN_ROW_HEIGHT is sufficient
 
             version_label = QLabel(f"v{plugin_info['version']}")
             version_label.setObjectName("PluginItemVersionLabel")
-            version_label.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL - 1))
+            version_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
             version_label.setAlignment(Qt.AlignVCenter | Qt.AlignLeft)
             
             item_layout.addWidget(icon_label)
@@ -401,7 +394,7 @@ class PluginManagerPanel(QDockWidget):
             item_layout.addWidget(version_label)
             
             # Calculate correct item size hint
-            item_size = QSize(self.plugin_list.width() - 10, theme.PLUGIN_ROW_HEIGHT + theme.PADDING_SMALL)
+            item_size = QSize(self.plugin_list.width() - 10, theme.PLUGIN_ROW_HEIGHT + theme.PADDING_S)
             item.setSizeHint(item_size)
             
             item.setData(Qt.UserRole, plugin_info['id'])
@@ -425,21 +418,27 @@ class PluginManagerPanel(QDockWidget):
 
     def _update_item_widget_style(self, widget: QWidget, is_selected: bool):
         if is_selected:
-            bg_color = theme.ACCENT_COLOR.name()  # Changed to match the screenshot
-            text_color_primary = theme.SELECTION_TEXT_COLOR.name()
-            text_color_secondary = theme.SELECTION_TEXT_COLOR.lighter(120).name()
-            border_style = f"border: 1px solid {theme.ACCENT_COLOR.name()};"
+            bg_color = theme.ACCENT_PRIMARY_COLOR.name()
+            text_color_primary = theme.ACCENT_TEXT_COLOR.name()
+            # For version text on accent, a slightly less prominent variant of accent text might be good.
+            text_color_secondary = theme.ACCENT_TEXT_COLOR.lighter(130).name() 
+            if theme.ACCENT_TEXT_COLOR.lightness() < 128: # If accent text is dark, lighten secondary
+                 text_color_secondary = theme.ACCENT_TEXT_COLOR.lighter(150).name()
+            else: # If accent text is light, darken secondary
+                 text_color_secondary = theme.ACCENT_TEXT_COLOR.darker(150).name()
+
+            border_style = f"border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(120).name()};"
         else:
-            bg_color = theme.BUTTON_COLOR.name()
+            bg_color = theme.ITEM_BG_COLOR.name()
             text_color_primary = theme.PRIMARY_TEXT_COLOR.name()
             text_color_secondary = theme.SECONDARY_TEXT_COLOR.name()
-            border_style = "border: none;"
+            border_style = f"border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};"
 
         # Base style for the item widget (card)
         widget.setStyleSheet(f"""
             QWidget#PluginItemWidget {{
                 background-color: {bg_color};
-                border-radius: {theme.BORDER_RADIUS}px;
+                border-radius: {theme.BORDER_RADIUS_M}px;
                 {border_style}
             }}
         """)
@@ -449,12 +448,14 @@ class PluginManagerPanel(QDockWidget):
         name_label = widget.findChild(QLabel, "PluginItemNameLabel")
         version_label = widget.findChild(QLabel, "PluginItemVersionLabel")
 
-        if icon_label:
-            icon_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent;")
+        if icon_label: # Icon color (for text/emoji based icons)
+            icon_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent; border: none;")
         if name_label:
-            name_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent;")
+            name_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
+            name_label.setStyleSheet(f"color: {text_color_primary}; background-color: transparent; border: none;")
         if version_label:
-            version_label.setStyleSheet(f"color: {text_color_secondary}; background-color: transparent;")
+            version_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
+            version_label.setStyleSheet(f"color: {text_color_secondary}; background-color: transparent; border: none;")
             
     def resizeEvent(self, event):
         """Handle resize events to update item sizes"""
@@ -462,8 +463,11 @@ class PluginManagerPanel(QDockWidget):
         # Update item widths when resized
         for i in range(self.plugin_list.count()):
             item = self.plugin_list.item(i)
-            item.setSizeHint(QSize(self.plugin_list.width() - 10, theme.PLUGIN_ROW_HEIGHT + theme.PADDING_SMALL))
-            
+            item_widget = self.plugin_list.itemWidget(item) # Get the custom widget
+            if item_widget: # Ensure item_widget exists
+                 # Set item size hint on the QListWidgetItem for QListWidget to use
+                item.setSizeHint(QSize(self.plugin_list.viewport().width() - (theme.PADDING_S * 2), theme.PLUGIN_ROW_HEIGHT))
+
     def set_current_notes(self, notes):
         self.current_notes = notes
     

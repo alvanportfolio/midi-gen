@@ -103,7 +103,7 @@ class PluginParameterDialog(QDialog):
                 border-bottom-right-radius: {theme.BORDER_RADIUS_M}px;
             }}
             PluginParameterDialog QComboBox::down-arrow {{
-                /* Default arrow should be fine. If custom SVG: image: url({theme.DROPDOWN_ICON_PATH}); */
+                /* Default arrow is used */
                 width: {theme.ICON_SIZE_S}px; 
                 height: {theme.ICON_SIZE_S}px;
             }}
@@ -130,7 +130,7 @@ class PluginParameterDialog(QDialog):
             PluginParameterDialog QCheckBox::indicator:checked {{
                 background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
                 border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(120).name()};
-                /* If custom SVG: image: url({theme.CHECKMARK_ICON_PATH}); */
+                /* Default checkmark is used */
             }}
             PluginParameterDialog QCheckBox::indicator:hover {{
                 border: 1px solid {theme.ACCENT_PRIMARY_COLOR.name()};

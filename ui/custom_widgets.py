@@ -105,7 +105,7 @@ class ModernButton(QPushButton):
         if tooltip:
             self.setToolTip(tooltip)
         
-        self.setFont(QFont(theme.FONT_FAMILY, theme.FONT_SIZE_NORMAL))
+        self.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
         
         if fixed_size and isinstance(fixed_size, tuple) and len(fixed_size) == 2:
             self.setFixedSize(QSize(fixed_size[0], fixed_size[1]))

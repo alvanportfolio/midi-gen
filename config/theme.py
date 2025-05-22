@@ -69,6 +69,11 @@ KEY_BORDER_COLOR = QColor(100, 100, 100, 60)             # Slightly reduced alph
 PIANO_KEY_LABEL_COLOR = QColor(70, 70, 70)                 # Dark gray for text on white keys
 PIANO_KEY_BLACK_LABEL_COLOR = QColor(210, 210, 210)      # Light gray for text on black keys
 
+# Add aliases for WHITE_KEY_COLOR and BLACK_KEY_COLOR to maintain compatibility
+PIANO_KEY_WHITE_COLOR = WHITE_KEY_COLOR
+PIANO_KEY_BLACK_COLOR = BLACK_KEY_COLOR
+PIANO_KEY_BORDER_COLOR = KEY_BORDER_COLOR
+
 # Note Colors
 NOTE_LOW_COLOR = QColor(80, 200, 120)                    # #50C878
 NOTE_MED_COLOR = QColor(70, 180, 210)                    # #46B4D2

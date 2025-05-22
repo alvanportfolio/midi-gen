@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QLabel, QStyle, QFrame
 ) # QPushButton and QSlider removed as ModernSlider/Button are used
-from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtCore import Qt, Signal, Slot, QSize
 from PySide6.QtGui import QFont, QIcon # Import QFont and QIcon
 from ui.custom_widgets import ModernSlider, ModernIconButton # Use ModernIconButton
 from config import theme # Import theme
