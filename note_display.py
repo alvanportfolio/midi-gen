@@ -44,7 +44,8 @@ class PianoRollDisplay(QWidget):
         self.bpm = DEFAULT_BPM
         self.horizontal_zoom_factor = 1.0
         self.vertical_zoom_factor = 1.0
-        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+        # time_scale is now independent of BPM, only controlled by horizontal_zoom_factor
+        self.time_scale = BASE_TIME_SCALE * self.horizontal_zoom_factor
         self.time_signature_numerator = 4
         self.time_signature_denominator = 4
         
@@ -105,9 +106,9 @@ class PianoRollDisplay(QWidget):
     def set_bpm(self, bpm):
         if bpm <= 0 or self.bpm == bpm: return
         self.bpm = bpm
-        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+        # self.time_scale is no longer updated here as it's independent of BPM
         self._update_quantization_value()
-        self.calculate_total_width()
+        self.calculate_total_width() # This will use the new BPM for min_time_from_bars
         self.update()
 
     def set_time_signature(self, numerator: int, denominator: int):
@@ -282,7 +283,7 @@ class PianoRollDisplay(QWidget):
                 old_scroll_x = parent_scroll_area.horizontalScrollBar().value()
 
             # Time at cursor before zoom (absolute time)
-            time_at_cursor = self._pixel_to_time(mouse_x + old_scroll_x)
+            time_at_cursor = self._pixel_to_time(int(mouse_x + old_scroll_x))
 
             delta = event.angleDelta().y()
             zoom_speed_factor = 1.1
@@ -297,7 +298,8 @@ class PianoRollDisplay(QWidget):
 
             self.horizontal_zoom_factor = max(self.MIN_HORIZONTAL_ZOOM, min(self.MAX_HORIZONTAL_ZOOM, new_zoom_factor))
             
-            self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+            # time_scale is now independent of BPM
+            self.time_scale = BASE_TIME_SCALE * self.horizontal_zoom_factor
             
             # This recalculates minimum width based on new time_scale and total_time
             self.calculate_total_width() 
@@ -324,7 +326,7 @@ class PianoRollDisplay(QWidget):
             if parent_scroll_area and hasattr(parent_scroll_area, 'verticalScrollBar'):
                 old_scroll_y = parent_scroll_area.verticalScrollBar().value()
 
-            pitch_at_cursor = self._pixel_to_pitch(mouse_y + old_scroll_y)
+            pitch_at_cursor = self._pixel_to_pitch(int(mouse_y + old_scroll_y))
 
             delta = event.angleDelta().y()
             zoom_speed_factor = 1.1
@@ -369,15 +371,15 @@ class PianoRollDisplay(QWidget):
             current_viewport_center_x_widget_relative = viewport_width / 2
         
         # Time at the center of the viewport (absolute time)
-        time_at_center = self._pixel_to_time(current_viewport_center_x_widget_relative + current_scroll_x)
+        time_at_center = self._pixel_to_time(int(current_viewport_center_x_widget_relative + current_scroll_x))
 
         old_horizontal_zoom_factor = self.horizontal_zoom_factor
         new_horizontal_zoom_factor = old_horizontal_zoom_factor * zoom_factor_change_multiplier
         
         self.horizontal_zoom_factor = max(self.MIN_HORIZONTAL_ZOOM, min(self.MAX_HORIZONTAL_ZOOM, new_horizontal_zoom_factor))
         
-        # Update time_scale based on the new zoom factor
-        self.time_scale = BASE_TIME_SCALE * (DEFAULT_BPM / self.bpm) * self.horizontal_zoom_factor
+        # Update time_scale based on the new zoom factor, independent of BPM
+        self.time_scale = BASE_TIME_SCALE * self.horizontal_zoom_factor
         
         # Recalculate total width which also calls updateGeometry
         self.calculate_total_width() 
@@ -432,7 +434,7 @@ class PianoRollDisplay(QWidget):
             current_scroll_y = scrollbar.value()
             current_viewport_center_y_widget_relative = viewport_height / 2
         
-        pitch_at_center = self._pixel_to_pitch(current_viewport_center_y_widget_relative + current_scroll_y)
+        pitch_at_center = self._pixel_to_pitch(int(current_viewport_center_y_widget_relative + current_scroll_y))
         
         old_vertical_zoom_factor = self.vertical_zoom_factor
         new_vertical_zoom_factor = old_vertical_zoom_factor * zoom_factor_change_multiplier

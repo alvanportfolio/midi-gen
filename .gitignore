@@ -17,3 +17,8 @@ Thumbs.db
 
 # MIDI files
 *.mid
+
+.clinerules/
+
+soundfont.sf2
+test_fluidsynth.py

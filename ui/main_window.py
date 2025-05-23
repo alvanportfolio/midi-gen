@@ -218,6 +218,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.transport_controls.stopClicked.connect(self.stop_playback)
         self.transport_controls.seekPositionChanged.connect(self.slider_position_changed_slot)
         self.transport_controls.bpmChangedSignal.connect(self.bpm_changed_slot)
+        self.transport_controls.instrumentChangedSignal.connect(self.instrument_changed_slot) # New connection
+        self.transport_controls.volumeChangedSignal.connect(self.volume_changed_slot) # Connection for volume
 
     def create_piano_roll_display(self):
         scroll_area = QScrollArea()
@@ -453,6 +455,25 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.update_timer_interval()
         if hasattr(self.midi_player, 'set_tempo'):
             self.midi_player.set_tempo(new_bpm)
+
+    @Slot(int)
+    def instrument_changed_slot(self, program_num: int):
+        """Handles instrument change from the transport controls."""
+        if hasattr(self.midi_player, 'set_instrument'):
+            print(f"MainWindow: Instrument changed to program {program_num}")
+            self.midi_player.set_instrument(program_num)
+        else:
+            print(f"MainWindow: MidiPlayer does not have set_instrument method.")
+
+    @Slot(int)
+    def volume_changed_slot(self, volume_percentage: int):
+        """Handles volume change from the transport controls."""
+        volume_float = volume_percentage / 100.0  # Convert 0-100 to 0.0-1.0
+        if hasattr(self.midi_player, 'set_volume'):
+            # print(f"MainWindow: Volume changed to {volume_percentage}% ({volume_float:.2f})")
+            self.midi_player.set_volume(volume_float)
+        else:
+            print(f"MainWindow: MidiPlayer does not have set_volume method.")
     
     def update_timer_interval(self):
         base_interval = 16

@@ -56,10 +56,11 @@ piano_roll_project/
 │   └── plugin_panel.py        # PluginManagerPanel (QDockWidget)
 ├── midi/
 │   ├── __init__.py
-│   ├── device_manager.py
+│   ├── device_manager.py      # (Legacy, if previously used for pygame.midi output)
+│   ├── fluidsynth_player.py   # Wrapper for FluidSynth library
 │   ├── midi_event_utils.py
 │   ├── note_scheduler.py
-│   └── playback_controller.py
+│   └── playback_controller.py   # Manages playback logic using FluidSynthPlayer
 ├── plugins/
 │   ├── __init__.py
 │   ├── markov_generator.py
@@ -108,13 +109,31 @@ piano_roll_project/
   - Handle mouse interactions
 
 #### `midi_player.py`
-- **Purpose**: MIDI playback implementation
-- **Not Shown in Provided Code**: This file needs to implement MIDI playback functionality
+- **Purpose**: Facade for MIDI playback, delegating to `PlaybackController`.
 - **Key Functions**:
-  - Play, pause, stop MIDI notes
-  - Set playback tempo
-  - Get current playback position
-  - Seek to position
+  - Provides a simple API for play, pause, stop, seek, tempo, instrument, and volume control.
+  - Manages an instance of `PlaybackController`.
+
+#### `midi/playback_controller.py`
+- **Purpose**: Manages the core MIDI playback logic, state, and timing.
+- **Key Classes**:
+  - `PlaybackController`: Handles note scheduling, tempo adjustments, and playback state (playing, paused, stopped).
+- **Key Functions**:
+  - Initializes and manages `FluidSynthPlayer` for audio output.
+  - Uses `NoteScheduler` to time MIDI events.
+  - Provides methods for `play`, `pause`, `stop`, `seek`, `set_tempo`, `set_instrument`, and `set_master_volume`.
+  - Stores current playback time and master volume.
+
+#### `midi/fluidsynth_player.py`
+- **Purpose**: Low-level wrapper for the `fluidsynth` library.
+- **Key Classes**:
+  - `FluidSynthPlayer`: Initializes FluidSynth, loads soundfonts, and sends MIDI messages.
+- **Key Functions**:
+  - `sfload()`: Loads SoundFont files.
+  - `noteon()`, `noteoff()`: Sends note events to FluidSynth.
+  - `program_select()`: Changes instruments.
+  - `set_gain()` (via `fs.setting("synth.gain", ...)`): Adjusts master volume.
+  - `cleanup()`: Releases FluidSynth resources.
 
 ### Plugin System Files
 
@@ -187,10 +206,20 @@ piano_roll_project/
 5. The generated notes are added to the piano roll display and MIDI player
 
 ### MIDI Playback Process
-1. Notes are added to the `midi_player` 
-2. User clicks Play to start playback
-3. The playback timer regularly updates the playhead position
-4. The piano roll display shows the current playback position
+1. Notes are loaded into `PlaybackController` via `MidiPlayer`.
+2. `PlaybackController` initializes `FluidSynthPlayer` with a soundfont.
+3. User interacts with transport controls (Play, Pause, Stop, BPM, Instrument, Volume) in the UI.
+4. Signals are sent to `PianoRollMainWindow`, which calls methods on `MidiPlayer`.
+5. `MidiPlayer` delegates these calls to `PlaybackController`.
+6. `PlaybackController` manages playback state:
+    - `play()`: Starts the `NoteScheduler` thread, which sends timed `noteon`/`noteoff` events to `FluidSynthPlayer`.
+    - `pause()`: Halts the scheduler and mutes notes.
+    - `stop()`: Stops playback and resets position.
+    - `set_tempo()`: Adjusts playback speed.
+    - `set_instrument()`: Sends program change to `FluidSynthPlayer`.
+    - `set_master_volume()`: Adjusts master gain in `FluidSynthPlayer`.
+7. `FluidSynthPlayer` translates these commands into `fluidsynth` library calls, producing audio.
+8. The playback timer in `PianoRollMainWindow` regularly queries `PlaybackController` for the current position to update the UI (playhead, time display).
 
 ### MIDI Export Process
 1. User clicks Export MIDI in the Plugin Manager panel
@@ -255,12 +284,15 @@ piano_roll_project/
 - Python 3.8 or higher
 - PySide6 for the GUI
 - pretty_midi for MIDI processing
-- Additional libraries as needed by specific plugins
+- numpy
+- fluidsynth (Python wrapper for FluidSynth, e.g., `pyfluidsynth`)
+- pygame (currently used for `pygame.midi.quit()` in `midi_player.py` test, and potentially by `DeviceManager` if still in use for other MIDI I/O tasks, though primary playback is now FluidSynth)
 
 ### Setting Up Development Environment
 1. Clone the repository
-2. Install dependencies: `pip install PySide6 pretty_midi numpy pygame` (pygame is used by midi_player)
-3. Run the application:
+2. Install dependencies: `pip install PySide6 pretty_midi numpy pygame fluidsynth`
+3. Ensure FluidSynth library is installed on your system if the Python wrapper requires it (common).
+4. Run the application:
    - Using the script: `python app.py`
    - On Windows: `start.bat`
    - On Linux/macOS: `sh start.sh` or `./start.sh` (after `chmod +x start.sh`)

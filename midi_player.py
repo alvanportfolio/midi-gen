@@ -58,6 +58,21 @@ class MidiPlayer:
         """Set the tempo in beats per minute."""
         self.controller.set_tempo(bpm)
 
+    def set_instrument(self, program_num: int):
+        """Set the MIDI instrument (program change)."""
+        # Assuming channel 0 for simplicity, or make channel configurable
+        if hasattr(self.controller, 'set_instrument'):
+            self.controller.set_instrument(program_num) 
+        else:
+            print("MidiPlayer: Controller does not have set_instrument method.")
+
+    def set_volume(self, volume_float: float):
+        """Sets the master volume for playback."""
+        if hasattr(self.controller, 'set_master_volume'):
+            self.controller.set_master_volume(volume_float)
+        else:
+            print("MidiPlayer: Controller does not have set_master_volume method.")
+
     def cleanup(self):
         """Clean up resources."""
         self.controller.cleanup()

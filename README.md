@@ -26,6 +26,20 @@
 
 ---
 
+## 🔄 <span style="color:#a5d6a7;">Recent Updates (Changelog)</span>
+
+- 🔊 **Volume Control & FluidSynth Integration**:
+  - Added a **master volume slider** to the transport controls for real-time audio level adjustment.
+  - Integrated **FluidSynth** as the new audio backend for MIDI playback, offering improved sound quality and control.
+- 🎚️ **Enhanced Transport Controls**:
+  - Improved **BPM slider** stability and responsiveness.
+  - Enhanced **instrument selection** capabilities.
+- 🛠️ **Bug Fixes & Stability**:
+  - Addressed various bugs, including fixes related to audio playback initialization and control.
+  - General stability improvements throughout the application.
+
+---
+
 ## 🖼️ <span style="color:#6ec6ff;">Screenshots</span>
 
 <div align="center">
@@ -126,7 +140,7 @@ cd midi-gen
 </ol>
 
 ```bash
-pip install PySide6 pretty_midi numpy pygame
+pip install PySide6 pretty_midi numpy pygame fluidsynth
 ```
 
 <ol start="3">

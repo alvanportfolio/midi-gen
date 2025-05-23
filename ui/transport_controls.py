@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QLabel, QStyle, QFrame
+    QWidget, QHBoxLayout, QLabel, QStyle, QFrame, QComboBox
 ) # QPushButton and QSlider removed as ModernSlider/Button are used
 from PySide6.QtCore import Qt, Signal, Slot, QSize
 from PySide6.QtGui import QFont, QIcon # Import QFont and QIcon
 from ui.custom_widgets import ModernSlider, ModernIconButton # Use ModernIconButton
-from config import theme # Import theme
+from config import theme, constants # Import theme and constants
 
 class TransportControls(QWidget):
     """Transport controls for MIDI playback (play, stop, BPM, time slider)"""
@@ -15,6 +15,8 @@ class TransportControls(QWidget):
     stopClicked = Signal()
     seekPositionChanged = Signal(float) # position in seconds
     bpmChangedSignal = Signal(int)
+    instrumentChangedSignal = Signal(int) # New signal for instrument changes
+    volumeChangedSignal = Signal(int) # Signal for volume changes (0-100)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -110,7 +112,114 @@ class TransportControls(QWidget):
         self.bpm_value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(self.bpm_value_label)
 
+        layout.addSpacing(theme.PADDING_L) # Spacing before instrument selector
+
+        # Separator line before instrument selector
+        line3 = QFrame()
+        line3.setFrameShape(QFrame.VLine)
+        line3.setFrameShadow(QFrame.Sunken)
+        line3.setStyleSheet(f"color: {theme.BORDER_COLOR_NORMAL.name()};")
+        layout.addWidget(line3)
+        layout.addSpacing(theme.PADDING_S)
+
+        # Instrument Selector
+        self.instrument_label = QLabel("Instrument")
+        self.instrument_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
+        self.instrument_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        layout.addWidget(self.instrument_label)
+
+        self.instrument_selector = QComboBox()
+        self.instrument_selector.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
+        self.instrument_selector.setFixedWidth(150) # Adjust width as needed
+        # Populate with instruments from constants
+        for name in constants.INSTRUMENT_PRESETS.keys():
+            self.instrument_selector.addItem(name)
+        
+        # Set default selection
+        default_instrument_name = constants.DEFAULT_INSTRUMENT_NAME
+        if default_instrument_name in constants.INSTRUMENT_PRESETS:
+            self.instrument_selector.setCurrentText(default_instrument_name)
+
+        self.instrument_selector.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {theme.STANDARD_BUTTON_BG_COLOR.name()};
+                color: {theme.STANDARD_BUTTON_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                padding: {theme.PADDING_XS}px {theme.PADDING_S}px;
+                min-height: {theme.ICON_SIZE_M + theme.PADDING_XS * 2}px; /* Match button height */
+            }}
+            QComboBox:hover {{
+                background-color: {theme.STANDARD_BUTTON_HOVER_BG_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
+            }}
+            QComboBox::drop-down {{
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: {theme.ICON_SIZE_M}px;
+                border-left-width: 1px;
+                border-left-color: {theme.BORDER_COLOR_NORMAL.name()};
+                border-left-style: solid;
+                border-top-right-radius: {theme.BORDER_RADIUS_M}px;
+                border-bottom-right-radius: {theme.BORDER_RADIUS_M}px;
+            }}
+            QComboBox::down-arrow {{
+                image: url({theme.DROPDOWN_ICON_PATH}); /* Assuming a theme path for dropdown arrow */
+                width: {theme.ICON_SIZE_S}px;
+                height: {theme.ICON_SIZE_S}px;
+            }}
+            QComboBox QAbstractItemView {{ /* Style for the dropdown list */
+                background-color: {theme.PANEL_BG_COLOR.name()};
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
+                selection-background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+                selection-color: {theme.ACCENT_TEXT_COLOR.name()};
+                outline: 0px; /* Remove focus outline from items */
+            }}
+        """)
+        self.instrument_selector.currentTextChanged.connect(self._handle_instrument_change)
+        layout.addWidget(self.instrument_selector)
+
+        layout.addSpacing(theme.PADDING_L)  # Spacing before volume controls
+
+        # Separator line before volume controls
+        line4 = QFrame()
+        line4.setFrameShape(QFrame.VLine)
+        line4.setFrameShadow(QFrame.Sunken)
+        line4.setStyleSheet(f"color: {theme.BORDER_COLOR_NORMAL.name()};")
+        layout.addWidget(line4)
+        layout.addSpacing(theme.PADDING_S)
+
+        # Volume Label
+        self.volume_label = QLabel("Volume")
+        self.volume_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M))
+        self.volume_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        layout.addWidget(self.volume_label)
+
+        # Volume Slider
+        self.volume_slider = ModernSlider(Qt.Horizontal)
+        self.volume_slider.setRange(0, 100)
+        self.volume_slider.setValue(50)  # Default volume 50%
+        self.volume_slider.setFixedWidth(100)
+        self.volume_slider.setToolTip("Adjust playback volume")
+        self.volume_slider.valueChanged.connect(self._handle_volume_change)
+        layout.addWidget(self.volume_slider)
+
+        # Volume Value Label
+        self.volume_value_label = QLabel("50%")
+        self.volume_value_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD))
+        self.volume_value_label.setStyleSheet(f"color: {theme.PRIMARY_TEXT_COLOR.name()}; min-width: 35px;") # Adjusted min-width
+        self.volume_value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        layout.addWidget(self.volume_value_label)
+        
+        layout.addStretch(1) # Add stretch at the end to push controls left
+
         self._is_playing = False
+
+    def _handle_instrument_change(self, instrument_name: str):
+        if instrument_name in constants.INSTRUMENT_PRESETS:
+            program_num = constants.INSTRUMENT_PRESETS[instrument_name]
+            self.instrumentChangedSignal.emit(program_num)
 
     def _handle_play_pause(self):
         if self.play_button.isChecked(): # If button is now checked (meaning play was clicked)
@@ -129,6 +238,11 @@ class TransportControls(QWidget):
         self.bpm_value_label.setText(str(value))
         self.bpmChangedSignal.emit(value)
         # Main window will update piano_roll.set_bpm and slider range
+
+    def _handle_volume_change(self, value: int):
+        self.volume_value_label.setText(f"{value}%")
+        self.volumeChangedSignal.emit(value)
+        # Main window will connect this signal to adjust actual playback volume
 
     @Slot(bool)
     def set_playing_state(self, playing):

@@ -131,7 +131,7 @@ PAUSE_ICON_PATH = ICON_PATH + "pause.svg"
 STOP_ICON_PATH = ICON_PATH + "stop.svg"
 PLUGIN_ICON_PATH_DEFAULT = ICON_PATH + "default-plugin.svg"
 # Add other specific icon paths here as needed, e.g.:
-# DROPDOWN_ICON_PATH = ICON_PATH + "chevron_down.svg"
+DROPDOWN_ICON_PATH = ICON_PATH + "chevron_down.svg"
 # CHECKMARK_ICON_PATH = ICON_PATH + "checkmark.svg"
 
 # =============================================================================
