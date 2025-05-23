@@ -1,0 +1,65 @@
+name: Build & Release Portable EXE
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: 🔁 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 📦 Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller requests
+          pip install -r requirements.txt || echo "No requirements.txt found"
+
+      - name: 🔊 Install FluidSynth binary
+        run: |
+          curl -LO https://github.com/FluidSynth/fluidsynth/releases/download/v2.3.4/fluidsynth-2.3.4-win10-x64.zip
+          powershell -Command "Expand-Archive -Path fluidsynth-2.3.4-win10-x64.zip -DestinationPath fluidsynth"
+          echo "Adding FluidSynth to PATH"
+          echo "%GITHUB_WORKSPACE%\\fluidsynth\\bin" | Out-File -Append $env:GITHUB_PATH
+
+      - name: 🔨 Build Portable EXE with PyInstaller
+        run: |
+          pyinstaller app.py ^
+            --noconsole ^
+            --onefile ^
+            --name PianoRollStudio ^
+            --icon=assets/icons/app_icon.ico ^
+            --add-data "assets;assets" ^
+            --add-data "soundbank;soundbank" ^
+            --hidden-import requests ^
+            --exclude-module PyQt5 ^
+            --exclude-module PySide2 ^
+            --exclude-module PyQt6 ^
+            --exclude-module PySide5
+
+      - name: 📂 Prepare Release Folder
+        run: |
+          mkdir release
+          copy dist\PianoRollStudio.exe release\
+          if exist plugins mkdir release\plugins & copy plugins\* release\plugins\
+          if exist start.bat copy start.bat release\
+
+      - name: 📦 Create ZIP Package
+        run: |
+          powershell Compress-Archive -Path release\* -DestinationPath PianoRollStudio.zip
+
+      - name: 🚀 Upload to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: PianoRollStudio.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
