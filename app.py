@@ -2,18 +2,20 @@ import sys
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QIcon
 from ui.main_window import PianoRollMainWindow
-import os
+from config import theme # Import theme for APP_ICON_PATH
+import os # os is still needed for os.path.exists if we keep the check
 import pretty_midi
+# utils.get_resource_path is not directly needed here if theme.APP_ICON_PATH uses it
 
 def main():
     app = QApplication(sys.argv)
     
-    # Set application icon
-    icon_path = os.path.join(os.path.dirname(__file__), "assets", "icons", "app_icon.png")
-    if os.path.exists(icon_path):
-        app.setWindowIcon(QIcon(icon_path))
+    # Set application icon using the path from theme.py
+    # theme.APP_ICON_PATH is already an absolute path resolved by get_resource_path
+    if os.path.exists(theme.APP_ICON_PATH):
+        app.setWindowIcon(QIcon(theme.APP_ICON_PATH))
     else:
-        print(f"Warning: Application icon not found at {icon_path}")
+        print(f"Warning: Application icon not found at {theme.APP_ICON_PATH}")
 
     # app.setStyle('Fusion') # Commented out to allow custom QSS to take full effect
 

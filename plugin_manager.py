@@ -7,12 +7,19 @@ from typing import List, Dict, Optional, Any
 import pretty_midi
 
 from plugin_api import PluginBase
+from utils import get_resource_path # Import the new helper
+
+DEFAULT_PLUGINS_DIR_NAME = "plugins"
 
 class PluginManager:
     """Manages the discovery, loading, and execution of plugins"""
     
-    def __init__(self, plugins_dir="plugins"):
-        self.plugins_dir = plugins_dir
+    def __init__(self, plugins_dir_name: str = DEFAULT_PLUGINS_DIR_NAME):
+        # Resolve the absolute path to the plugins directory
+        # For plugins, we want to look in a directory next to the executable when bundled.
+        self.plugins_dir = get_resource_path(plugins_dir_name, is_external_to_bundle=True)
+        print(f"PluginManager: Using plugins directory: {self.plugins_dir}")
+        
         self.plugins = {}  # Map plugin IDs to plugin instances
         self.discover_plugins()
     
@@ -59,9 +66,12 @@ class PluginManager:
                 except TypeError:
                     # Not a class or unrelated class
                     continue
-                    
+        except ImportError as e_imp:
+            print(f"Failed to load plugin '{module_name}' due to missing dependency: {e_imp}")
+            print(f"  Please ensure that any libraries required by '{module_name}.py' are available.")
+            print(f"  If this is a bundled application, the library might need to be included in the PyInstaller build.")
         except Exception as e:
-            print(f"Error loading plugin {module_name}: {e}")
+            print(f"Error loading plugin '{module_name}': {type(e).__name__} - {e}")
     
     def get_plugin_list(self) -> List[Dict[str, str]]:
         """
@@ -93,7 +103,11 @@ class PluginManager:
         """
         return self.plugins.get(plugin_id)
     
-    def generate_notes(self, plugin_id: str, existing_notes=None, parameters=None) -> List[pretty_midi.Note]:
+    def generate_notes(self, 
+                       plugin_id: str, 
+                       existing_notes: Optional[List[pretty_midi.Note]] = None, 
+                       parameters: Optional[Dict[str, Any]] = None
+                       ) -> List[pretty_midi.Note]:
         """
         Generate notes using a specific plugin
         
@@ -109,7 +123,12 @@ class PluginManager:
         if not plugin:
             raise ValueError(f"Plugin not found: {plugin_id}")
         
-        params = parameters or {}
-        validated_params = plugin.validate_parameters(params)
+        current_params = parameters or {}
+        # Assuming validate_parameters can handle empty dict if params is None
+        validated_params = plugin.validate_parameters(current_params) 
         
-        return plugin.generate(existing_notes, **validated_params)
+        # Ensure an empty list is passed if existing_notes is None,
+        # if the plugin's generate method expects a list.
+        notes_to_pass = existing_notes if existing_notes is not None else []
+        
+        return plugin.generate(notes_to_pass, **validated_params)

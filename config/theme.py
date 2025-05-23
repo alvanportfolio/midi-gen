@@ -125,14 +125,28 @@ PLUGIN_ROW_HEIGHT = 44
 # =============================================================================
 # --- Icon Paths ---
 # =============================================================================
-ICON_PATH = "assets/icons/" # Base path
-PLAY_ICON_PATH = ICON_PATH + "play.svg"
-PAUSE_ICON_PATH = ICON_PATH + "pause.svg"
-STOP_ICON_PATH = ICON_PATH + "stop.svg"
-PLUGIN_ICON_PATH_DEFAULT = ICON_PATH + "default-plugin.svg"
-# Add other specific icon paths here as needed, e.g.:
-DROPDOWN_ICON_PATH = ICON_PATH + "chevron_down.svg"
-# CHECKMARK_ICON_PATH = ICON_PATH + "checkmark.svg"
+import os # Ensure os is imported if not already
+from utils import get_resource_path # Import the helper
+
+# Define the base path for assets using the portable resource path function
+# ASSETS_BASE_PATH will be the absolute path to the 'assets' directory
+ASSETS_BASE_PATH = get_resource_path("assets")
+
+# Define icon paths relative to the ASSETS_BASE_PATH
+ICON_DIR_NAME = "icons" # Subdirectory for icons within assets
+
+# Helper to ensure forward slashes for QSS url() paths
+def _qss_path(path_segments):
+    return os.path.join(*path_segments).replace('\\', '/')
+
+PLAY_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "play.svg"])
+PAUSE_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "pause.svg"])
+STOP_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "stop.svg"])
+PLUGIN_ICON_PATH_DEFAULT = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "default-plugin.svg"])
+DROPDOWN_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "chevron_down.svg"])
+APP_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "app_icon.png"]) # For main window icon
+
+# CHECKMARK_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "checkmark.svg"])
 
 # =============================================================================
 # --- Mapping Legacy Names (Informational - to be removed or refactored in usage) ---

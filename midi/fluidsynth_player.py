@@ -2,19 +2,21 @@ import fluidsynth
 import os
 import inspect # For inspect.getfile
 from config.constants import DEFAULT_MIDI_PROGRAM
+from utils import get_resource_path # Import the new helper
 
-# Path to the SoundFont file (relative to the project root)
-# The user stated it's in project/soundbank/soundfont.sf2,
-# and the CWD is the project root.
-SOUNDFONT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "soundbank", "soundfont.sf2")
-# os.path.dirname(__file__) is midi/
-# os.path.dirname(os.path.dirname(__file__)) is project root
+# Default SoundFont path relative to project root
+DEFAULT_SOUNDFONT_RELATIVE_PATH = "soundbank/soundfont.sf2"
 
 class FluidSynthPlayer:
-    def __init__(self, soundfont_path=None):
+    def __init__(self, soundfont_path_str: str | None = None): # Allow passing a specific path
         self.fs = None
         self.soundfont_id = None
-        self.soundfont_path = soundfont_path or SOUNDFONT_PATH
+        
+        # Determine the soundfont path to use
+        if soundfont_path_str:
+            self.soundfont_path = soundfont_path_str
+        else:
+            self.soundfont_path = get_resource_path(DEFAULT_SOUNDFONT_RELATIVE_PATH)
 
         try:
             # Print the path of the imported fluidsynth module for diagnostics
@@ -29,19 +31,22 @@ class FluidSynthPlayer:
             # Or, we might need to specify it, e.g., self.fs.start(driver="dsound") on Windows.
             # For simplicity, I'll rely on the default driver selection by pyfluidsynth.
             # If issues arise, driver selection might need to be exposed or made platform-dependent.
-            self.fs.start() 
+            self.fs.start()
 
             if not os.path.exists(self.soundfont_path):
-                print(f"Error: SoundFont file not found at {self.soundfont_path}")
-                # Fallback or raise error - for now, print and continue without soundfont
+                print(f"ERROR: SoundFont file not found at '{self.soundfont_path}'.")
+                print("Please ensure 'soundbank/soundfont.sf2' exists relative to the application or _MEIPASS folder.")
+                # self.fs.delete() # Clean up synth if soundfont is critical
+                # self.fs = None
                 self.soundfont_id = None
+                # Optionally, raise an error or use a silent fallback
             else:
                 self.soundfont_id = self.fs.sfload(self.soundfont_path)
-                if self.soundfont_id == -1: # sfload returns -1 on error
-                    print(f"Error: Failed to load SoundFont from {self.soundfont_path}")
+                if self.soundfont_id == fluidsynth.FLUID_FAILED: # More robust check for failure
+                    print(f"ERROR: Failed to load SoundFont from '{self.soundfont_path}'.")
                     self.soundfont_id = None
                 else:
-                    print(f"SoundFont loaded successfully from {self.soundfont_path} with ID {self.soundfont_id}")
+                    print(f"SoundFont loaded successfully from '{self.soundfont_path}' with ID {self.soundfont_id}")
                     # Default instrument for all channels (0-15)
                     for channel in range(16):
                         self.fs.program_select(channel, self.soundfont_id, 0, DEFAULT_MIDI_PROGRAM)

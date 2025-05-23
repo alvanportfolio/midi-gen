@@ -20,5 +20,9 @@ Thumbs.db
 
 .clinerules/
 
-soundfont.sf2
 test_fluidsynth.py
+
+build/
+dist/
+app.spec
+*.spec
