@@ -13,7 +13,7 @@ jobs:
       - name: 🔁 Checkout repository
         uses: actions/checkout@v3
 
-      - name: 🐍 Setting up Python 3.10
+      - name: 🐍 Setting ups Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
