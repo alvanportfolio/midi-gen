@@ -35,6 +35,7 @@ jobs:
           pyinstaller app.py --noconsole --onefile --name PianoRollStudio --icon=assets/icons/app_icon.ico --add-data "assets;assets" --add-data "soundbank;soundbank" --hidden-import requests --exclude-module PyQt5 --exclude-module PySide2 --exclude-module PyQt6 --exclude-module PySide5
 
       - name: 📂 Prepare Release Folder
+        shell: cmd
         run: |
           mkdir release
           copy dist\PianoRollStudio.exe release\
@@ -42,7 +43,7 @@ jobs:
 
       - name: 📦 Create ZIP Package
         run: |
-          powershell Compress-Archive -Path release\* -DestinationPath PianoRollStudio.zip
+          Compress-Archive -Path release\* -DestinationPath PianoRollStudio.zip
 
       - name: 🚀 Upload to GitHub Releases
         uses: softprops/action-gh-release@v1
