@@ -32,18 +32,7 @@ jobs:
 
       - name: 🔨 Build Portable EXE with PyInstaller
         run: |
-          pyinstaller app.py ^
-            --noconsole ^
-            --onefile ^
-            --name PianoRollStudio ^
-            --icon=assets/icons/app_icon.ico ^
-            --add-data "assets;assets" ^
-            --add-data "soundbank;soundbank" ^
-            --hidden-import requests ^
-            --exclude-module PyQt5 ^
-            --exclude-module PySide2 ^
-            --exclude-module PyQt6 ^
-            --exclude-module PySide5
+          pyinstaller app.py --noconsole --onefile --name PianoRollStudio --icon=assets/icons/app_icon.ico --add-data "assets;assets" --add-data "soundbank;soundbank" --hidden-import requests --exclude-module PyQt5 --exclude-module PySide2 --exclude-module PyQt6 --exclude-module PySide5
 
       - name: 📂 Prepare Release Folder
         run: |
