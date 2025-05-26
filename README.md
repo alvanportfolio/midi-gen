@@ -175,20 +175,39 @@ python app.py
 
 ---
 
-## ⭐ <span style="color:#ff6f00;">Like This Project?</span>
+## ⭐ <span style="color:#ff6f00;">Show Your Support!</span>
 
 <div align="center">
-  <p>If you find this MIDI Generator useful and enjoy creating music with it, please consider giving it a star! ⭐</p>
-  <p>Your support helps us improve the project and add more amazing features.</p>
+  <p><b>🎵 Love this MIDI Generator? Help us grow the community!</b></p>
   
-  <a href="https://github.com/WebChatAppAi/midi-gen">
-    <img src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=social" alt="Star this repository">
-  </a>
+  <table>
+    <tr>
+      <td align="center">
+        <a href="https://github.com/WebChatAppAi/midi-gen">
+          <img src="https://img.shields.io/badge/⭐_Star_this_repo-FFD700?style=for-the-badge&logo=github&logoColor=black" alt="Star this repository" height="40">
+        </a>
+        <br>
+        <sub><b>👆 Click here to star the repo!</b></sub>
+      </td>
+      <td align="center">
+        <a href="https://github.com/WebChatAppAi/midi-gen/fork">
+          <img src="https://img.shields.io/badge/🍴_Fork_&_Contribute-28a745?style=for-the-badge&logo=github&logoColor=white" alt="Fork this repository" height="40">
+        </a>
+        <br>
+        <sub><b>Build your own plugins!</b></sub>
+      </td>
+    </tr>
+  </table>
   
-  <br/><br/>
+  <br/>
   
-  <p><b>🎵 Share your creations!</b> Tag us when you share music made with this tool.</p>
-  <p><b>🐛 Found a bug or have an idea?</b> Open an issue or contribute a plugin!</p>
+  <p>⭐ <b>Current Stars:</b> <img src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=flat-square&color=gold" alt="GitHub Stars"></p>
+  
+  <hr width="50%">
+  
+  <p><b>🎼 Share your creations!</b> Tag us when you share music made with this tool.</p>
+  <p><b>🐛 Found a bug or have an idea?</b> <a href="https://github.com/WebChatAppAi/midi-gen/issues">Open an issue</a> or contribute a plugin!</p>
+  <p><b>💬 Questions?</b> Start a <a href="https://github.com/WebChatAppAi/midi-gen/discussions">discussion</a> with the community!</p>
 </div>
 
 ---
