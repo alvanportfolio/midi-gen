@@ -1,6 +1,7 @@
 name: Build & Release Portable EXE
 
 on:
+  workflow_dispatch:      # ✅ Adds manual "Run workflow" button in Actions tab
   push:
     tags:
       - "v*"
@@ -49,4 +50,5 @@ jobs:
         with:
           files: PianoRollStudio.zip
         env:
-          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
