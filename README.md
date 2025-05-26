@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/License-Non--Commercial-red?style=flat-square" alt="License"/>
   <img src="https://img.shields.io/badge/GUI-PySide6-green?style=flat-square" alt="PySide6"/>
   <img src="https://img.shields.io/badge/MIDI-pretty__midi-orange?style=flat-square" alt="MIDI"/>
+  <img src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=flat-square&color=gold" alt="GitHub Stars"/>
 </p>
 
 <blockquote>
@@ -78,49 +79,6 @@ Add an optional <code>get_parameter_info()</code> to customize UI controls per p
 📖 <b>Full developer reference:</b> [docs/plugin-docs.md](./docs/plugin-docs.md)
 
 </details>
-
----
-
-## 🛠️ <span style="color:#ffd54f;">Project Structure</span>
-
-```text
-piano_roll_project/
-├── LICENSE                    # Non-Commercial License file
-├── app.py                     # Main application entry point
-├── note_display.py            # Piano roll grid and note visualization (QWidget)
-├── midi_player.py             # Facade for MIDI playback
-├── plugin_manager.py          # Plugin discovery and management system
-├── plugin_api.py              # Base classes and API for plugins
-├── export_utils.py            # MIDI export functionality
-├── start.bat                  # Windows startup script
-├── start.sh                   # Linux/macOS startup script
-├── config/
-│   ├── __init__.py
-│   ├── constants.py
-│   └── theme.py
-├── ui/
-│   ├── __init__.py
-│   ├── custom_widgets.py      # ModernSlider, ModernButton
-│   ├── drawing_utils.py       # PianoRollDisplay drawing functions
-│   ├── event_handlers.py      # MainWindowEventHandlersMixin
-│   ├── main_window.py         # PianoRollMainWindow (QMainWindow)
-│   ├── plugin_dialogs.py      # PluginParameterDialog
-│   └── plugin_panel.py        # PluginManagerPanel (QDockWidget)
-├── midi/
-│   ├── __init__.py
-│   ├── device_manager.py
-│   ├── midi_event_utils.py
-│   ├── note_scheduler.py
-│   └── playback_controller.py
-├── plugins/
-│   ├── __init__.py
-│   ├── markov_generator.py
-│   ├── melody_generator.py
-│   └── motif_generator.py
-└── docs/
-    ├── project-details.md     # This file
-    └── plugin-docs.md         # Documentation for plugin developers
-```
 
 ---
 
@@ -217,9 +175,28 @@ python app.py
 
 ---
 
+## ⭐ <span style="color:#ff6f00;">Like This Project?</span>
+
+<div align="center">
+  <p>If you find this MIDI Generator useful and enjoy creating music with it, please consider giving it a star! ⭐</p>
+  <p>Your support helps us improve the project and add more amazing features.</p>
+  
+  <a href="https://github.com/WebChatAppAi/midi-gen">
+    <img src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=social" alt="Star this repository">
+  </a>
+  
+  <br/><br/>
+  
+  <p><b>🎵 Share your creations!</b> Tag us when you share music made with this tool.</p>
+  <p><b>🐛 Found a bug or have an idea?</b> Open an issue or contribute a plugin!</p>
+</div>
+
+---
+
 ## 🧠 <span style="color:#b2dfdb;">Want to Contribute?</span>
 
-- 📖 Read the full guide: [docs/project-details.md](./docs/project-details.md)  
+- 📖 Read the full technical guide: [docs/project-details.md](./docs/project-details.md)  
+- 🔧 Explore the project structure and architecture details  
 - 🍴 Fork → 🛠️ Build your plugin → 📬 Open a Pull Request  
 
 ---
