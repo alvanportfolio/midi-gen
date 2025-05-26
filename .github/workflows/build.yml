@@ -4,7 +4,7 @@ on:
   workflow_dispatch:      # ✅ Adds manual "Run workflow" button in Actions tab
   push:
     tags:
-      - "v*"
+      - "v1.0.6"
 
 jobs:
   build-windows:
