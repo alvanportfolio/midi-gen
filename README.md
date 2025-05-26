@@ -188,7 +188,7 @@ python app.py
 
   <div align="center" style="margin: 32px 0;">
     <a href="https://github.com/WebChatAppAi/midi-gen">
-      <img src="https://repobeats.axiom.co/api/embed/4e4a4c8b0e5f6a1c2b7d0a5a5f0d4e2e5f6a1c2.svg" alt="Repo Analytics">
+     <img src="https://repobeats.axiom.co/api/embed/85314166456118665297959c949c0772fe2583be.svg" alt="Repo Analytics">
     </a>
   </div>
 
