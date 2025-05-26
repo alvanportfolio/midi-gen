@@ -126,6 +126,31 @@ piano_roll_project/
 
 ## 🚀 <span style="color:#81c784;">Getting Started</span>
 
+### 💻 Windows Users - Quick Installation (Executable)
+
+<details open>
+<summary><b>📦 Using the pre-built executable</b></summary>
+
+1. **Download the application**
+   - Go to the [Releases](https://github.com/WebChatAppAi/midi-gen/releases) tab on GitHub
+   - Download the latest `.zip` file
+
+2. **Install the application**
+   - Extract the ZIP file to `C:\Users\YourName\Documents\PianoRollStudio`
+   - Run the executable (first launch may take a moment to initialize)
+   
+3. **Set up plugins**
+   - On first launch, a `plugins` directory will be created in the installation folder
+   - Download the plugin `.py` files from the [GitHub repository's plugins folder](https://github.com/WebChatAppAi/midi-gen/tree/main/plugins)
+   - Place these files in the newly created `plugins` directory
+   
+4. **Restart and enjoy**
+   - Close and reopen the application
+   - Your plugins should now be loaded and ready to use
+</details>
+
+### 🐍 Python Installation (All Platforms)
+
 <ol>
 <li>Clone the repository</li>
 </ol>
