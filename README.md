@@ -174,40 +174,56 @@ python app.py
 - 📥 Import <code>.mid</code> files for editing  
 
 ---
-
-## ⭐ <span style="color:#ff6f00;">Show Your Support!</span>
-
 <div align="center">
-  <p><b>🎵 Love this MIDI Generator? Help us grow the community!</b></p>
+  <h2>🎶 Support MIDI Generator Development</h2>
   
-  <table>
-    <tr>
-      <td align="center">
-        <a href="https://github.com/WebChatAppAi/midi-gen">
-          <img src="https://img.shields.io/badge/⭐_Star_this_repo-FFD700?style=for-the-badge&logo=github&logoColor=black" alt="Star this repository" height="40">
+  <div align="center" style="display: flex; gap: 16px; justify-content: center; margin: 24px 0;">
+    <a href="https://github.com/WebChatAppAi/midi-gen">
+      <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=flat-square&label=Star%20This%20Repo&logo=github&logoColor=white&color=gold&labelColor=181717">
+    </a>
+    <a href="https://github.com/WebChatAppAi/midi-gen/fork">
+      <img alt="GitHub forks" src="https://img.shields.io/github/forks/WebChatAppAi/midi-gen?style=flat-square&label=Fork%20%26%20Build&logo=git&logoColor=white&color=4dc71f&labelColor=181717">
+    </a>
+  </div>
+
+  <div align="center" style="margin: 32px 0;">
+    <a href="https://github.com/WebChatAppAi/midi-gen">
+      <img src="https://repobeats.axiom.co/api/embed/4e4a4c8b0e5f6a1c2b7d0a5a5f0d4e2e5f6a1c2.svg" alt="Repo Analytics">
+    </a>
+  </div>
+
+  <div align="center" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; max-width: 800px; margin: 0 auto;">
+    <div>
+      <h3>🚀 Quick Links</h3>
+      <p>
+        <a href="https://github.com/WebChatAppAi/midi-gen/issues">
+          <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/WebChatAppAi/midi-gen?style=for-the-badge&logo=git&logoColor=white&color=blue&label=Report%20Issue">
         </a>
-        <br>
-        <sub><b>👆 Click here to star the repo!</b></sub>
-      </td>
-      <td align="center">
-        <a href="https://github.com/WebChatAppAi/midi-gen/fork">
-          <img src="https://img.shields.io/badge/🍴_Fork_&_Contribute-28a745?style=for-the-badge&logo=github&logoColor=white" alt="Fork this repository" height="40">
+      </p>
+      <p>
+        <a href="https://github.com/WebChatAppAi/midi-gen/discussions">
+          <img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&color=purple&label=Join%20Discussion">
         </a>
-        <br>
-        <sub><b>Build your own plugins!</b></sub>
-      </td>
-    </tr>
-  </table>
-  
-  <br/>
-  
-  <p>⭐ <b>Current Stars:</b> <img src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=flat-square&color=gold" alt="GitHub Stars"></p>
-  
-  <hr width="50%">
-  
-  <p><b>🎼 Share your creations!</b> Tag us when you share music made with this tool.</p>
-  <p><b>🐛 Found a bug or have an idea?</b> <a href="https://github.com/WebChatAppAi/midi-gen/issues">Open an issue</a> or contribute a plugin!</p>
-  <p><b>💬 Questions?</b> Start a <a href="https://github.com/WebChatAppAi/midi-gen/discussions">discussion</a> with the community!</p>
+      </p>
+    </div>
+    <div>
+      <h3>📈 Project Stats</h3>
+      <p>
+        <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/WebChatAppAi/midi-gen?style=flat-square&logo=github&logoColor=white&color=blue&label=Last%20Update">
+      </p>
+      <p>
+        <img alt="GitHub contributors" src="https://img.shields.io/github/contributors/WebChatAppAi/midi-gen?style=flat-square&logo=github&logoColor=white&color=green&label=Contributors">
+      </p>
+    </div>
+  </div>
+
+  <hr style="border: 1px solid #404040; width: 60%; margin: 32px auto;">
+
+  <div align="center" style="margin-top: 24px;">
+    <h3>🎹 Community Engagement</h3>
+    <p>Share your creations with <code>#MIDIGen</code> on social media!</p>
+    <p>Featured plugins get highlighted in our <a href="https://github.com/WebChatAppAi/midi-gen/wiki/Showcase">Showcase Wiki</a></p>
+  </div>
 </div>
 
 ---
