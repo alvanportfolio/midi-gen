@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is a plugin-based MIDI generator system that integrates with a custom piano roll GUI. The system allows users to generate MIDI notes using various algorithms encapsulated in plugins, visualize them on a piano roll, play them back, and export them to MIDI files.
+This project is a plugin-based MIDI generator system that integrates with a custom piano roll GUI. The system allows users to generate MIDI notes using various algorithms encapsulated in plugins, visualize them on a piano roll, play them back with FluidSynth audio engine, and export them to standard MIDI files.
 
 ## System Architecture
 
@@ -30,10 +30,11 @@ The architecture follows a modular plugin-based design:
 - **Note Display**: Renders MIDI notes on a piano roll
 - **MIDI Export**: Exports generated notes to standard MIDI files
 
-## Project Structure
+## 🛠️ <span style="color:#ffd54f;">Project Structure</span>
 
-```
+```text
 piano_roll_project/
+├── LICENSE                    # Non-Commercial License file
 ├── app.py                     # Main application entry point
 ├── note_display.py            # Piano roll grid and note visualization (QWidget)
 ├── midi_player.py             # Facade for MIDI playback
@@ -308,4 +309,10 @@ When contributing new features or plugins, ensure:
 
 ## License
 
-This project is open-source and available under the MIT License. See the LICENSE file for details.
+This project is licensed under a custom Non-Commercial Software License. See the [LICENSE](LICENSE) file in the root directory for complete license details.
+
+### Key License Terms:
+- You may use and modify this software for personal and non-commercial purposes
+- Commercial use is strictly prohibited without explicit permission from Jonas
+- You must notify the copyright holder of any distribution or modification
+- Attribution to the copyright holder (Jonas) is required in all copies
