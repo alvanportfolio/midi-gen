@@ -2,32 +2,65 @@
 
 <div align="center">
 
-<div align="center" style="display: flex; gap: 16px; justify-content: center; margin: 24px 0;">
-  <a href="https://github.com/WebChatAppAi/midi-gen">
-    <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=for-the-badge&label=⭐%20Star%20This%20Repo&logo=github&logoColor=white&color=gold&labelColor=181717">
-  </a>
-  <a href="https://github.com/WebChatAppAi/midi-gen/fork">
-    <img alt="GitHub forks" src="https://img.shields.io/github/forks/WebChatAppAi/midi-gen?style=for-the-badge&label=🍴%20Fork%20%26%20Build&logo=git&logoColor=white&color=4dc71f&labelColor=181717">
-  </a>
-  <a href="https://github.com/WebChatAppAi/midi-gen/issues">
-    <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&color=blue&label=🐛%20Report%20Issue">
-  </a>
-</div>
+  <!-- ⭐ GitHub Stars / 🍴 Forks / 🐛 Issues Badges -->
+  <div align="center" style="display: flex; gap: 12px; justify-content: center; margin: 24px 0;">
+    <a href="https://github.com/WebChatAppAi/midi-gen">
+      <img
+        alt="GitHub Stars"
+        src="https://img.shields.io/github/stars/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&label=Stars&color=blue"
+      />
+    </a>
+    <a href="https://github.com/WebChatAppAi/midi-gen/fork">
+      <img
+        alt="GitHub Forks"
+        src="https://img.shields.io/github/forks/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&label=Forks&color=green"
+      />
+    </a>
+    <a href="https://github.com/WebChatAppAi/midi-gen/issues">
+      <img
+        alt="GitHub Issues"
+        src="https://img.shields.io/github/issues/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&label=Issues&color=red"
+      />
+    </a>
+  </div>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/License-Non--Commercial-red?style=flat-square&logo=balance-scale&logoColor=white" alt="License"/>
-  <img src="https://img.shields.io/badge/GUI-PySide6-green?style=flat-square&logo=qt&logoColor=white" alt="PySide6"/>
-  <img src="https://img.shields.io/badge/MIDI-pretty__midi-orange?style=flat-square&logo=musical-note&logoColor=white" alt="MIDI"/>
-  <img src="https://img.shields.io/github/last-commit/WebChatAppAi/midi-gen?style=flat-square&logo=github&logoColor=white&color=blue&label=Last%20Update" alt="Last Commit"/>
-  <img src="https://img.shields.io/github/contributors/WebChatAppAi/midi-gen?style=flat-square&logo=github&logoColor=white&color=green&label=Contributors" alt="Contributors"/>
-</p>
+  <!-- 🔖 Meta Badges (Python, License, GUI, MIDI, Last Update, Contributors) -->
+  <p align="center" style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+    <img
+      src="https://img.shields.io/badge/🐍%20Python-3.8%2B-blue?style=for-the-badge"
+      alt="Python Version"
+    />
+    <img
+      src="https://img.shields.io/badge/📄%20License-Non--Commercial-red?style=for-the-badge"
+      alt="License"
+    />
+    <img
+      src="https://img.shields.io/badge/🖥️%20GUI-PySide6-5cb85c?style=for-the-badge"
+      alt="PySide6 GUI"
+    />
+    <img
+      src="https://img.shields.io/badge/🎼%20MIDI-pretty__midi-orange?style=for-the-badge"
+      alt="pretty_midi"
+    />
+    <img
+      src="https://img.shields.io/github/last-commit/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&label=Last%20Update&color=blue"
+      alt="Last Commit"
+    />
+    <img
+      src="https://img.shields.io/github/contributors/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&label=Contributors&color=green"
+      alt="Contributors"
+    />
+  </p>
 
-<div align="center" style="margin: 32px 0;">
-  <a href="https://github.com/WebChatAppAi/midi-gen">
-   <img src="https://repobeats.axiom.co/api/embed/85314166456118665297959c949c0772fe2583be.svg" alt="Repo Analytics">
-  </a>
-</div>
+  <!-- 📊 Repo Analytics (RepoBeats) -->
+  <div align="center" style="margin: 32px 0;">
+    <a href="https://github.com/WebChatAppAi/midi-gen">
+      <img
+        src="https://repobeats.axiom.co/api/embed/85314166456118665297959c949c0772fe2583be.svg"
+        alt="Repo Analytics"
+      />
+    </a>
+  </div>
 
 </div>
 
@@ -42,7 +75,10 @@
   <p>Featured plugins get highlighted in our <a href="https://github.com/WebChatAppAi/midi-gen/wiki/Showcase">🌟 Showcase Wiki</a></p>
   <p>
     <a href="https://github.com/WebChatAppAi/midi-gen/discussions">
-      <img alt="GitHub Discussions" src="https://img.shields.io/github/discussions/WebChatAppAi/midi-gen?style=for-the-badge&logo=github&logoColor=white&color=purple&label=💬%20Join%20Discussion">
+      <img
+        alt="GitHub Discussions"
+        src="https://img.shields.io/github/discussions/WebChatAppAi/midi-gen?style=for-the-badge&logo=github-discussions&logoColor=white&label=Discussions&color=purple"
+      />
     </a>
   </p>
 </div>
