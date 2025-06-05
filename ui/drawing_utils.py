@@ -36,7 +36,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
             current_viewport_y_offset = grandparent_obj.verticalScrollBar().value()
     
     # Draw horizontal lines for note rows
-    painter.setPen(QPen(theme.KEY_GRID_LINE_COLOR, 0.8, Qt.SolidLine)) # Use new name, subtle width
+    painter.setPen(QPen(theme.KEY_GRID_LINE_COLOR, 0.8, Qt.PenStyle.SolidLine)) # Use new name, subtle width
     for pitch in range(MIN_PITCH, MAX_PITCH + 1):
         y_pos = (MAX_PITCH - pitch) * effective_white_key_height
         painter.drawLine(keyboard_width, int(y_pos), width, int(y_pos))
@@ -59,7 +59,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
         actual_pixels_per_quarter_note = time_scale * seconds_per_quarter_note
     
     # Draw sixteenth note lines (very faint)
-    painter.setPen(QPen(theme.GRID_LINE_COLOR, 0.5, Qt.DotLine)) # Subtle width
+    painter.setPen(QPen(theme.GRID_LINE_COLOR, 0.5, Qt.PenStyle.DotLine)) # Subtle width
     sixteenth_note_step_pixels = actual_pixels_per_quarter_note / 4.0 if actual_pixels_per_quarter_note > 0 else 0
     if sixteenth_note_step_pixels > 5: # Only draw if lines are reasonably spaced
         for i in range(int(width / sixteenth_note_step_pixels) + 1):
@@ -71,7 +71,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
     
     # Draw beat lines (more visible than grid, less than measure)
     if pixels_per_beat > 0:
-        painter.setPen(QPen(theme.GRID_BEAT_LINE_COLOR, 0.7, Qt.SolidLine)) # Subtle width
+        painter.setPen(QPen(theme.GRID_BEAT_LINE_COLOR, 0.7, Qt.PenStyle.SolidLine)) # Subtle width
         for i in range(int(width / pixels_per_beat) + 1):
             if i % time_signature_numerator != 0:
                 x = i * pixels_per_beat + keyboard_width
@@ -81,7 +81,7 @@ def draw_time_grid(painter, width, height, time_scale, bpm, time_signature_numer
     if pixels_per_beat > 0 and time_signature_numerator > 0:
         pixels_per_measure = pixels_per_beat * time_signature_numerator
         if pixels_per_measure > 0:
-            painter.setPen(QPen(theme.GRID_MEASURE_LINE_COLOR, 1.0, Qt.SolidLine)) # Slightly more prominent
+            painter.setPen(QPen(theme.GRID_MEASURE_LINE_COLOR, 1.0, Qt.PenStyle.SolidLine)) # Slightly more prominent
             measure_number_y_pos = current_viewport_y_offset + theme.PADDING_M + theme.FONT_SIZE_S
             for i in range(int(width / pixels_per_measure) + 1):
                 x = i * pixels_per_measure + keyboard_width
@@ -140,8 +140,8 @@ def draw_piano_keys(painter, vertical_zoom_factor=1.0):
             painter.setPen(QPen(theme.KEY_BORDER_COLOR, 0.5)) # Use new theme constant
             painter.drawRect(key_rect)
 
-    # Draw labels on keys
-    label_font = QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S) # Use theme font
+    # Draw labels on keys with bold, more visible font
+    label_font = QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_M, weight=theme.FONT_WEIGHT_BOLD) # Bigger, bolder font
     painter.setFont(label_font)
     metrics = QFontMetrics(label_font)
 
@@ -150,26 +150,21 @@ def draw_piano_keys(painter, vertical_zoom_factor=1.0):
         pitch_class = pitch_label % 12
         is_white_key_for_label = pitch_class in [0, 2, 4, 5, 7, 9, 11]
         
-        original_note_name = pretty_midi.note_number_to_name(pitch_label)
-        # ... (name correction logic remains same)
-        note_part = original_note_name[:-1]
-        octave_str = original_note_name[-1:]
-        corrected_label_name = original_note_name
-        if octave_str.isdigit():
-            octave_part = int(octave_str)
-            corrected_label_name = f"{note_part}{octave_part + 1}"
+        # Use the original note name directly - pretty_midi already gives correct octave numbers
+        # C0 = MIDI 12, C1 = MIDI 24, C2 = MIDI 36, C3 = MIDI 48, C4 = MIDI 60 (Middle C), etc.
+        corrected_label_name = pretty_midi.note_number_to_name(pitch_label)
 
         key_slot_y_top = (MAX_PITCH - pitch_label) * effective_white_key_height
         
         if is_white_key_for_label:
             text_rect = QRect(0, int(key_slot_y_top), WHITE_KEY_WIDTH, int(effective_white_key_height))
             painter.setPen(piano_key_label_color)
-            painter.drawText(text_rect, Qt.AlignCenter | Qt.AlignVCenter, corrected_label_name)
+            painter.drawText(text_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter, corrected_label_name)
         else:
             if pitch_label in drawn_black_keys: # Ensure label is only for drawn keys
                 black_key_rect = QRect(0, int(key_slot_y_top), BLACK_KEY_WIDTH, int(effective_black_key_height))
                 painter.setPen(piano_key_black_label_color)
-                painter.drawText(black_key_rect, Qt.AlignCenter | Qt.AlignVCenter, corrected_label_name)
+                painter.drawText(black_key_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter, corrected_label_name)
 
 def draw_notes(painter, notes, time_scale, vertical_zoom_factor=1.0):
     """Draw the MIDI notes as colored rectangles"""
@@ -212,50 +207,66 @@ def draw_notes(painter, notes, time_scale, vertical_zoom_factor=1.0):
         painter.drawRoundedRect(int(x_pos), int(y_pos + y_offset), int(width), int(height), 
                                 theme.BORDER_RADIUS_S, theme.BORDER_RADIUS_S) # Use theme radius
         
-        # Note labels (optional)
-        original_note_name = pretty_midi.note_number_to_name(pitch)
-        # ... (name correction logic remains same)
-        note_part_label = original_note_name[:-1]
-        octave_str_label = original_note_name[-1:]
-        corrected_label_name_note = original_note_name
-        if octave_str_label.isdigit():
-            octave_part_label = int(octave_str_label)
-            corrected_label_name_note = f"{note_part_label}{octave_part_label + 1}"
+        # Note labels - make them bold and visible
+        corrected_label_name_note = pretty_midi.note_number_to_name(pitch)
 
-        note_block_font = QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_XS) # Use theme font
-        note_block_font.setBold(True) # Keep bold for readability on notes
+        note_block_font = QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S, weight=theme.FONT_WEIGHT_BOLD) # Bigger, bolder font
         painter.setFont(note_block_font)
-        painter.setPen(note_label_color) # Use defined note label color
+        
+        # Use high contrast color for note labels - white with some transparency for visibility
+        note_label_color = QColor(255, 255, 255, 220)  # Bright white with high opacity
+        painter.setPen(QPen(note_label_color))
         
         font_metrics = QFontMetrics(painter.font())
         text_width_needed = font_metrics.horizontalAdvance(corrected_label_name_note)
         text_height_needed = font_metrics.height()
         note_content_rect = QRectF(x_pos, y_pos + y_offset, width, height)
         
-        if text_width_needed <= note_content_rect.width() - (theme.PADDING_XS * 2) and \
-           text_height_needed <= note_content_rect.height() - (theme.PADDING_XS * 2):
-            painter.drawText(note_content_rect, Qt.AlignCenter | Qt.AlignVCenter, corrected_label_name_note)
+        # More relaxed condition for showing text - show if note is reasonably sized
+        if width >= 25 and height >= 12:  # Simple size check instead of complex text fitting
+            painter.drawText(note_content_rect, Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter, corrected_label_name_note)
 
 def draw_playhead(painter, playhead_position, time_scale, height):
-    """Draw the playhead indicator"""
+    """Draw the playhead indicator with shadow"""
     if playhead_position >= 0: # Allow drawing at position 0
         playhead_x = playhead_position * time_scale + WHITE_KEY_WIDTH
+        shadow_offset_x = 2 # Increased offset for better visibility
+        shadow_offset_y = 2 # Increased offset for better visibility
+        triangle_size = theme.ICON_SIZE_S // 2 # Base size on theme icon size
+        triangle_height = int(triangle_size * 1.5)
+
+        # --- Draw Shadow ---
+        painter.save()
+        shadow_pen = QPen(theme.PLAYHEAD_SHADOW_COLOR, 2)
+        painter.setPen(shadow_pen)
+        painter.setBrush(QBrush(theme.PLAYHEAD_SHADOW_COLOR))
+
+        # Shadow for the line
+        painter.drawLine(int(playhead_x + shadow_offset_x), shadow_offset_y, int(playhead_x + shadow_offset_x), height + shadow_offset_y)
         
+        # Shadow for the triangle
+        shadow_points = [
+            QPoint(int(playhead_x + shadow_offset_x), shadow_offset_y),
+            QPoint(int(playhead_x - triangle_size + shadow_offset_x), triangle_height + shadow_offset_y),
+            QPoint(int(playhead_x + triangle_size + shadow_offset_x), triangle_height + shadow_offset_y)
+        ]
+        painter.drawPolygon(shadow_points)
+        painter.restore()
+
+        # --- Draw Main Playhead ---
         # Main line
         playhead_pen = QPen(theme.PLAYHEAD_COLOR, 2) # Use theme color, 2px width
         painter.setPen(playhead_pen)
         painter.drawLine(int(playhead_x), 0, int(playhead_x), height)
         
         # Triangle marker
-        triangle_size = theme.ICON_SIZE_S // 2 # Base size on theme icon size
-        playhead_triangle_color = getattr(theme, 'PLAYHEAD_TRIANGLE_COLOR', theme.PLAYHEAD_COLOR) # Use defined or fallback
-        
-        painter.setBrush(QBrush(playhead_triangle_color)) # Solid color
-        painter.setPen(Qt.NoPen) # No border for triangle for cleaner look
+        # playhead_triangle_color is already defined in theme.py and should be used directly
+        painter.setBrush(QBrush(theme.PLAYHEAD_TRIANGLE_COLOR)) # Solid color
+        painter.setPen(Qt.PenStyle.NoPen) # No border for triangle for cleaner look
         
         points = [
             QPoint(int(playhead_x), 0),
-            QPoint(int(playhead_x - triangle_size), int(triangle_size * 1.5)), # Make triangle a bit taller
-            QPoint(int(playhead_x + triangle_size), int(triangle_size * 1.5))
+            QPoint(int(playhead_x - triangle_size), triangle_height),
+            QPoint(int(playhead_x + triangle_size), triangle_height)
         ]
         painter.drawPolygon(points)

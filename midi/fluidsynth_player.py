@@ -22,6 +22,11 @@ class FluidSynthPlayer:
             # Print the path of the imported fluidsynth module for diagnostics
             print(f"Attempting to use fluidsynth module from: {inspect.getfile(fluidsynth)}")
             
+            # Note: FluidSynth may show warnings during initialization such as:
+            # - "SDL3 not initialized" - This is normal if SDL3 is not used
+            # - "Unknown parameter" warnings - These are usually version-related and can be ignored
+            # These warnings do not affect functionality as FluidSynth will use available audio drivers
+            
             self.fs = fluidsynth.Synth()
             # Start the synth. For Windows, 'dsound' or 'wasapi' might be needed.
             # For Linux, 'alsa' or 'pulseaudio'. For macOS, 'coreaudio'.

@@ -58,16 +58,17 @@ KEY_GRID_LINE_COLOR = GRID_LINE_COLOR.darker(110)        # Subtler than main gri
 SHADOW_COLOR = QColor(0, 0, 0, 70)                       # #000000 with alpha - For subtle depth
 
 # --- Piano Roll Specific Colors ---
-PLAYHEAD_COLOR = QColor(255, 120, 0)                     # #FF7800 - Opaque for clarity
-PLAYHEAD_TRIANGLE_COLOR = PLAYHEAD_COLOR.lighter(125)    # Lighter version for the triangle marker
+PLAYHEAD_COLOR = QColor(70, 130, 180)                    # #4682B4 - Cool Blue
+PLAYHEAD_TRIANGLE_COLOR = QColor(100, 160, 210)           # #64A0D2 - Lighter Cool Blue
+PLAYHEAD_SHADOW_COLOR = QColor(0, 0, 0, 70)                # #000000 with alpha - For playerhead shadow
 PIANO_KEY_SEPARATOR_COLOR = BORDER_COLOR_NORMAL          # Consistent with other borders
 
 # Piano Key Colors
 WHITE_KEY_COLOR = QColor(240, 240, 240)                  # #F0F0F0
 BLACK_KEY_COLOR = QColor(30, 30, 35)                     # #1E1E23
 KEY_BORDER_COLOR = QColor(100, 100, 100, 60)             # Slightly reduced alpha for subtlety
-PIANO_KEY_LABEL_COLOR = QColor(70, 70, 70)                 # Dark gray for text on white keys
-PIANO_KEY_BLACK_LABEL_COLOR = QColor(210, 210, 210)      # Light gray for text on black keys
+PIANO_KEY_LABEL_COLOR = QColor(40, 40, 40)                 # Darker, more visible text on white keys
+PIANO_KEY_BLACK_LABEL_COLOR = QColor(240, 240, 240)      # Brighter white text on black keys
 
 # Add aliases for WHITE_KEY_COLOR and BLACK_KEY_COLOR to maintain compatibility
 PIANO_KEY_WHITE_COLOR = WHITE_KEY_COLOR

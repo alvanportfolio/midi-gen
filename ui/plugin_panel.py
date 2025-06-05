@@ -5,14 +5,44 @@ from PySide6.QtWidgets import (
     QDockWidget, QListWidget, QListWidgetItem, QFileDialog, QMessageBox, QDialog, QLabel,
     QSizePolicy, QStyle
 )
-from PySide6.QtCore import Qt, Signal, QSize, QUrl, QMimeData # Added QUrl, QMimeData
+from PySide6.QtCore import Qt, Signal, QSize, QUrl, QMimeData, QThread, QTimer # Added QUrl, QMimeData, QThread, QTimer
 from PySide6.QtGui import QFont, QIcon, QPixmap, QFontMetrics, QDrag # Added QDrag
+import threading
 
 from plugin_manager import PluginManager
 from export_utils import export_to_midi
 from ui.plugin_dialogs import PluginParameterDialog
 from .custom_widgets import DragExportButton, ModernButton # Added ModernButton
 from config import theme
+
+class PluginGenerationWorker(QThread):
+    """Worker thread for plugin generation to keep UI responsive"""
+    
+    # Signals to communicate with the main thread
+    finished = Signal(list)  # Emitted when generation is complete with notes
+    error = Signal(str)      # Emitted when an error occurs
+    progress = Signal(str)   # Emitted for progress updates
+    
+    def __init__(self, plugin_manager, plugin_id, existing_notes, parameters):
+        super().__init__()
+        self.plugin_manager = plugin_manager
+        self.plugin_id = plugin_id
+        self.existing_notes = existing_notes
+        self.parameters = parameters
+    
+    def run(self):
+        """Run the plugin generation in background thread"""
+        try:
+            self.progress.emit("Starting generation...")
+            generated_notes = self.plugin_manager.generate_notes(
+                self.plugin_id, 
+                existing_notes=self.existing_notes, 
+                parameters=self.parameters
+            )
+            self.progress.emit("Generation complete!")
+            self.finished.emit(generated_notes)
+        except Exception as e:
+            self.error.emit(str(e))
 
 class PluginManagerPanel(QDockWidget):
     """Dockable panel for managing plugins"""
@@ -59,6 +89,7 @@ class PluginManagerPanel(QDockWidget):
         main_panel_layout.addWidget(self.plugin_list)
         
         self.plugin_list.currentItemChanged.connect(self._on_plugin_selection_changed)
+        self.plugin_list.itemDoubleClicked.connect(self._on_plugin_double_clicked)
 
         # Buttons
         button_layout = QHBoxLayout()
@@ -84,6 +115,10 @@ class PluginManagerPanel(QDockWidget):
         self.temp_files_to_clean = [] 
         self.temp_midi_dir = os.path.join(tempfile.gettempdir(), "pianoroll_midi_exports")
         os.makedirs(self.temp_midi_dir, exist_ok=True)
+        
+        # Worker thread for async generation
+        self.generation_worker = None
+        self.generation_in_progress = False
         
         # Load plugins after UI setup
         self._load_plugins()
@@ -168,6 +203,16 @@ class PluginManagerPanel(QDockWidget):
             if curr_widget:
                 self._update_item_widget_style(curr_widget, True)
 
+    def _on_plugin_double_clicked(self, item: QListWidgetItem):
+        """Handle double-click on plugin item to open configuration dialog"""
+        if item:
+            plugin_id = item.data(Qt.UserRole)
+            if plugin_id:
+                # Set the item as selected first
+                self.plugin_list.setCurrentItem(item)
+                # Open configuration dialog
+                self._configure_plugin()
+
     def _update_item_widget_style(self, widget: QWidget, is_selected: bool):
         if is_selected:
             bg_color = theme.ACCENT_PRIMARY_COLOR.name()
@@ -237,21 +282,83 @@ class PluginManagerPanel(QDockWidget):
             self.configure_button.clearFocus()
     
     def _generate_notes(self):
+        """Start plugin generation in background thread to keep UI responsive"""
+        if self.generation_in_progress:
+            QMessageBox.information(self, "Generation in Progress", "A generation is already in progress. Please wait.")
+            return
+            
         selected_items = self.plugin_list.selectedItems()
         if not selected_items:
             QMessageBox.warning(self, "No Plugin Selected", "Please select a plugin.")
             return
+            
         plugin_id = selected_items[0].data(Qt.UserRole)
         parameters = self.plugin_params.get(plugin_id, {})
-        try:
-            generated_notes = self.plugin_manager.generate_notes(plugin_id, existing_notes=self.current_notes, parameters=parameters)
-            self.notesGenerated.emit(generated_notes)
-            self.current_notes = generated_notes
-        except Exception as e:
-            QMessageBox.critical(self, "Generation Error", f"Error: {str(e)}")
-        finally:
-            if hasattr(self.generate_button, 'clearFocus'):
-                self.generate_button.clearFocus() 
+        
+        # Update UI to show generation is starting
+        self.generation_in_progress = True
+        self.generate_button.setText("Generating...")
+        self.generate_button.setEnabled(False)
+        
+        # Create and start worker thread
+        self.generation_worker = PluginGenerationWorker(
+            self.plugin_manager, 
+            plugin_id, 
+            self.current_notes, 
+            parameters
+        )
+        
+        # Connect worker signals
+        self.generation_worker.finished.connect(self._on_generation_finished)
+        self.generation_worker.error.connect(self._on_generation_error)
+        self.generation_worker.progress.connect(self._on_generation_progress)
+        
+        # Start generation in background
+        self.generation_worker.start()
+    
+    def _on_generation_finished(self, generated_notes):
+        """Handle successful generation completion"""
+        self.generation_in_progress = False
+        self.generate_button.setText("Generate")
+        self.generate_button.setEnabled(True)
+        
+        # Emit the notes to update the main UI
+        self.notesGenerated.emit(generated_notes)
+        self.current_notes = generated_notes
+        
+        # Clean up worker
+        if self.generation_worker:
+            self.generation_worker.deleteLater()
+            self.generation_worker = None
+            
+        if hasattr(self.generate_button, 'clearFocus'):
+            self.generate_button.clearFocus()
+    
+    def _on_generation_error(self, error_message):
+        """Handle generation error"""
+        self.generation_in_progress = False
+        self.generate_button.setText("Generate")
+        self.generate_button.setEnabled(True)
+        
+        QMessageBox.critical(self, "Generation Error", f"Error: {error_message}")
+        
+        # Clean up worker
+        if self.generation_worker:
+            self.generation_worker.deleteLater()
+            self.generation_worker = None
+            
+        if hasattr(self.generate_button, 'clearFocus'):
+            self.generate_button.clearFocus()
+    
+    def _on_generation_progress(self, message):
+        """Handle progress updates during generation"""
+        print(f"🎵 Generation progress: {message}")
+        # Update button text to show progress
+        if self.generation_in_progress:
+            if "Starting" in message:
+                self.generate_button.setText("🚀 Starting...")
+            elif "complete" in message.lower():
+                self.generate_button.setText("✨ Finishing...") 
 
     def _handle_export_click(self): 
         if not self.current_notes:
@@ -344,3 +451,16 @@ class PluginManagerPanel(QDockWidget):
                 print(f"Removed temporary MIDI directory: {self.temp_midi_dir}")
         except Exception as e:
             print(f"Could not remove temporary MIDI directory {self.temp_midi_dir} (it might not be empty or access denied): {e}")
+    
+    def closeEvent(self, event):
+        """Clean up when the panel is closed"""
+        # Stop any running generation
+        if self.generation_worker and self.generation_worker.isRunning():
+            self.generation_worker.terminate()
+            self.generation_worker.wait(3000)  # Wait up to 3 seconds
+            if self.generation_worker:
+                self.generation_worker.deleteLater()
+        
+        # Clean up temporary files
+        self.cleanup_temporary_files()
+        super().closeEvent(event)

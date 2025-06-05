@@ -137,6 +137,17 @@ The application comes with several example plugins:
 1. `motif_generator.py`: Creates melodies based on motifs and variations
 2. `markov_generator.py`: Uses Markov chains to generate melodies
 3. `melody_generator.py`: Emotional melody generator inspired by FL Studio
+4. `godzilla_piano_transformer.py`: AI-powered generation using Godzilla Piano Transformer model
+
+### AI-Powered Plugins
+
+The `godzilla_piano_transformer.py` plugin demonstrates integration with external AI models:
+
+- Uses Gradio API to communicate with Hugging Face Spaces
+- Supports existing notes as input primers
+- Includes fallback generation if API is unavailable
+- Demonstrates proper error handling and retry logic
+- Uses helper utilities from `api_helpers.py` for common operations
 
 Study these examples to understand how to create more complex generation algorithms.
 
@@ -156,5 +167,50 @@ For advanced plugins, you can:
 2. **Use advanced music theory** concepts (scales, chords, progressions).
 3. **Incorporate machine learning** algorithms if applicable.
 4. **Process existing notes** to create variations or accompaniments.
+5. **Integrate external APIs** for AI-powered generation.
+
+## Working with External APIs
+
+For plugins that integrate with external APIs (like AI models), use the helper utilities in `api_helpers.py`:
+
+```python
+from .api_helpers import (
+    ApiConnectionManager,
+    MidiFileHandler, 
+    TempFileManager,
+    validate_api_parameters,
+    create_fallback_melody
+)
+
+class MyAIPlugin(PluginBase):
+    def __init__(self):
+        super().__init__()
+        self.connection_manager = ApiConnectionManager(max_retries=3, timeout=60)
+    
+    def generate(self, existing_notes=None, **kwargs):
+        with TempFileManager() as temp_manager:
+            # Create input MIDI file
+            input_path = MidiFileHandler.create_temp_midi_from_notes(existing_notes)
+            temp_manager.add_temp_file(input_path)
+            
+            # Make API call with retry logic
+            result = self.connection_manager.call_with_retry(self._api_call, input_path, **kwargs)
+            
+            # Parse result or fallback
+            if result:
+                return MidiFileHandler.parse_midi_file(result)
+            else:
+                return create_fallback_melody()
+```
+
+## API Helper Utilities
+
+The `api_helpers.py` module provides:
+
+- **ApiConnectionManager**: Retry logic and timeout handling
+- **MidiFileHandler**: MIDI file creation and parsing
+- **TempFileManager**: Automatic cleanup of temporary files
+- **validate_api_parameters**: Parameter validation and normalization
+- **create_fallback_melody**: Simple fallback when APIs fail
 
 Happy plugin development!

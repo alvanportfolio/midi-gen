@@ -11,7 +11,12 @@ numpy>=1.20.0
 
 # Audio and MIDI playback
 pygame>=2.0.0
+pyfluidsynth>=1.3.0  # FluidSynth Python wrapper for high-quality MIDI audio synthesis
 
 # Additional utilities
 python-rtmidi>=1.4.0  # For real-time MIDI I/O
 mido>=1.2.10  # MIDI objects for Python
+
+# AI/ML APIs
+gradio_client>=0.8.0  # For Gradio API integration
+requests>=2.25.0  # HTTP requests

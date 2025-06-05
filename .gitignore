@@ -18,8 +18,30 @@ Thumbs.db
 # MIDI files
 *.mid
 
+# Test files
+test_*.py
+*_test.py
+tests/
+pytest_cache/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Old and backup files
+*.old
+*.bak
+*.backup
+*~
+*.swp
+*.swo
 
 test_fluidsynth.py
+
+# Specific test and old files
+ui/old-main_window.py
+godzillatest.py
+old-note_display.py
+report.txt
 
 build/
 dist/

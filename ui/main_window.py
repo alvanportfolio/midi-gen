@@ -12,18 +12,33 @@ import pretty_midi
 import time
 import os
 
-from note_display import PianoRollDisplay
-from midi_player import MidiPlayer
-# Assuming plugin_manager, export_utils are in the root or accessible via PYTHONPATH
-from plugin_manager import PluginManager
-from export_utils import export_to_midi
-# UI components are now relative to the 'ui' package or root
+# 🔧 FIXED: Import path corrected based on project structure
+# If main_window.py is in ui/ folder and note_display.py is in root
+try:
+    # Try relative import first (if main_window.py is in ui/ package)
+    from ..note_display import PianoRollDisplay, PianoRollComposite
+    from ..midi_player import MidiPlayer
+    from ..plugin_manager import PluginManager
+    from ..export_utils import export_to_midi
+except ImportError:
+    # Fallback to absolute import (if both files are in same directory or PYTHONPATH is set)
+    from note_display import PianoRollDisplay, PianoRollComposite
+    from midi_player import MidiPlayer
+    from plugin_manager import PluginManager
+    from export_utils import export_to_midi
+
+# UI components with relative imports (assuming these are in ui/ package)
 from .custom_widgets import ModernSlider, ModernButton
 from .plugin_dialogs import PluginParameterDialog
 from .plugin_panel import PluginManagerPanel
 from .transport_controls import TransportControls
-from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter # Added GlobalPlaybackHotkeyFilter
-from config import theme # Import the theme configuration
+from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter
+
+# Config imports
+try:
+    from ..config import theme  # Relative import
+except ImportError:
+    from config import theme  # Absolute import fallback
 
 
 class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
@@ -56,10 +71,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         
         self.create_plugin_manager()
         
-        # self.installEventFilter(self) # MainWindow's own event filter is now secondary
-        
         # Install the global event filter
-        # Pass the main window's toggle_playback method directly
         app_instance = QApplication.instance()
         if app_instance:
             # Pass self.toggle_playback which handles UI updates (timer)
@@ -222,22 +234,12 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.transport_controls.volumeChangedSignal.connect(self.volume_changed_slot) # Connection for volume
 
     def create_piano_roll_display(self):
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: #1c1c20;
-            }
-        """)
-        self.piano_roll = PianoRollDisplay(self.midi_notes)
+        # Use the new composite widget with fixed piano keys
+        self.piano_roll = PianoRollComposite(self.midi_notes)
         self.piano_roll.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        scroll_area.setWidget(self.piano_roll)
-        self.main_layout.addWidget(scroll_area, 1)
+        self.main_layout.addWidget(self.piano_roll, 1)
         
-        # Connect signals from PianoRollDisplay
+        # Connect signals from PianoRollComposite
         self.piano_roll.midiFileProcessed.connect(self.handle_midi_file_processed)
         self.piano_roll.notesChanged.connect(self.handle_notes_changed_from_display)
 
@@ -254,20 +256,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
     def handle_notes_changed_from_display(self, current_notes_in_display: list):
         """Handles notes changed by direct interaction in PianoRollDisplay (paint, delete)."""
         print(f"MainWindow: Notes changed in display, {len(current_notes_in_display)} notes.")
-        # Update the main list and propagate to other components
-        # Avoid direct call to set_midi_notes if it causes redundant updates or signal loops
-        # For now, assuming set_midi_notes is robust enough.
-        # If PianoRollDisplay.notes IS the master list, then only need to update other components.
-        # Let's assume MainWindow.midi_notes is the master.
         
         self.midi_notes = current_notes_in_display # Update master list
-        
-        # Propagate to MidiPlayer and PluginManagerPanel directly if piano_roll.set_notes was already called
-        # by PianoRollDisplay itself before emitting notesChanged.
-        # The PianoRollDisplay.set_notes calls notesChanged.emit(self.notes)
-        # PianoRollDisplay.add_note calls notesChanged.emit(self.notes)
-        # PianoRollDisplay.delete_note_at calls notesChanged.emit(self.notes)
-        # So, current_notes_in_display is already the new state of piano_roll.notes.
         
         self.midi_player.set_notes(self.midi_notes)
         if hasattr(self, 'plugin_manager_panel'):
@@ -281,7 +271,6 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
                     max_end_time = note.end
         self.total_duration = max_end_time + 1.0 # Add padding
         self.update_slider_range()
-        # self.piano_roll.update() # PianoRollDisplay should update itself after modification
 
     def set_midi_notes(self, notes: list): # Added type hint
         # This method is called by PluginManagerPanel.notesGenerated and handle_midi_file_processed
@@ -289,57 +278,12 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         print(f"PianoRollMainWindow: Setting {len(notes)} notes globally.")
         self.midi_notes = notes if notes is not None else []
         
-        # Update PianoRollDisplay (if notes didn't originate from it)
-        # To avoid signal loops, check source or block signals if necessary.
-        # For now, assume direct call is okay.
-        if hasattr(self, 'piano_roll'):
-             self.piano_roll.set_notes(self.midi_notes) # This will emit piano_roll.notesChanged again.
-                                                        # This could be problematic.
-                                                        # Let's refine: set_notes in PianoRollDisplay should not emit if called from here.
-                                                        # Or, handle_notes_changed_from_display should be the sole updater from PianoRoll.
-
-        # The set_notes in PianoRollDisplay already emits notesChanged.
-        # If this set_midi_notes is the main handler, then PianoRollDisplay.notesChanged should
-        # primarily update MainWindow.midi_notes and then MainWindow updates others.
-
-        # Let's simplify: MainWindow.set_midi_notes is the authority.
-        # PianoRollDisplay.notesChanged will call a simpler handler in MainWindow
-        # that just updates MainWindow.midi_notes, then calls this authoritative set_midi_notes.
-        # This is getting circular.
-
-        # Revised flow:
-        # 1. User action in PianoRollDisplay (paint, delete) -> PianoRollDisplay updates its internal self.notes
-        #    -> PianoRollDisplay emits notesChanged(self.notes)
-        # 2. MIDI Drop in PianoRollDisplay -> PianoRollDisplay emits midiFileProcessed(loaded_notes)
-        # 3. Plugin generates notes -> PluginManagerPanel emits notesGenerated(generated_notes)
-
-        # MainWindow slots:
-        # - handle_midi_file_processed(loaded_notes) -> calls self.set_midi_notes(loaded_notes)
-        # - handle_notes_changed_from_display(new_notes_list) -> calls self.set_midi_notes(new_notes_list)
-        # - set_midi_notes (called by plugin) -> this is the current method.
-
-        # The current set_midi_notes method:
-        # self.midi_notes = notes # Master list updated
-        # self.piano_roll.set_notes(notes) # Updates display, emits notesChanged -> handle_notes_changed_from_display -> calls set_midi_notes again! (LOOP)
-
-        # To break loop:
-        # Option A: PianoRollDisplay.set_notes has an emit_signal=False flag.
-        # Option B: MainWindow.set_midi_notes blocks signals from piano_roll temporarily.
-        # Option C: Refactor signal connections.
-
-        # Let's go with a flag in PianoRollDisplay.set_notes and add_note/delete_note_at
-        # For now, I'll assume the current structure and proceed, then refine if loops occur.
-        # The current PianoRollDisplay.set_notes *does* emit notesChanged.
-
-        if hasattr(self, 'piano_roll') and self.piano_roll.notes != self.midi_notes: # Avoid redundant update if already set
+        # Update PianoRollDisplay
+        if hasattr(self, 'piano_roll') and self.piano_roll.notes != self.midi_notes:
             self.piano_roll.set_notes(self.midi_notes) 
         
         if notes:
             sample = notes[0]
-            # print(f"Sample note: pitch={getattr(sample, 'pitch', 'N/A')}, " +
-            #       f"start={getattr(sample, 'start', 'N/A')}, " +
-            #       f"end={getattr(sample, 'end', 'N/A')}, " +
-            #       f"velocity={getattr(sample, 'velocity', 'N/A')}")
         
         self.midi_player.set_notes(notes)
         
@@ -355,7 +299,6 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             self.plugin_manager_panel.set_current_notes(notes)
         
         self.transport_controls.set_bpm_value(self.bpm) # Ensure BPM display is correct
-        # self.update_slider_range() # Called above
 
     def clear_notes(self):
         print("PianoRollMainWindow: Clearing all notes.")
@@ -437,7 +380,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         slider_value_ms = int(position * 1000)
         self.transport_controls.update_time_slider_value(slider_value_ms)
         self.transport_controls.update_position_label(position)
-        self.piano_roll.set_playhead_position(position)
+        self.piano_roll.set_playhead_position(position)  # 🔧 This is the key call that should now work!
         if hasattr(self, 'total_duration') and position >= self.total_duration and self.midi_player.is_playing:
             self.stop_playback()
 
@@ -498,18 +441,6 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
 # Example usage (for testing, would be in main.py)
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    # Load some initial MIDI data for testing if desired
-    # initial_midi_file = "path_to_your_midi.mid" 
-    # if os.path.exists(initial_midi_file):
-    #     midi_data = pretty_midi.PrettyMIDI(initial_midi_file)
-    #     notes_to_load = []
-    #     for instrument in midi_data.instruments:
-    #         if not instrument.is_drum:
-    #             notes_to_load.extend(instrument.notes)
-    # else:
-    #     notes_to_load = []
-
-    # window = PianoRollMainWindow(notes_to_load)
     window = PianoRollMainWindow() # Start with empty
     window.show()
     sys.exit(app.exec())
