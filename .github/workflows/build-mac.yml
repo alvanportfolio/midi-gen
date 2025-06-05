@@ -1,0 +1,82 @@
+name: Build & Release macOS App
+
+permissions:
+  contents: write   # 👈 Required for creating releases
+
+on:
+  workflow_dispatch:      # ✅ Adds manual "Run workflow" button in Actions tab
+  push:
+    tags:
+      - "v1.0.*-mac"      # 🍎 Mac-specific tags (e.g., v1.0.1-mac)
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: 🔁 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🐍 Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: 🍺 Install FluidSynth via Homebrew
+        run: |
+          brew update
+          brew install fluidsynth
+
+      - name: 📦 Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller requests
+          pip install -r requirements.txt || echo "No requirements.txt found"
+
+      - name: 🔨 Build macOS App with PyInstaller
+        run: |
+          pyinstaller app.py \
+            --windowed \
+            --onedir \
+            --name PianoRollStudio \
+            --icon=assets/icons/app_icon.icns \
+            --add-data "assets:assets" \
+            --add-data "soundbank:soundbank" \
+            --hidden-import requests \
+            --exclude-module tkinter \
+            --osx-bundle-identifier com.pianorollstudio.app
+
+      - name: 📱 Create macOS App Bundle (if needed)
+        run: |
+          # Optional: Create a proper .app bundle structure
+          if [ -d "dist/PianoRollStudio" ]; then
+            echo "App bundle created successfully"
+            ls -la dist/PianoRollStudio/
+          fi
+
+      - name: 📂 Prepare Release Folder
+        run: |
+          mkdir -p release
+          if [ -d "dist/PianoRollStudio.app" ]; then
+            cp -R dist/PianoRollStudio.app release/
+          elif [ -d "dist/PianoRollStudio" ]; then
+            cp -R dist/PianoRollStudio release/
+          fi
+          if [ -f "start.sh" ]; then
+            cp start.sh release/
+            chmod +x release/start.sh
+          fi
+
+      - name: 📦 Create ZIP Package for macOS
+        run: |
+          cd release
+          zip -r ../PianoRollStudio-macOS.zip .
+          cd ..
+
+      - name: 🚀 Upload to GitHub Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: PianoRollStudio-macOS.zip
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
