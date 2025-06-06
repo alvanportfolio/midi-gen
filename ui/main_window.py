@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (
     QLabel, QScrollArea, QSizePolicy, QSlider, QStyle, QToolButton,
     QFrame, QSpacerItem, QDockWidget, QListWidget, QListWidgetItem,
     QFormLayout, QSpinBox, QDoubleSpinBox, QComboBox, QCheckBox,
-    QDialog, QDialogButtonBox, QFileDialog, QApplication, QMessageBox
+    QDialog, QDialogButtonBox, QFileDialog, QApplication, QMessageBox,
+    QLineEdit, QTextEdit
 )
 from PySide6.QtCore import Qt, QTimer, Signal, Slot, QSize, QEvent
 from PySide6.QtGui import QKeyEvent, QColor, QPalette, QFont, QLinearGradient, QBrush
@@ -12,33 +13,29 @@ import pretty_midi
 import time
 import os
 
-# 🔧 FIXED: Import path corrected based on project structure
-# If main_window.py is in ui/ folder and note_display.py is in root
+# Import fixes
 try:
-    # Try relative import first (if main_window.py is in ui/ package)
     from ..note_display import PianoRollDisplay, PianoRollComposite
     from ..midi_player import MidiPlayer
     from ..plugin_manager import PluginManager
     from ..export_utils import export_to_midi
 except ImportError:
-    # Fallback to absolute import (if both files are in same directory or PYTHONPATH is set)
     from note_display import PianoRollDisplay, PianoRollComposite
     from midi_player import MidiPlayer
     from plugin_manager import PluginManager
     from export_utils import export_to_midi
 
-# UI components with relative imports (assuming these are in ui/ package)
 from .custom_widgets import ModernSlider, ModernButton
 from .plugin_dialogs import PluginParameterDialog
 from .plugin_panel import PluginManagerPanel
+from .ai_studio_panel import AIStudioPanel
 from .transport_controls import TransportControls
-from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter
+from .event_handlers import MainWindowEventHandlersMixin  # ❌ Removed GlobalPlaybackHotkeyFilter
 
-# Config imports
 try:
-    from ..config import theme  # Relative import
+    from ..config import theme
 except ImportError:
-    from config import theme  # Absolute import fallback
+    from config import theme
 
 
 class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
@@ -48,6 +45,21 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         super().__init__(parent)
         self.setWindowTitle("Piano Roll with Plugin Manager")
         self.setMinimumSize(1000, 600)
+        
+        # Configure dock options for better drag-and-drop behavior
+        self.setDockOptions(
+            QMainWindow.AnimatedDocks |           # Enable animated docking
+            QMainWindow.AllowNestedDocks |        # Allow dock widgets to be nested
+            QMainWindow.AllowTabbedDocks |        # Allow dock widgets to be tabbed
+            QMainWindow.GroupedDragging |         # Enable grouped dragging
+            QMainWindow.VerticalTabs              # Enable vertical tabs
+        )
+        
+        # Enable all dock areas
+        self.setCorner(Qt.TopLeftCorner, Qt.LeftDockWidgetArea)
+        self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
+        self.setCorner(Qt.TopRightCorner, Qt.RightDockWidgetArea)
+        self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)
         
         self.midi_notes = midi_notes or []
         self.midi_player = MidiPlayer()
@@ -70,17 +82,11 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self._connect_transport_signals()
         
         self.create_plugin_manager()
+        self.create_ai_studio_panel()
         
-        # Install the global event filter
-        app_instance = QApplication.instance()
-        if app_instance:
-            # Pass self.toggle_playback which handles UI updates (timer)
-            self.global_hotkey_filter = GlobalPlaybackHotkeyFilter(self.toggle_playback, self) 
-            app_instance.installEventFilter(self.global_hotkey_filter)
-            print("Global playback hotkey filter installed with MainWindow.toggle_playback.")
-        else:
-            print("Error: QApplication.instance() is None. Global hotkey filter not installed.")
-            self.global_hotkey_filter = None
+        # 🔧 FIXED: Use local event filter instead of global one to avoid docking interference
+        self.installEventFilter(self)  # Install on MainWindow only, not globally
+        print("Local event filter installed on MainWindow for spacebar handling.")
             
         self.playback_timer = QTimer(self)
         self.update_timer_interval()
@@ -89,7 +95,11 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         # Initialize transport controls after all components are ready
         self.transport_controls.set_bpm_value(self.bpm)
         self.update_slider_range()
-
+        
+        # Debug: Print dock options to ensure they're set correctly
+        print(f"Dock options enabled: {self.dockOptions()}")
+        print(f"Plugin Manager allowed areas: {self.plugin_manager_panel.allowedAreas()}")
+        print(f"AI Studio allowed areas: {self.ai_studio_panel.allowedAreas()}")
 
     def _apply_stylesheet(self):
         # Global stylesheet using constants from theme.py
@@ -111,16 +121,35 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
                 background-color: {theme.PANEL_BG_COLOR.darker(110).name()};
                 color: {theme.PRIMARY_TEXT_COLOR.name()};
                 font-family: "{theme.FONT_FAMILY_PRIMARY}";
-                font-size: {theme.FONT_SIZE_L}pt; /* Slightly larger for titles */
+                font-size: {theme.FONT_SIZE_L}pt;
                 font-weight: {theme.FONT_WEIGHT_BOLD};
                 padding: {theme.PADDING_S}px {theme.PADDING_M}px;
                 border-bottom: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                text-align: left;
             }}
 
             QDockWidget {{
                 border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
-                /* titlebar-close-icon and titlebar-normal-icon properties can be used
-                   if custom icons are desired for dock widget float/close buttons */
+                titlebar-close-icon: url();
+                titlebar-normal-icon: url();
+            }}
+            
+            /* Dock widget separator styling */
+            QMainWindow::separator {{
+                background-color: {theme.BORDER_COLOR_NORMAL.name()};
+                width: 2px;
+                height: 2px;
+            }}
+            
+            QMainWindow::separator:hover {{
+                background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+            }}
+            
+            /* Ensure dock indicators are visible */
+            QMainWindow QRubberBand {{
+                background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+                border: 2px solid {theme.ACCENT_HOVER_COLOR.name()};
+                opacity: 0.7;
             }}
             
             QScrollBar:horizontal {{
@@ -133,7 +162,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
                 background-color: {theme.BORDER_COLOR_NORMAL.name()};
                 min-width: 20px;
                 border-radius: {theme.BORDER_RADIUS_S}px;
-                margin: 2px 0px 2px 0px; /* Vertical margin */
+                margin: 2px 0px 2px 0px;
             }}
             QScrollBar::handle:horizontal:hover {{
                 background-color: {theme.BORDER_COLOR_HOVER.name()};
@@ -144,7 +173,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
                 border: none;
                 background: none;
-                width: 0px; /* Hide arrows */
+                width: 0px;
             }}
             QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
                 background: none;
@@ -160,7 +189,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
                 background-color: {theme.BORDER_COLOR_NORMAL.name()};
                 min-height: 20px;
                 border-radius: {theme.BORDER_RADIUS_S}px;
-                margin: 0px 2px 0px 2px; /* Horizontal margin */
+                margin: 0px 2px 0px 2px;
             }}
             QScrollBar::handle:vertical:hover {{
                 background-color: {theme.BORDER_COLOR_HOVER.name()};
@@ -171,24 +200,21 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 border: none;
                 background: none;
-                height: 0px; /* Hide arrows */
+                height: 0px;
             }}
             QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
                 background: none;
             }}
 
-            /* Style for QScrollArea containing PianoRollDisplay - already partially styled inline */
-            /* This global style can act as a fallback or default */
             QScrollArea {{
                 background-color: {theme.PIANO_ROLL_BG_COLOR.name()}; 
-                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()}; /* Or none if preferred */
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
             }}
             
-            /* Fallback QPushButton styling */
             QPushButton {{
                 background-color: {theme.STANDARD_BUTTON_BG_COLOR.name()};
                 color: {theme.STANDARD_BUTTON_TEXT_COLOR.name()};
-                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()}; /* Adding a subtle border */
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
                 padding: {theme.PADDING_S}px {theme.PADDING_M}px;
                 border-radius: {theme.BORDER_RADIUS_M}px;
                 font-family: "{theme.FONT_FAMILY_PRIMARY}";
@@ -224,14 +250,25 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.plugin_manager_panel.notesGenerated.connect(self.set_midi_notes)
         self.plugin_manager_panel.set_current_notes(self.midi_notes)
 
+    def create_ai_studio_panel(self):
+        self.ai_studio_panel = AIStudioPanel(self)
+        # Start AI Studio in right dock area for better testing
+        self.addDockWidget(Qt.RightDockWidgetArea, self.ai_studio_panel)
+        self.ai_studio_panel.notesGenerated.connect(self.set_midi_notes)
+        self.ai_studio_panel.set_current_notes(self.midi_notes)
+        
+        # Initially hide AI studio panel (start with plugin manager)
+        self.ai_studio_panel.hide()
+
     def _connect_transport_signals(self):
         self.transport_controls.playClicked.connect(self.start_playback)
         self.transport_controls.pauseClicked.connect(self.pause_playback)
         self.transport_controls.stopClicked.connect(self.stop_playback)
         self.transport_controls.seekPositionChanged.connect(self.slider_position_changed_slot)
         self.transport_controls.bpmChangedSignal.connect(self.bpm_changed_slot)
-        self.transport_controls.instrumentChangedSignal.connect(self.instrument_changed_slot) # New connection
-        self.transport_controls.volumeChangedSignal.connect(self.volume_changed_slot) # Connection for volume
+        self.transport_controls.instrumentChangedSignal.connect(self.instrument_changed_slot)
+        self.transport_controls.volumeChangedSignal.connect(self.volume_changed_slot)
+        self.transport_controls.aiModeToggled.connect(self.toggle_ai_mode)
 
     def create_piano_roll_display(self):
         # Use the new composite widget with fixed piano keys
@@ -247,43 +284,39 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
     def handle_midi_file_processed(self, loaded_notes: list):
         """Handles notes loaded from a dropped MIDI file."""
         print(f"MainWindow: MIDI file processed, {len(loaded_notes)} notes received.")
-        # set_midi_notes will update all components
         self.set_midi_notes(loaded_notes)
-        # Optionally, reset playhead to start after loading a new file
-        self.stop_playback() # Stop and reset playhead
+        self.stop_playback()
 
     @Slot(list)
     def handle_notes_changed_from_display(self, current_notes_in_display: list):
-        """Handles notes changed by direct interaction in PianoRollDisplay (paint, delete)."""
+        """Handles notes changed by direct interaction in PianoRollDisplay."""
         print(f"MainWindow: Notes changed in display, {len(current_notes_in_display)} notes.")
         
-        self.midi_notes = current_notes_in_display # Update master list
+        self.midi_notes = current_notes_in_display
         
         self.midi_player.set_notes(self.midi_notes)
         if hasattr(self, 'plugin_manager_panel'):
             self.plugin_manager_panel.set_current_notes(self.midi_notes)
+        if hasattr(self, 'ai_studio_panel'):
+            self.ai_studio_panel.set_current_notes(self.midi_notes)
         
-        # Recalculate duration and update UI elements that depend on it
+        # Recalculate duration and update UI elements
         max_end_time = 0
         if self.midi_notes:
             for note in self.midi_notes:
                 if hasattr(note, 'end') and note.end > max_end_time:
                     max_end_time = note.end
-        self.total_duration = max_end_time + 1.0 # Add padding
+        self.total_duration = max_end_time + 1.0
         self.update_slider_range()
 
-    def set_midi_notes(self, notes: list): # Added type hint
-        # This method is called by PluginManagerPanel.notesGenerated and handle_midi_file_processed
-        # It should be the primary way to update notes across the application.
+    def set_midi_notes(self, notes: list):
+        """Primary method to update notes across the application."""
         print(f"PianoRollMainWindow: Setting {len(notes)} notes globally.")
         self.midi_notes = notes if notes is not None else []
         
         # Update PianoRollDisplay
         if hasattr(self, 'piano_roll') and self.piano_roll.notes != self.midi_notes:
             self.piano_roll.set_notes(self.midi_notes) 
-        
-        if notes:
-            sample = notes[0]
         
         self.midi_player.set_notes(notes)
         
@@ -297,8 +330,10 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         
         if hasattr(self, 'plugin_manager_panel'):
             self.plugin_manager_panel.set_current_notes(notes)
+        if hasattr(self, 'ai_studio_panel'):
+            self.ai_studio_panel.set_current_notes(notes)
         
-        self.transport_controls.set_bpm_value(self.bpm) # Ensure BPM display is correct
+        self.transport_controls.set_bpm_value(self.bpm)
 
     def clear_notes(self):
         print("PianoRollMainWindow: Clearing all notes.")
@@ -319,6 +354,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
 
         if hasattr(self, 'plugin_manager_panel'):
             self.plugin_manager_panel.set_current_notes([])
+        if hasattr(self, 'ai_studio_panel'):
+            self.ai_studio_panel.set_current_notes([])
 
     def receive_generated_note(self, note: pretty_midi.Note):
         if not hasattr(note, 'start') or not hasattr(note, 'end') or not hasattr(note, 'pitch'):
@@ -335,19 +372,21 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         
         if hasattr(self, 'plugin_manager_panel'):
             self.plugin_manager_panel.set_current_notes(self.midi_notes)
+        if hasattr(self, 'ai_studio_panel'):
+            self.ai_studio_panel.set_current_notes(self.midi_notes)
     
     def toggle_playback(self):
+        print(f"🎮 toggle_playback() called! Current state: {'Playing' if self.midi_player.is_playing else 'Stopped/Paused'}")
+        print(f"🎵 Current notes count: {len(self.midi_notes)}")
+        
         if self.midi_player.is_playing:
-            # User wants pause to behave like stop: reset playhead to 0
             print("MainWindow: Toggle playback - was playing, now stopping and resetting.")
             self.stop_playback() 
         else:
-            # If stopped or "paused" (which is now stop), start from beginning
             print("MainWindow: Toggle playback - was stopped/paused, now starting from beginning.")
-            # Ensure playback position is at 0 before starting
             if self.midi_player.get_current_position() != 0.0:
-                 self.midi_player.seek(0.0) # Ensure player is at start
-                 self.piano_roll.set_playhead_position(0.0) # Ensure UI is at start
+                 self.midi_player.seek(0.0)
+                 self.piano_roll.set_playhead_position(0.0)
                  self.transport_controls.update_time_slider_value(0)
                  self.transport_controls.update_position_label(0)
             self.start_playback()
@@ -380,7 +419,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         slider_value_ms = int(position * 1000)
         self.transport_controls.update_time_slider_value(slider_value_ms)
         self.transport_controls.update_position_label(position)
-        self.piano_roll.set_playhead_position(position)  # 🔧 This is the key call that should now work!
+        self.piano_roll.set_playhead_position(position)
         if hasattr(self, 'total_duration') and position >= self.total_duration and self.midi_player.is_playing:
             self.stop_playback()
 
@@ -411,12 +450,49 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
     @Slot(int)
     def volume_changed_slot(self, volume_percentage: int):
         """Handles volume change from the transport controls."""
-        volume_float = volume_percentage / 100.0  # Convert 0-100 to 0.0-1.0
+        volume_float = volume_percentage / 100.0
         if hasattr(self.midi_player, 'set_volume'):
-            # print(f"MainWindow: Volume changed to {volume_percentage}% ({volume_float:.2f})")
             self.midi_player.set_volume(volume_float)
         else:
             print(f"MainWindow: MidiPlayer does not have set_volume method.")
+    
+    @Slot(bool)
+    def toggle_ai_mode(self, is_ai_mode: bool):
+        """Toggle between Plugin Manager and AI Studio modes"""
+        if is_ai_mode:
+            # Switch to AI Studio
+            if hasattr(self, 'plugin_manager_panel'):
+                self.plugin_manager_panel.setVisible(False)
+            if hasattr(self, 'ai_studio_panel'):
+                self.ai_studio_panel.setVisible(True)
+                # Update AI Studio with current notes
+                self.ai_studio_panel.set_current_notes(self.midi_notes)
+                # Ensure it's dockable if it was floating
+                if self.ai_studio_panel.isFloating():
+                    # If floating, make sure it still has all features enabled
+                    self.ai_studio_panel.setFeatures(
+                        QDockWidget.DockWidgetMovable | 
+                        QDockWidget.DockWidgetFloatable | 
+                        QDockWidget.DockWidgetClosable
+                    )
+            print("MainWindow: Switched to AI Studio mode")
+        else:
+            # Switch to Plugin Manager
+            if hasattr(self, 'ai_studio_panel'):
+                self.ai_studio_panel.setVisible(False)
+            if hasattr(self, 'plugin_manager_panel'):
+                self.plugin_manager_panel.setVisible(True)
+                # Update Plugin Manager with current notes
+                self.plugin_manager_panel.set_current_notes(self.midi_notes)
+                # Ensure it's dockable if it was floating
+                if self.plugin_manager_panel.isFloating():
+                    # If floating, make sure it still has all features enabled
+                    self.plugin_manager_panel.setFeatures(
+                        QDockWidget.DockWidgetMovable | 
+                        QDockWidget.DockWidgetFloatable | 
+                        QDockWidget.DockWidgetClosable
+                    )
+            print("MainWindow: Switched to Plugin Manager mode")
     
     def update_timer_interval(self):
         base_interval = 16
@@ -433,14 +509,38 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             scaled_duration_ms = int(self.total_duration * 1000)
             if hasattr(self, 'transport_controls'):
                 self.transport_controls.update_time_slider_maximum(scaled_duration_ms)
-        else:
-            pass
-    
-    # eventFilter and closeEvent are now inherited from MainWindowEventHandlersMixin
 
-# Example usage (for testing, would be in main.py)
+    # 🔧 ENHANCED: Better event filter implementation that doesn't interfere with docking
+    def eventFilter(self, watched, event):
+        """Handle keyboard events for shortcuts (e.g., Space for play/pause)."""
+        if event.type() == QEvent.KeyPress:
+            if isinstance(event, QKeyEvent) and event.key() == Qt.Key_Space:
+                focused_widget = QApplication.focusWidget()
+                
+                print(f"🎹 Spacebar pressed! Watched: {watched.__class__.__name__}, Focused: {focused_widget.__class__.__name__ if focused_widget else 'None'}")
+                
+                # Don't handle spacebar if user is typing in text fields
+                if isinstance(focused_widget, (QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox)):
+                    print("❌ Spacebar ignored - user is typing in text input field")
+                    return super().eventFilter(watched, event)
+                if isinstance(focused_widget, QComboBox) and focused_widget.view().isVisible():
+                    print("❌ Spacebar ignored - ComboBox is open")
+                    return super().eventFilter(watched, event)
+
+                # Handle spacebar
+                if hasattr(self, 'toggle_playback') and callable(self.toggle_playback):
+                    print("✅ Spacebar handled - calling toggle_playback()")
+                    self.toggle_playback()
+                    return True  # Event handled
+                else:
+                    print("❌ toggle_playback method not found!")
+        
+        return super().eventFilter(watched, event)
+
+
+# Example usage
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    window = PianoRollMainWindow() # Start with empty
+    window = PianoRollMainWindow()
     window.show()
     sys.exit(app.exec())

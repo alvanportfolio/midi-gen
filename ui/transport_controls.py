@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QLabel, QStyle, QFrame, QComboBox
+    QWidget, QHBoxLayout, QLabel, QStyle, QFrame, QComboBox, QButtonGroup
 ) # QPushButton and QSlider removed as ModernSlider/Button are used
 from PySide6.QtCore import Qt, Signal, Slot, QSize
 from PySide6.QtGui import QFont, QIcon # Import QFont and QIcon
-from ui.custom_widgets import ModernSlider, ModernIconButton # Use ModernIconButton
+from ui.custom_widgets import ModernSlider, ModernIconButton, ModernButton # Use ModernIconButton
 from config import theme, constants # Import theme and constants
 
 class TransportControls(QWidget):
@@ -17,6 +17,9 @@ class TransportControls(QWidget):
     bpmChangedSignal = Signal(int)
     instrumentChangedSignal = Signal(int) # New signal for instrument changes
     volumeChangedSignal = Signal(int) # Signal for volume changes (0-100)
+    
+    # New signal for AI/Plugin toggle
+    aiModeToggled = Signal(bool) # True for AI mode, False for Plugin mode
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -211,6 +214,34 @@ class TransportControls(QWidget):
         self.volume_value_label.setStyleSheet(f"color: {theme.PRIMARY_TEXT_COLOR.name()}; min-width: 35px;") # Adjusted min-width
         self.volume_value_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(self.volume_value_label)
+
+        layout.addSpacing(theme.PADDING_L)  # Spacing before AI/Plugin toggle
+
+        # Separator line before AI/Plugin toggle
+        line5 = QFrame()
+        line5.setFrameShape(QFrame.VLine)
+        line5.setFrameShadow(QFrame.Sunken)
+        line5.setStyleSheet(f"color: {theme.BORDER_COLOR_NORMAL.name()};")
+        layout.addWidget(line5)
+        layout.addSpacing(theme.PADDING_S)
+
+        # AI/Plugin Mode Toggle
+        self.mode_toggle_group = QButtonGroup()
+        
+        self.plugin_mode_button = ModernButton("🎛️ Plugins")
+        self.plugin_mode_button.setCheckable(True)
+        self.plugin_mode_button.setFixedWidth(90)
+        self.plugin_mode_button.setChecked(True)  # Default to plugin mode
+        self.plugin_mode_button.clicked.connect(lambda: self._handle_mode_toggle(False))
+        self.mode_toggle_group.addButton(self.plugin_mode_button, 0)
+        layout.addWidget(self.plugin_mode_button)
+        
+        self.ai_mode_button = ModernButton("🤖 AI Studio")
+        self.ai_mode_button.setCheckable(True)
+        self.ai_mode_button.setFixedWidth(90)
+        self.ai_mode_button.clicked.connect(lambda: self._handle_mode_toggle(True))
+        self.mode_toggle_group.addButton(self.ai_mode_button, 1)
+        layout.addWidget(self.ai_mode_button)
         
         layout.addStretch(1) # Add stretch at the end to push controls left
 
@@ -243,6 +274,17 @@ class TransportControls(QWidget):
         self.volume_value_label.setText(f"{value}%")
         self.volumeChangedSignal.emit(value)
         # Main window will connect this signal to adjust actual playback volume
+
+    def _handle_mode_toggle(self, is_ai_mode: bool):
+        """Handle toggle between Plugin Manager and AI Studio modes"""
+        if is_ai_mode:
+            self.ai_mode_button.setChecked(True)
+            self.plugin_mode_button.setChecked(False)
+        else:
+            self.plugin_mode_button.setChecked(True)
+            self.ai_mode_button.setChecked(False)
+        
+        self.aiModeToggled.emit(is_ai_mode)
 
     @Slot(bool)
     def set_playing_state(self, playing):

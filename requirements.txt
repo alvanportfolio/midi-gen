@@ -1,22 +1,32 @@
+# ======================================
 # MIDI Generator Piano Roll Project Requirements
+# ======================================
 
-# GUI
+# GUI Framework
 PySide6>=6.0.0
 
-# MIDI processing
+# MIDI Processing
 pretty_midi>=0.2.9
+mido>=1.2.10
+python-rtmidi>=1.4.0
 
-# Numerical operations
-numpy>=1.20.0
-
-# Audio and MIDI playback
+# Audio and MIDI Playback
 pygame>=2.0.0
-pyfluidsynth>=1.3.0  # FluidSynth Python wrapper for high-quality MIDI audio synthesis
+pyfluidsynth>=1.3.0  # FluidSynth Python wrapper for MIDI audio synthesis
 
-# Additional utilities
-python-rtmidi>=1.4.0  # For real-time MIDI I/O
-mido>=1.2.10  # MIDI objects for Python
+# Numerical and Scientific Computing
+numpy>=1.20.0
+scikit-learn
+matplotlib
+tqdm
+torch>=1.9.0
+einx
+einops
 
-# AI/ML APIs
-gradio_client>=0.8.0  # For Gradio API integration
-requests>=2.25.0  # HTTP requests
+# Standard Libraries (usually don't need to be installed separately)
+# pathlib
+# argparse
+
+# API and Web Integration
+gradio_client>=0.8.0
+requests>=2.25.0

@@ -1,4 +1,4 @@
-# Ignore Python compiled files
+pp# Ignore Python compiled files
 __pycache__/
 *.pyc
 *.pyo
@@ -43,7 +43,12 @@ godzillatest.py
 old-note_display.py
 report.txt
 
+example.md
+
+check.py 
+
 build/
 dist/
 app.spec
 *.spec
+*.pth

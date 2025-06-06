@@ -51,8 +51,12 @@ class PluginManagerPanel(QDockWidget):
     
     def __init__(self, parent=None):
         super().__init__("Plugin Manager", parent)
-        self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        self.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetFloatable)
+        self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea | Qt.TopDockWidgetArea | Qt.BottomDockWidgetArea)
+        self.setFeatures(
+            QDockWidget.DockWidgetMovable | 
+            QDockWidget.DockWidgetFloatable | 
+            QDockWidget.DockWidgetClosable
+        )
         
         self.plugin_manager = PluginManager()
         
