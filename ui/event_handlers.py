@@ -10,22 +10,9 @@ class MainWindowEventHandlersMixin:
     """
     
     def eventFilter(self, watched, event):
-        """Handle keyboard events for shortcuts (e.g., Space for play/pause)."""
-        # This filter is now secondary if GlobalPlaybackHotkeyFilter is used.
-        # Kept for potential other main window specific shortcuts or if global filter is disabled.
-        if event.type() == QEvent.KeyPress:
-            if isinstance(event, QKeyEvent) and event.key() == Qt.Key_Space:
-                focused_widget = QApplication.focusWidget()
-                if isinstance(focused_widget, (QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox)):
-                    return super().eventFilter(watched, event)
-                if isinstance(focused_widget, QComboBox) and focused_widget.view().isVisible():
-                    return super().eventFilter(watched, event)
-
-                if hasattr(self, 'toggle_playback') and callable(self.toggle_playback):
-                    # self.toggle_playback() # This would be handled by the global filter now
-                    # print("MainWindow eventFilter: Spacebar pressed, but global filter should handle.")
-                    pass # Let global filter handle it
-                    
+        """Event filter for MainWindow - spacebar handling is now done in the main window class."""
+        # Spacebar handling moved to PianoRollMainWindow.eventFilter() to avoid conflicts
+        # This mixin eventFilter is kept for other potential shortcuts in the future
         return super().eventFilter(watched, event)
     
     def closeEvent(self, event):
