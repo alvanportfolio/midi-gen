@@ -143,6 +143,7 @@ def _qss_path(path_segments):
 PLAY_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "play.svg"])
 PAUSE_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "pause.svg"])
 STOP_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "stop.svg"])
+CLEAR_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "clear.svg"])
 PLUGIN_ICON_PATH_DEFAULT = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "default-plugin.svg"])
 DROPDOWN_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "chevron_down.svg"])
 APP_ICON_PATH = _qss_path([ASSETS_BASE_PATH, ICON_DIR_NAME, "app_icon.png"]) # For main window icon

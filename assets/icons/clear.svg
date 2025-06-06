@@ -1,0 +1,3 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" id="delete">
+  <path d="M12.5 0C5.602 0 0 5.602 0 12.5S5.602 25 12.5 25 25 19.398 25 12.5 19.398 0 12.5 0zm0 .969A11.519 11.519 0 0 1 24.031 12.5c0 6.378-5.153 11.563-11.531 11.563C6.122 24.063.969 18.878.969 12.5A11.519 11.519 0 0 1 12.5.969zM11 7c-.548 0-1 .452-1 1v1H7v1h1v7c0 .545.455 1 1 1h7c.545 0 1-.455 1-1v-7h1V9h-3V8c0-.548-.452-1-1-1h-3zm0 1h3v1h-3V8zm-2 2h7v7h-1v-6h-1v6h-1v-6h-1v6h-1v-6h-1v6H9v-7z" color="#000" font-family="Sans" font-weight="400" overflow="visible" style="text-indent:0;text-align:start;line-height:normal;text-transform:none;block-progression:tb;marker:none;-inkscape-font-specification:Sans"></path>
+</svg>

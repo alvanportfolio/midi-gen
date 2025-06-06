@@ -20,6 +20,9 @@ class TransportControls(QWidget):
     
     # New signal for AI/Plugin toggle
     aiModeToggled = Signal(bool) # True for AI mode, False for Plugin mode
+    
+    # Signal for clear all notes
+    clearNotesClicked = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -43,6 +46,7 @@ class TransportControls(QWidget):
         self.play_icon = QIcon(theme.PLAY_ICON_PATH)
         self.pause_icon = QIcon(theme.PAUSE_ICON_PATH)
         self.stop_icon = QIcon(theme.STOP_ICON_PATH)
+        self.clear_icon = QIcon(theme.CLEAR_ICON_PATH)
 
         # Play button - Uses ModernIconButton, should pick up its styles
         # Icon size for transport controls might be larger, e.g., ICON_SIZE_L
@@ -243,6 +247,18 @@ class TransportControls(QWidget):
         self.mode_toggle_group.addButton(self.ai_mode_button, 1)
         layout.addWidget(self.ai_mode_button)
         
+        layout.addSpacing(theme.PADDING_S)  # Small spacing before clear button
+        
+        # Clear Notes Button - Icon only
+        self.clear_button = ModernIconButton(
+            icon=self.clear_icon, 
+            tooltip="Clear All Notes", 
+            fixed_size=button_size
+        )
+        self.clear_button.setIconSize(QSize(theme.ICON_SIZE_L, theme.ICON_SIZE_L))
+        self.clear_button.clicked.connect(self._handle_clear_notes)
+        layout.addWidget(self.clear_button)
+        
         layout.addStretch(1) # Add stretch at the end to push controls left
 
         self._is_playing = False
@@ -285,6 +301,11 @@ class TransportControls(QWidget):
             self.ai_mode_button.setChecked(False)
         
         self.aiModeToggled.emit(is_ai_mode)
+    
+    def _handle_clear_notes(self):
+        """Handle clear all notes button click"""
+        print("Transport Controls: Clear all notes button clicked")
+        self.clearNotesClicked.emit()
 
     @Slot(bool)
     def set_playing_state(self, playing):

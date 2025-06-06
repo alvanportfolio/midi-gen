@@ -35,7 +35,7 @@ class GlobalPlaybackHotkeyFilter(QObject):
     Global event filter to handle Spacebar for toggling playback.
     Installed on QApplication.instance().
     """
-    def __init__(self, main_window_toggle_method, parent=None): # Changed to accept main window's toggle method
+    def __init__(self, main_window_toggle_method, parent=None):
         super().__init__(parent)
         self.main_window_toggle_method = main_window_toggle_method
 
@@ -44,15 +44,27 @@ class GlobalPlaybackHotkeyFilter(QObject):
             if isinstance(event, QKeyEvent) and event.key() == Qt.Key_Space:
                 focused_widget = QApplication.focusWidget()
                 
+                print(f"🎹 GlobalFilter: Spacebar pressed! Focused widget: {focused_widget.__class__.__name__ if focused_widget else 'None'}")
+                
+                # Don't handle spacebar if user is typing in text fields
                 if isinstance(focused_widget, (QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox)):
-                    return False 
-
-                if isinstance(focused_widget, QComboBox) and focused_widget.view().isVisible():
+                    print("❌ GlobalFilter: Spacebar ignored - user is typing in text input field")
                     return False
 
+                if isinstance(focused_widget, QComboBox) and focused_widget.view().isVisible():
+                    print("❌ GlobalFilter: Spacebar ignored - ComboBox dropdown is open")
+                    return False
+
+                # Handle spacebar for playback
                 if callable(self.main_window_toggle_method):
-                    print("GlobalHotkeyFilter: Spacebar pressed, calling main window toggle_playback.")
-                    self.main_window_toggle_method()
-                    return True 
+                    print("✅ GlobalFilter: Spacebar handled - calling toggle_playback!")
+                    try:
+                        self.main_window_toggle_method()
+                        return True  # Event consumed
+                    except Exception as e:
+                        print(f"❌ GlobalFilter: Error calling toggle_playback: {e}")
+                        return False
+                else:
+                    print("❌ GlobalFilter: toggle_playback method not callable!")
         
-        return False
+        return False  # Don't consume other events

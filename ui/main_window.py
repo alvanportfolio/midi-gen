@@ -30,7 +30,7 @@ from .plugin_dialogs import PluginParameterDialog
 from .plugin_panel import PluginManagerPanel
 from .ai_studio_panel import AIStudioPanel
 from .transport_controls import TransportControls
-from .event_handlers import MainWindowEventHandlersMixin  # ❌ Removed GlobalPlaybackHotkeyFilter
+from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter
 
 try:
     from ..config import theme
@@ -84,9 +84,10 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.create_plugin_manager()
         self.create_ai_studio_panel()
         
-        # 🔧 FIXED: Use local event filter instead of global one to avoid docking interference
-        self.installEventFilter(self)  # Install on MainWindow only, not globally
-        print("Local event filter installed on MainWindow for spacebar handling.")
+        # 🔧 FIXED: Install global spacebar handler that works everywhere
+        self.global_hotkey_filter = GlobalPlaybackHotkeyFilter(self.toggle_playback)
+        QApplication.instance().installEventFilter(self.global_hotkey_filter)
+        print("Global spacebar event filter installed for playback control.")
             
         self.playback_timer = QTimer(self)
         self.update_timer_interval()
@@ -269,6 +270,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.transport_controls.instrumentChangedSignal.connect(self.instrument_changed_slot)
         self.transport_controls.volumeChangedSignal.connect(self.volume_changed_slot)
         self.transport_controls.aiModeToggled.connect(self.toggle_ai_mode)
+        self.transport_controls.clearNotesClicked.connect(self.clear_notes)
 
     def create_piano_roll_display(self):
         # Use the new composite widget with fixed piano keys
@@ -336,26 +338,51 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.transport_controls.set_bpm_value(self.bpm)
 
     def clear_notes(self):
-        print("PianoRollMainWindow: Clearing all notes.")
-        self.midi_notes = []
-        if hasattr(self, 'piano_roll'):
-            self.piano_roll.set_notes([])
-        if hasattr(self, 'midi_player'):
-            self.midi_player.set_notes([])
+        """Clear all notes with user confirmation"""
+        # Check if there are any notes to clear
+        if not self.midi_notes or len(self.midi_notes) == 0:
+            print("PianoRollMainWindow: No notes to clear.")
+            return
         
-        self.total_duration = 10.0
-        self.update_slider_range()
-        if hasattr(self, 'piano_roll'):
-            self.piano_roll.set_playhead_position(0)
+        # Show confirmation dialog
+        reply = QMessageBox.question(
+            self,
+            "Clear All Notes",
+            f"Are you sure you want to clear all {len(self.midi_notes)} notes?\n\nThis action cannot be undone.",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No  # Default to No for safety
+        )
         
-        if hasattr(self, 'transport_controls'):
-            self.transport_controls.update_position_label(0)
-            self.transport_controls.update_time_slider_value(0)
+        if reply == QMessageBox.Yes:
+            print("PianoRollMainWindow: Clearing all notes (user confirmed).")
+            
+            # Stop playback first
+            self.stop_playback()
+            
+            # Clear notes
+            self.midi_notes = []
+            if hasattr(self, 'piano_roll'):
+                self.piano_roll.set_notes([])
+            if hasattr(self, 'midi_player'):
+                self.midi_player.set_notes([])
+            
+            self.total_duration = 10.0
+            self.update_slider_range()
+            if hasattr(self, 'piano_roll'):
+                self.piano_roll.set_playhead_position(0)
+            
+            if hasattr(self, 'transport_controls'):
+                self.transport_controls.update_position_label(0)
+                self.transport_controls.update_time_slider_value(0)
 
-        if hasattr(self, 'plugin_manager_panel'):
-            self.plugin_manager_panel.set_current_notes([])
-        if hasattr(self, 'ai_studio_panel'):
-            self.ai_studio_panel.set_current_notes([])
+            if hasattr(self, 'plugin_manager_panel'):
+                self.plugin_manager_panel.set_current_notes([])
+            if hasattr(self, 'ai_studio_panel'):
+                self.ai_studio_panel.set_current_notes([])
+                
+            print(f"✅ Successfully cleared all notes from piano roll.")
+        else:
+            print("PianoRollMainWindow: Clear notes cancelled by user.")
 
     def receive_generated_note(self, note: pretty_midi.Note):
         if not hasattr(note, 'start') or not hasattr(note, 'end') or not hasattr(note, 'pitch'):
@@ -510,32 +537,15 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             if hasattr(self, 'transport_controls'):
                 self.transport_controls.update_time_slider_maximum(scaled_duration_ms)
 
-    # 🔧 ENHANCED: Better event filter implementation that doesn't interfere with docking
-    def eventFilter(self, watched, event):
-        """Handle keyboard events for shortcuts (e.g., Space for play/pause)."""
-        if event.type() == QEvent.KeyPress:
-            if isinstance(event, QKeyEvent) and event.key() == Qt.Key_Space:
-                focused_widget = QApplication.focusWidget()
-                
-                print(f"🎹 Spacebar pressed! Watched: {watched.__class__.__name__}, Focused: {focused_widget.__class__.__name__ if focused_widget else 'None'}")
-                
-                # Don't handle spacebar if user is typing in text fields
-                if isinstance(focused_widget, (QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox)):
-                    print("❌ Spacebar ignored - user is typing in text input field")
-                    return super().eventFilter(watched, event)
-                if isinstance(focused_widget, QComboBox) and focused_widget.view().isVisible():
-                    print("❌ Spacebar ignored - ComboBox is open")
-                    return super().eventFilter(watched, event)
-
-                # Handle spacebar
-                if hasattr(self, 'toggle_playback') and callable(self.toggle_playback):
-                    print("✅ Spacebar handled - calling toggle_playback()")
-                    self.toggle_playback()
-                    return True  # Event handled
-                else:
-                    print("❌ toggle_playback method not found!")
+    def closeEvent(self, event):
+        """Clean up resources when window is closed."""
+        # Remove global event filter before closing
+        if hasattr(self, 'global_hotkey_filter'):
+            QApplication.instance().removeEventFilter(self.global_hotkey_filter)
+            print("Global spacebar event filter removed.")
         
-        return super().eventFilter(watched, event)
+        # Call parent cleanup
+        super().closeEvent(event)
 
 
 # Example usage

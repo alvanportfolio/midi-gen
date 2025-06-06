@@ -24,15 +24,38 @@ sys.path.append(os.path.join(ai_studio_path, 'tegridy-tools', 'tegridy-tools', '
 
 # Import AI dependencies with error handling
 AI_AVAILABLE = False
+TMIDIX_AVAILABLE = False
+TRANSFORMER_AVAILABLE = False
+
 try:
     import torch
     import numpy as np
-    import TMIDIX
-    from x_transformer_2_3_1 import *
+    print("✅ PyTorch and NumPy loaded successfully")
+    
+    # Try to import TMIDIX
+    try:
+        import TMIDIX
+        TMIDIX_AVAILABLE = True
+        print("✅ TMIDIX loaded successfully")
+    except ImportError as e:
+        print(f"⚠️ TMIDIX not available: {e}")
+        print("ℹ️ AI Studio will use fallback MIDI processing")
+    
+    # Try to import X-Transformer
+    try:
+        from x_transformer_2_3_1 import *
+        TRANSFORMER_AVAILABLE = True
+        print("✅ X-Transformer loaded successfully")
+    except ImportError as e:
+        print(f"⚠️ X-Transformer not available: {e}")
+        print("ℹ️ AI Studio will use simplified generation")
+    
+    # AI is available if we have at least PyTorch
     AI_AVAILABLE = True
-    print("✅ AI dependencies loaded successfully")
+    print("✅ Basic AI dependencies loaded successfully")
+    
 except ImportError as e:
-    print(f"⚠️ AI dependencies not available: {e}")
+    print(f"⚠️ Core AI dependencies not available: {e}")
     AI_AVAILABLE = False
 
 class RealAIGenerator:
@@ -46,18 +69,39 @@ class RealAIGenerator:
         self.ctx = None
         self.model_loaded = False
         
-        # Auto-detect device
-        if AI_AVAILABLE and torch.cuda.is_available():
-            self.device = 'cuda'
-        else:
-            self.device = 'cpu'
+        # Auto-detect device with better error handling
+        self.device = 'cpu'  # Default to CPU
+        if AI_AVAILABLE:
+            try:
+                # First check if CUDA is available
+                if torch.cuda.is_available():
+                    self.device = 'cuda'
+                    print(f"✅ CUDA GPU detected: {torch.cuda.get_device_name(0)}")
+                else:
+                    # Check for other device types (MPS for Mac)
+                    if hasattr(torch, 'mps') and hasattr(torch.mps, 'is_available') and torch.mps.is_available():
+                        self.device = 'mps'
+                        print("✅ Apple MPS device detected")
+                    else:
+                        print("ℹ️ No GPU detected, using CPU")
+            except Exception as e:
+                print(f"⚠️ Error detecting device capabilities: {e}")
+                print("ℹ️ Falling back to CPU")
+                self.device = 'cpu'
     
     def load_model(self):
         """Load the alex_melody.pth model"""
         if not AI_AVAILABLE:
             raise ImportError("AI dependencies not available")
         
-        model_path = "ai_studio/models/alex_melody.pth"
+        # Look for model in external ai_studio folder next to executable when bundled
+        if getattr(sys, 'frozen', False):
+            # Running in a PyInstaller bundle
+            base_dir = os.path.dirname(sys.executable)
+            model_path = os.path.join(base_dir, "ai_studio", "models", "alex_melody.pth")
+        else:
+            # Running in development mode
+            model_path = "ai_studio/models/alex_melody.pth"
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
         
@@ -89,11 +133,26 @@ class RealAIGenerator:
         self.model.to(self.device)
         self.model.eval()
         
-        # Setup autocast context
-        if self.device == 'cuda':
-            self.ctx = torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16)
-        else:
-            self.ctx = torch.amp.autocast(device_type='cpu', dtype=torch.bfloat16, enabled=False)
+        # Setup autocast context with better error handling
+        try:
+            if self.device == 'cuda':
+                # Check if bfloat16 is supported
+                if torch.cuda.is_bf16_supported():
+                    self.ctx = torch.amp.autocast(device_type='cuda', dtype=torch.bfloat16)
+                else:
+                    # Fall back to float16 if bfloat16 is not supported
+                    self.ctx = torch.amp.autocast(device_type='cuda', dtype=torch.float16)
+            elif self.device == 'mps':
+                # MPS device (Apple Silicon)
+                self.ctx = torch.amp.autocast(device_type='mps', dtype=torch.float16)
+            else:
+                # CPU fallback
+                self.ctx = torch.amp.autocast(device_type='cpu', dtype=torch.bfloat16, enabled=False)
+        except Exception as e:
+            print(f"⚠️ Error setting up autocast context: {e}")
+            print("ℹ️ Disabling autocast")
+            # Create a dummy context manager that does nothing
+            self.ctx = torch.amp.autocast(device_type='cpu', enabled=False)
         
         self.model_loaded = True
     
