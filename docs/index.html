@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIDI Generator Piano Roll | A Modern MIDI Generation Tool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-music"></i>
+                <h1>MIDI Generator Piano Roll</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">Home</a></li>
+                    <li><a href="pages/features.html">Features</a></li>
+                    <li><a href="pages/plugins.html">Plugins</a></li>
+                    <li><a href="pages/download.html">Download</a></li>
+                    <li><a href="https://github.com/WebChatAppAi/midi-gen" class="github-btn"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+            </nav>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Generate MIDI with Ease</h1>
+            <p>A plugin-powered standalone piano roll app written in Python</p>
+            <div class="hero-buttons">
+                <a href="pages/download.html" class="btn primary-btn"><i class="fas fa-download"></i> Download</a>
+                <a href="https://github.com/WebChatAppAi/midi-gen" class="btn secondary-btn"><i class="fab fa-github"></i> View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured-img">
+        <div class="container">
+            <img src="assets/img/image1.png" alt="Piano Roll Screenshot" class="screenshot-img">
+            <div class="caption">
+                <p>🎼 Generated MIDI using Motif Generator</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-overview">
+        <div class="container">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <h3>Modern Piano Roll</h3>
+                    <p>Intuitive grid lines, time ruler, and MIDI note visualization</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-puzzle-piece"></i>
+                    </div>
+                    <h3>Plugin Manager</h3>
+                    <p>Run motif, Markov, and custom generation logic</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-export"></i>
+                    </div>
+                    <h3>Export to MIDI</h3>
+                    <p>Save with velocity/pitch embedded for use in any DAW</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <h3>Playback Controls</h3>
+                    <p>Beat-synced transport with FluidSynth integration</p>
+                </div>
+            </div>
+            <div class="more-features">
+                <a href="pages/features.html" class="btn outline-btn">View All Features</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="screenshot-section">
+        <div class="container">
+            <div class="screenshot-grid">
+                <div class="screenshot-text">
+                    <h2>Powerful Visualization</h2>
+                    <p>The piano roll provides a clear visualization of your generated MIDI, with smooth zoom functionality and an intuitive interface for editing and playback.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Note visualization with color-coding</li>
+                        <li><i class="fas fa-check"></i> Adjustable grid and time ruler</li>
+                        <li><i class="fas fa-check"></i> Playhead with beat-synced tracking</li>
+                        <li><i class="fas fa-check"></i> Zoom in/out for detail work</li>
+                    </ul>
+                </div>
+                <div class="screenshot-img-container">
+                    <img src="assets/img/image2.png" alt="Piano Roll Screenshot" class="screenshot-img">
+                    <div class="caption">
+                        <p>🧠 Markov Chain Plugin Output + Plugin Panel Floating</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="plugins-overview">
+        <div class="container">
+            <h2>Plugin System</h2>
+            <p class="section-description">Easily extend the application with your own Python plugins</p>
+            <div class="code-block">
+                <pre><code>class MyCustomGenerator(PluginBase):
+    def generate(self, **params):
+        return [
+            pretty_midi.Note(
+                pitch=64,
+                velocity=100,
+                start=0.0,
+                end=0.5
+            )
+        ]</code></pre>
+            </div>
+            <p>Define <code>generate()</code> and return a list of PrettyMIDI notes. Add an optional <code>get_parameter_info()</code> to customize UI controls per plugin.</p>
+            <div class="more-plugins">
+                <a href="pages/plugins.html" class="btn outline-btn">Plugin Documentation</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Generate MIDI?</h2>
+            <p>Download now and start creating with our powerful piano roll application</p>
+            <a href="pages/download.html" class="btn primary-btn"><i class="fas fa-download"></i> Download</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-music"></i>
+                    <h2>MIDI Generator Piano Roll</h2>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="pages/features.html">Features</a></li>
+                        <li><a href="pages/plugins.html">Plugins</a></li>
+                        <li><a href="pages/download.html">Download</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen">GitHub Repository</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/wiki">Wiki</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/issues">Issues</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <h3>Connect</h3>
+                    <div class="social-icons">
+                        <a href="https://github.com/WebChatAppAi" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MIDI Generator Piano Roll. Non-Commercial Software License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

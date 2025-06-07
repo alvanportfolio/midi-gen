@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download | MIDI Generator Piano Roll</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Additional styles for download page */
+        .download-section {
+            padding: 60px 0;
+        }
+        
+        .download-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .download-card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: var(--box-shadow);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow);
+            border-color: var(--primary-color);
+        }
+        
+        .download-icon {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .download-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+        
+        .download-card p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        
+        .download-card .btn {
+            align-self: flex-start;
+        }
+        
+        .system-requirements {
+            background-color: var(--darker-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .system-requirements h4 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+        
+        .system-requirements ul {
+            color: var(--text-secondary);
+            margin-left: 20px;
+        }
+        
+        .installation-steps {
+            margin-top: 30px;
+        }
+        
+        .installation-steps ol {
+            margin-left: 20px;
+            counter-reset: steps;
+        }
+        
+        .installation-steps ol li {
+            margin-bottom: 15px;
+            position: relative;
+            padding-left: 30px;
+            counter-increment: steps;
+        }
+        
+        .installation-steps ol li::before {
+            content: counter(steps);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary-color);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+        
+        .code-block {
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+        
+        .code-block code {
+            background-color: transparent;
+            padding: 0;
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .release-info {
+            background-color: rgba(110, 198, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .release-info h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-color);
+        }
+        
+        .version-badge {
+            background-color: var(--primary-color);
+            color: #000;
+            font-size: 0.8rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .release-date {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .platform-badges {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .platform-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background-color: var(--card-bg);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .tip-box {
+            background-color: rgba(165, 214, 167, 0.1);
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box {
+            background-color: rgba(255, 179, 0, 0.1);
+            border-left: 4px solid var(--secondary-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-music"></i>
+                <h1>MIDI Generator Piano Roll</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="plugins.html">Plugins</a></li>
+                    <li><a href="download.html" class="active">Download</a></li>
+                    <li><a href="https://github.com/WebChatAppAi/midi-gen" class="github-btn"><i class="fab fa-github"></i> GitHub</a></li>
+                </ul>
+            </nav>
+            <div class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Download MIDI Generator Piano Roll</h1>
+            <p>Get started with our powerful MIDI generation tool</p>
+        </div>
+    </section>
+
+    <section class="release-section">
+        <div class="container">
+            <div class="release-info">
+                <h3><i class="fas fa-tags"></i> Latest Release <span class="version-badge">v1.2.0</span></h3>
+                <p class="release-date">Released on May 15, 2025</p>
+                <p>This release includes volume control & FluidSynth integration, enhanced transport controls, and various bug fixes for improved stability.</p>
+                <div class="platform-badges">
+                    <span class="platform-badge"><i class="fab fa-windows"></i> Windows</span>
+                    <span class="platform-badge"><i class="fab fa-apple"></i> macOS</span>
+                    <span class="platform-badge"><i class="fab fa-linux"></i> Linux</span>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-target="windows">Windows</div>
+                <div class="tab" data-target="macos">macOS</div>
+                <div class="tab" data-target="linux">Linux</div>
+                <div class="tab" data-target="source">Source Code</div>
+            </div>
+
+            <div id="windows" class="tab-content active">
+                <h2>Windows Installation</h2>
+                
+                <div class="download-options">
+                    <div class="download-card">
+                        <div class="download-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <h3>Executable Installer</h3>
+                        <p>The easiest way to get started with MIDI Generator Piano Roll. Simply download and run the installer.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/latest/download/MIDIGenerator-Setup-Windows.zip" class="btn primary-btn">Download Installer</a>
+                        
+                        <div class="system-requirements">
+                            <h4>System Requirements:</h4>
+                            <ul>
+                                <li>Windows 10 or later (64-bit)</li>
+                                <li>4 GB RAM</li>
+                                <li>100 MB disk space</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="download-card">
+                        <div class="download-icon">
+                            <i class="fas fa-file-archive"></i>
+                        </div>
+                        <h3>Portable ZIP</h3>
+                        <p>No installation required. Extract and run the application from any location.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/latest/download/MIDIGenerator-Portable-Windows.zip" class="btn primary-btn">Download ZIP</a>
+                        
+                        <div class="system-requirements">
+                            <h4>System Requirements:</h4>
+                            <ul>
+                                <li>Windows 10 or later (64-bit)</li>
+                                <li>4 GB RAM</li>
+                                <li>100 MB disk space</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="installation-steps">
+                    <h3>Installation Instructions</h3>
+                    <ol>
+                        <li><strong>Download the application</strong>
+                            <p>Go to the <a href="https://github.com/WebChatAppAi/midi-gen/releases">Releases</a> tab on GitHub and download the latest <code>.zip</code> file.</p>
+                        </li>
+                        <li><strong>Install the application</strong>
+                            <p>Extract the ZIP file to <code>C:\Users\YourName\Documents\PianoRollStudio</code></p>
+                            <p>Run the executable (first launch may take a moment to initialize).</p>
+                        </li>
+                        <li><strong>Set up plugins</strong>
+                            <p>On first launch, a <code>plugins</code> directory will be created in the installation folder.</p>
+                            <p>Download the plugin <code>.py</code> files from the <a href="https://github.com/WebChatAppAi/midi-gen/tree/main/plugins">GitHub repository's plugins folder</a>.</p>
+                            <p>Place these files in the newly created <code>plugins</code> directory.</p>
+                        </li>
+                        <li><strong>Restart and enjoy</strong>
+                            <p>Close and reopen the application.</p>
+                            <p>Your plugins should now be loaded and ready to use.</p>
+                        </li>
+                    </ol>
+                </div>
+                
+                <div class="tip-box">
+                    <p><strong>Tip:</strong> For convenience, you can use the <code>start.bat</code> script to launch the application.</p>
+                </div>
+            </div>
+            
+            <div id="macos" class="tab-content">
+                <h2>macOS Installation</h2>
+                
+                <div class="download-options">
+                    <div class="download-card">
+                        <div class="download-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <h3>Python Installation (recommended)</h3>
+                        <p>Install the application using Python for the best experience on macOS.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/archive/refs/heads/main.zip" class="btn primary-btn">Download Source</a>
+                        
+                        <div class="system-requirements">
+                            <h4>System Requirements:</h4>
+                            <ul>
+                                <li>macOS 10.14 or later</li>
+                                <li>Python 3.8 or higher</li>
+                                <li>4 GB RAM</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="installation-steps">
+                    <h3>Installation Instructions</h3>
+                    <ol>
+                        <li><strong>Install Python</strong>
+                            <p>If you don't have Python 3.8+ installed, download and install it from <a href="https://www.python.org/downloads/" target="_blank">python.org</a>.</p>
+                        </li>
+                        <li><strong>Clone the repository</strong>
+                            <p>Open Terminal and run:</p>
+                            <div class="code-block">
+                                <code>git clone https://github.com/WebChatAppAi/midi-gen.git
+cd midi-gen</code>
+                            </div>
+                            <p>Alternatively, download and extract the ZIP file from GitHub.</p>
+                        </li>
+                        <li><strong>Install dependencies</strong>
+                            <p>In Terminal, run:</p>
+                            <div class="code-block">
+                                <code>pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                            </div>
+                            <p>Note: You may need to install FluidSynth separately using Homebrew:</p>
+                            <div class="code-block">
+                                <code>brew install fluid-synth</code>
+                            </div>
+                        </li>
+                        <li><strong>Run the application</strong>
+                            <p>In Terminal, run:</p>
+                            <div class="code-block">
+                                <code>python app.py</code>
+                            </div>
+                            <p>Or use the provided startup script:</p>
+                            <div class="code-block">
+                                <code>chmod +x start.sh
+./start.sh</code>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                
+                <div class="tip-box">
+                    <p><strong>Tip:</strong> For better performance on macOS, consider creating a virtual environment for the application:</p>
+                    <div class="code-block">
+                        <code>python -m venv venv
+source venv/bin/activate
+pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="linux" class="tab-content">
+                <h2>Linux Installation</h2>
+                
+                <div class="download-options">
+                    <div class="download-card">
+                        <div class="download-icon">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <h3>Python Installation</h3>
+                        <p>Install the application using Python on any Linux distribution.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/archive/refs/heads/main.zip" class="btn primary-btn">Download Source</a>
+                        
+                        <div class="system-requirements">
+                            <h4>System Requirements:</h4>
+                            <ul>
+                                <li>Any modern Linux distribution</li>
+                                <li>Python 3.8 or higher</li>
+                                <li>4 GB RAM</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="installation-steps">
+                    <h3>Installation Instructions</h3>
+                    <ol>
+                        <li><strong>Install system dependencies</strong>
+                            <p>For Debian/Ubuntu-based distributions:</p>
+                            <div class="code-block">
+                                <code>sudo apt-get update
+sudo apt-get install python3-pip python3-dev fluidsynth libfluidsynth-dev</code>
+                            </div>
+                            <p>For Fedora/RHEL-based distributions:</p>
+                            <div class="code-block">
+                                <code>sudo dnf install python3-pip python3-devel fluidsynth fluidsynth-devel</code>
+                            </div>
+                            <p>For Arch-based distributions:</p>
+                            <div class="code-block">
+                                <code>sudo pacman -S python-pip fluidsynth</code>
+                            </div>
+                        </li>
+                        <li><strong>Clone the repository</strong>
+                            <p>Open Terminal and run:</p>
+                            <div class="code-block">
+                                <code>git clone https://github.com/WebChatAppAi/midi-gen.git
+cd midi-gen</code>
+                            </div>
+                            <p>Alternatively, download and extract the ZIP file from GitHub.</p>
+                        </li>
+                        <li><strong>Install Python dependencies</strong>
+                            <p>In Terminal, run:</p>
+                            <div class="code-block">
+                                <code>pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                            </div>
+                        </li>
+                        <li><strong>Run the application</strong>
+                            <p>In Terminal, run:</p>
+                            <div class="code-block">
+                                <code>python app.py</code>
+                            </div>
+                            <p>Or use the provided startup script:</p>
+                            <div class="code-block">
+                                <code>chmod +x start.sh
+./start.sh</code>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                
+                <div class="tip-box">
+                    <p><strong>Tip:</strong> For better performance, consider creating a virtual environment for the application:</p>
+                    <div class="code-block">
+                        <code>python -m venv venv
+source venv/bin/activate
+pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                    </div>
+                </div>
+                
+                <div class="warning-box">
+                    <p><strong>Note:</strong> If you encounter issues with FluidSynth, make sure you have a soundfont installed:</p>
+                    <div class="code-block">
+                        <code># For Debian/Ubuntu:
+sudo apt-get install fluid-soundfont-gm
+
+# For Fedora:
+sudo dnf install fluid-soundfont-gm</code>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="source" class="tab-content">
+                <h2>Building from Source (All Platforms)</h2>
+                
+                <div class="download-options">
+                    <div class="download-card">
+                        <div class="download-icon">
+                            <i class="fab fa-github"></i>
+                        </div>
+                        <h3>GitHub Repository</h3>
+                        <p>Clone or download the source code directly from GitHub.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen" class="btn primary-btn">View on GitHub</a>
+                        
+                        <div class="system-requirements">
+                            <h4>Requirements:</h4>
+                            <ul>
+                                <li>Git client (optional)</li>
+                                <li>Python 3.8 or higher</li>
+                                <li>FluidSynth library</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="installation-steps">
+                    <h3>Build Instructions</h3>
+                    <ol>
+                        <li><strong>Clone the repository</strong>
+                            <div class="code-block">
+                                <code>git clone https://github.com/WebChatAppAi/midi-gen.git
+cd midi-gen</code>
+                            </div>
+                        </li>
+                        <li><strong>Install dependencies</strong>
+                            <div class="code-block">
+                                <code>pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                            </div>
+                        </li>
+                        <li><strong>Run the application</strong>
+                            <div class="code-block">
+                                <code>python app.py</code>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                
+                <div class="tip-box">
+                    <p><strong>Tip:</strong> Use the startup scripts for convenience:</p>
+                    <ul>
+                        <li>Windows: <code>start.bat</code></li>
+                        <li>Linux/macOS: <code>sh start.sh</code> (or <code>./start.sh</code> after <code>chmod +x start.sh</code>)</li>
+                    </ul>
+                </div>
+                
+                <h3>Development Environment</h3>
+                <p>For development, you may want to set up a virtual environment:</p>
+                <div class="code-block">
+                    <code># Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
+                </div>
+                
+                <div class="warning-box">
+                    <p><strong>Note:</strong> This project is licensed under a custom Non-Commercial Software License. See the <a href="https://github.com/WebChatAppAi/midi-gen/blob/main/LICENSE">LICENSE</a> file for details.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-to-use">
+        <div class="container">
+            <h2>How To Use</h2>
+            <div class="usage-steps">
+                <div class="usage-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Open the app</h3>
+                        <p>Launch the MIDI Generator Piano Roll application using the executable or script.</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Pick a plugin</h3>
+                        <p>Select a plugin from the Plugin Manager panel.</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Configure settings</h3>
+                        <p>Click Configure to adjust the plugin's parameters.</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Generate notes</h3>
+                        <p>Click Generate to create MIDI notes based on your settings.</p>
+                    </div>
+                </div>
+                <div class="usage-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <h3>Play or export</h3>
+                        <p>Press Play to hear your composition or Export MIDI to save it as a .mid file.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq-section">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-items">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>What is MIDI Generator Piano Roll?</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>MIDI Generator Piano Roll is a plugin-powered standalone application written in Python that allows you to generate MIDI notes using various algorithms, visualize them on a piano roll, play them back with a built-in synthesizer, and export them to standard MIDI files.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>How do I create my own plugins?</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>You can create your own plugins by writing Python classes that inherit from the PluginBase class and implement the necessary methods. Check out our <a href="plugins.html">Plugin Documentation</a> for detailed instructions and examples.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Can I use the generated MIDI in my DAW?</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes, you can export your generated compositions as standard MIDI (.mid) files, which can be imported into any digital audio workstation (DAW) such as FL Studio, Ableton Live, Logic Pro, or Studio One.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>Is this application free to use?</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Yes, the application is free to use for personal and non-commercial purposes under the terms of our Non-Commercial Software License. See the <a href="https://github.com/WebChatAppAi/midi-gen/blob/main/LICENSE">LICENSE</a> file for complete details.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <h3>I'm having trouble with the application. Where can I get help?</h3>
+                    </div>
+                    <div class="faq-answer">
+                        <p>You can get help by opening an issue on our <a href="https://github.com/WebChatAppAi/midi-gen/issues">GitHub Issues</a> page or by joining the discussion in our <a href="https://github.com/WebChatAppAi/midi-gen/discussions">GitHub Discussions</a> forum.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Create MIDI?</h2>
+            <p>Download MIDI Generator Piano Roll now and start making music!</p>
+            <div class="cta-buttons">
+                <a href="https://github.com/WebChatAppAi/midi-gen/releases/latest/download/MIDIGenerator-Setup-Windows.zip" class="btn primary-btn"><i class="fas fa-download"></i> Download for Windows</a>
+                <a href="https://github.com/WebChatAppAi/midi-gen" class="btn secondary-btn"><i class="fab fa-github"></i> View on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-music"></i>
+                    <h2>MIDI Generator Piano Roll</h2>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="features.html">Features</a></li>
+                        <li><a href="plugins.html">Plugins</a></li>
+                        <li><a href="download.html">Download</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen">GitHub Repository</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/wiki">Wiki</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/issues">Issues</a></li>
+                        <li><a href="https://github.com/WebChatAppAi/midi-gen/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <h3>Connect</h3>
+                    <div class="social-icons">
+                        <a href="https://github.com/WebChatAppAi" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-discord"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 MIDI Generator Piano Roll. Non-Commercial Software License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Tab functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.target;
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    tab.classList.add('active');
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+            
+            // FAQ accordion functionality
+            const faqQuestions = document.querySelectorAll('.faq-question');
+            
+            faqQuestions.forEach(question => {
+                question.addEventListener('click', () => {
+                    const faqItem = question.parentElement;
+                    faqItem.classList.toggle('active');
+                    
+                    // Optionally close other items
+                    // document.querySelectorAll('.faq-item').forEach(item => {
+                    //     if (item !== faqItem) {
+                    //         item.classList.remove('active');
+                    //     }
+                    // });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
