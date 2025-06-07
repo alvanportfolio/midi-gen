@@ -1,5 +1,14 @@
 # 🎹✨ MIDI Generator Piano Roll
 
+## 📖 <span style="color:#2196f3;">Project Information</span>
+
+<div align="center">
+  <h3>📄 <a href="https://webchatappai.github.io/midi-gen/">Visit Project Documentation</a></h3>
+  <p>Learn more about features, installation guides, and technical details</p>
+</div>
+
+---
+
 <div align="center">
 
   <!-- ⭐ GitHub Stars / 🍴 Forks / 🐛 Issues Badges -->
@@ -64,13 +73,30 @@
 
 </div>
 
+---
+
+## 🙏💡 <span style="color:#9c27b0;">Powered by Open Source Excellence</span>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/-AI%20MODEL%20CONTRIBUTOR-purple?style=for-the-badge&logo=github" alt="AI Model Contributor"/>
+  <br/>
+  <p><strong>🎵 Special Thanks to <a href="https://github.com/asigalov61">@asigalov61</a> for providing:</strong></p>
+  <ul style="list-style: none; text-align: center;">
+    <li>🤖 <strong>Melody AI Model</strong> – Advanced musical generation algorithms</li>
+    <li>🎼 <strong>TMIDIX & X-Transformer</strong> – Core MIDI processing and neural transformer architecture</li>
+  </ul>
+  <p><em>This project is made possible by the incredible open source AI music community!</em></p>
+</div>
+
+---
+
 <blockquote align="center">
   <h3>🎼 A plugin-powered standalone piano roll app written in Python</h3>
-  <p><strong>Generate MIDI using motif and Markov algorithms • Visualize compositions • Real-time playback • Export to <code>.mid</code></strong></p>
+  <p><strong>Generate MIDI using AI models, motif algorithms, and Markov chains • Visualize compositions • Real-time playback • Export to <code>.mid</code></strong></p>
 </blockquote>
 
 <div align="center">
-  <h3>🎹 Community Engagement</h3>
+  <h3>🎹 <span style="color:#e91e63;">Community Engagement</span></h3>
   <p>Share your creations with <code>#MIDIGen</code> on social media!</p>
   <p>Featured plugins get highlighted in our <a href="https://github.com/WebChatAppAi/midi-gen/wiki/Showcase">🌟 Showcase Wiki</a></p>
   <p>
@@ -88,27 +114,12 @@
 ## ✨ <span style="color:#ffb300;">Key Features</span>
 
 - 🎹 **Modern Piano Roll** with grid lines, time ruler, and MIDI notes  
+- 🤖 **AI-Powered Generation** via Melody Model, TMIDIX & X-Transformer  
 - 🧩 **Plugin Manager** to run motif, Markov, and custom generation logic  
 - 🔌 **Drop-in Python Plugins** – Easily extend the app with your own `.py` files  
 - 🛠️ **Dynamic Parameter Dialogs** – Each plugin has its own customizable settings  
 - 📤 **Export to MIDI** with velocity/pitch embedded (even if not shown in UI)  
-- ⏯ **Playback Controls** with beat-synced transport  
-- 🪟 **Smooth Dockable Plugin Panel** – Plugin Manager with fluid animations when dragged, floated, and reattached
-- 🔍 **Zoom Functionality** – Easily view and edit longer note sequences
-
----
-
-## 🔄 <span style="color:#a5d6a7;">Recent Updates (Changelog)</span>
-
-- 🔊 **Volume Control & FluidSynth Integration**:
-  - Added a **master volume slider** to the transport controls for real-time audio level adjustment.
-  - Integrated **FluidSynth** as the new audio backend for MIDI playback, offering improved sound quality and control.
-- 🎚️ **Enhanced Transport Controls**:
-  - Improved **BPM slider** stability and responsiveness.
-  - Enhanced **instrument selection** capabilities.
-- 🛠️ **Bug Fixes & Stability**:
-  - Addressed various bugs, including fixes related to audio playback initialization and control.
-  - General stability improvements throughout the application.
+- ⏯ **Playback Controls** with beat-synced transport
 
 ---
 
@@ -121,8 +132,64 @@
   <br/><br/>
   <img src="./image2.png" alt="Piano Roll Screenshot 2" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
   <br/>
-  <sub><strong>🧠 Markov Chain Plugin Output + Plugin Panel Floating</strong></sub>
+  <sub><strong>🤖 AI Studio – Using Melody Model via TMIDIX + X-Transformer</strong></sub>
 </div>
+
+---
+
+## 🚀 <span style="color:#81c784;">Getting Started</span>
+
+### 💻 <span style="color:#3f51b5;">Windows Users – Install Portable Version</span>
+
+<details open>
+<summary><b>📦 One-Click Installation (Recommended)</b></summary>
+
+1. **Download ZIP from Releases**
+   - Visit the [Releases](https://github.com/WebChatAppAi/midi-gen/releases) page
+   - Download the latest Windows portable ZIP package
+
+2. **Extract and run installation**
+   - Extract the ZIP file to your desired location
+   - Run `install.bat` and choose your preferred mode:
+     - **CPU Mode**: Standard processing (works on all systems)
+     - **GPU Mode**: Accelerated AI processing (requires compatible GPU)
+
+3. **Launch the application**
+   - Run `MidiGenApp.exe` from the installation directory
+   - First launch may take a moment to initialize AI models
+
+4. **Start using AI Studio**
+   - Open the Plugin Manager
+   - Select AI-powered generators
+   - Begin creating music with neural networks!
+
+</details>
+
+### 🐍 <span style="color:#ff7043;">Python Installation (All Platforms)</span>
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/WebChatAppAi/midi-gen.git
+cd midi-gen
+```
+
+2. **Install dependencies**
+```bash
+pip install PySide6 pretty_midi numpy pygame fluidsynth
+```
+
+3. **Run the app**
+```bash
+python app.py
+```
+
+<details>
+<summary>💡 <b>Tip:</b> Use the startup scripts for convenience</summary>
+<ul>
+<li>Windows: <code>start.bat</code></li>
+<li>Linux/macOS: <code>sh start.sh</code> (or <code>./start.sh</code> after <code>chmod +x start.sh</code>)</li>
+</ul>
+</details>
 
 ---
 
@@ -153,55 +220,20 @@ Add an optional `get_parameter_info()` to customize UI controls per plugin.
 
 ---
 
-## 🚀 <span style="color:#81c784;">Getting Started</span>
-
-### 💻 Windows Users - Quick Installation (Executable)
-
-<details open>
-<summary><b>📦 Using the pre-built executable</b></summary>
-
-1. **Download the application**
-   - Go to the [Releases](https://github.com/WebChatAppAi/midi-gen/releases) tab on GitHub
-   - Download the latest `.zip` file
-
-2. **Install the application**
-   - Extract the ZIP file to `C:\Users\YourName\Documents\PianoRollStudio`
-   - Run the executable (first launch may take a moment to initialize)
-   
-3. **Set up plugins**
-   - On first launch, a `plugins` directory will be created in the installation folder
-   - Download the plugin `.py` files from the [GitHub repository's plugins folder](https://github.com/WebChatAppAi/midi-gen/tree/main/plugins)
-   - Place these files in the newly created `plugins` directory
-   
-4. **Restart and enjoy**
-   - Close and reopen the application
-   - Your plugins should now be loaded and ready to use
-</details>
-
-### 🐍 Python Installation (All Platforms)
-
-1. **Clone the repository**
-```bash
-git clone https://github.com/WebChatAppAi/midi-gen.git
-cd midi-gen
-```
-
-2. **Install dependencies**
-```bash
-pip install PySide6 pretty_midi numpy pygame fluidsynth
-```
-
-3. **Run the app**
-```bash
-python app.py
-```
+## 🔄 <span style="color:#a5d6a7;">Changelogs</span>
 
 <details>
-<summary>💡 <b>Tip:</b> Use the startup scripts for convenience</summary>
-<ul>
-<li>Windows: <code>start.bat</code></li>
-<li>Linux/macOS: <code>sh start.sh</code> (or <code>./start.sh</code> after <code>chmod +x start.sh</code>)</li>
-</ul>
+<summary>📋 <b>View Recent Updates</b></summary>
+
+- 🤖 **AI-Powered Window Added**:
+  - Added dedicated AI-powered window for using AI generations
+  - Enhanced neural network-based music creation capabilities
+
+- 🖥️ **Windows Standalone Build**:
+  - Windows standalone build ready to go
+  - Portable executable with one-click installation
+  - Added Dedicated NOTES Remove Icon
+
 </details>
 
 ---
@@ -219,7 +251,6 @@ python app.py
 ## 💎 <span style="color:#4dd0e1;">Extra Capabilities</span>
 
 - 🧩 Easily add your own plugins via `plugins/*.py`  
-- 🖱 Plugin Manager can be docked, floated, and re-attached  
 - 🎼 Generated notes contain pitch and velocity info embedded in exported `.mid`  
 - 🔄 Real-time preview + loopable playback **coming soon**  
 - 🤖 Support for OpenAI-compatible endpoints and Gemini model plugins (default plugins currently produce better musical results)
@@ -229,9 +260,7 @@ python app.py
 ## 🌟 <span style="color:#ffd700;">What's Next?</span>
 
 - 🛒 **Plugin Marketplace** (auto-discovery from GitHub)  
-- 🤖 **AI Plugin Support** (HuggingFace, LLaMA, MusicGen)  
 - 🎹 **Auto-chord, Arp, and Drum Pattern generators**  
-- 📥 **Import `.mid` files for editing**  
 
 ---
 
