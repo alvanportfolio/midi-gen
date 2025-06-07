@@ -263,44 +263,31 @@
                 <div class="tab" data-target="macos">macOS</div>
                 <div class="tab" data-target="linux">Linux</div>
                 <div class="tab" data-target="source">Source Code</div>
-            </div>
-
-            <div id="windows" class="tab-content active">
+            </div>            <div id="windows" class="tab-content active">
                 <h2>Windows Installation</h2>
                 
                 <div class="download-options">
                     <div class="download-card">
                         <div class="download-icon">
-                            <i class="fas fa-download"></i>
-                        </div>
-                        <h3>Executable Installer</h3>
-                        <p>The easiest way to get started with MIDI Generator Piano Roll. Simply download and run the installer.</p>
-                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/latest/download/MIDIGenerator-Setup-Windows.zip" class="btn primary-btn">Download Installer</a>
-                        
-                        <div class="system-requirements">
-                            <h4>System Requirements:</h4>
-                            <ul>
-                                <li>Windows 10 or later (64-bit)</li>
-                                <li>4 GB RAM</li>
-                                <li>100 MB disk space</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="download-card">
-                        <div class="download-icon">
                             <i class="fas fa-file-archive"></i>
                         </div>
-                        <h3>Portable ZIP</h3>
-                        <p>No installation required. Extract and run the application from any location.</p>
-                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/latest/download/MIDIGenerator-Portable-Windows.zip" class="btn primary-btn">Download ZIP</a>
+                        <h3>MIDI-GEN PROFESSIONAL v2.0 - Portable</h3>
+                        <p>AI-Powered Music Generation Tool. No installation required - portable application with built-in Python runtime.</p>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/download/v2.0-WIN-PORTABLE/Midi-Gen-Portable-App.zip" class="btn primary-btn">Download Portable ZIP</a>
                         
                         <div class="system-requirements">
-                            <h4>System Requirements:</h4>
+                            <h4>Minimum Requirements:</h4>
                             <ul>
-                                <li>Windows 10 or later (64-bit)</li>
+                                <li>Windows 10/11 (64-bit)</li>
                                 <li>4 GB RAM</li>
-                                <li>100 MB disk space</li>
+                                <li>2 GB free disk space</li>
+                                <li>Internet connection (for initial setup)</li>
+                            </ul>
+                            <h4>Recommended for GPU Mode:</h4>
+                            <ul>
+                                <li>NVIDIA GeForce GTX 1060 or better</li>
+                                <li>8 GB RAM or more</li>
+                                <li>CUDA 12.1 compatible graphics card</li>
                             </ul>
                         </div>
                     </div>
@@ -309,27 +296,40 @@
                 <div class="installation-steps">
                     <h3>Installation Instructions</h3>
                     <ol>
-                        <li><strong>Download the application</strong>
-                            <p>Go to the <a href="https://github.com/WebChatAppAi/midi-gen/releases">Releases</a> tab on GitHub and download the latest <code>.zip</code> file.</p>
+                        <li><strong>Download the portable application</strong>
+                            <p>Download the <code>Midi-Gen-Portable-App.zip</code> file from the link above.</p>
                         </li>
-                        <li><strong>Install the application</strong>
-                            <p>Extract the ZIP file to <code>C:\Users\YourName\Documents\PianoRollStudio</code></p>
-                            <p>Run the executable (first launch may take a moment to initialize).</p>
+                        <li><strong>Extract the application</strong>
+                            <p>Extract the ZIP file to any location on your computer.</p>
+                            <p>Keep all files in the same folder structure - this is a portable application.</p>
                         </li>
-                        <li><strong>Set up plugins</strong>
-                            <p>On first launch, a <code>plugins</code> directory will be created in the installation folder.</p>
-                            <p>Download the plugin <code>.py</code> files from the <a href="https://github.com/WebChatAppAi/midi-gen/tree/main/plugins">GitHub repository's plugins folder</a>.</p>
-                            <p>Place these files in the newly created <code>plugins</code> directory.</p>
+                        <li><strong>Install AI dependencies (REQUIRED BEFORE FIRST RUN)</strong>
+                            <p>Before starting the application, double-click <code>install.bat</code> to run the installer.</p>
+                            <p>Choose your preferred option when prompted:</p>
+                            <div class="code-block">
+                                <code>[1] CPU Installation - Works on any computer (Universal compatibility)
+[2] GPU Installation - For NVIDIA graphics cards only (5-10x faster AI processing)</code>
+                            </div>
+                            <p><strong>Wait for installation to complete</strong> - This process may take 5-15 minutes depending on your choice.</p>
                         </li>
-                        <li><strong>Restart and enjoy</strong>
-                            <p>Close and reopen the application.</p>
-                            <p>Your plugins should now be loaded and ready to use.</p>
+                        <li><strong>Launch the application</strong>
+                            <p>After successful dependency installation, run <code>MidiGenApp.exe</code></p>
+                            <p>Begin creating your music with AI assistance!</p>
                         </li>
                     </ol>
                 </div>
                 
+                <div class="warning-box">
+                    <p><strong>Important:</strong> You MUST run <code>install.bat</code> before using the application for the first time. This installs the required AI/ML dependencies (PyTorch) for music generation.</p>
+                </div>
+                
                 <div class="tip-box">
-                    <p><strong>Tip:</strong> For convenience, you can use the <code>start.bat</code> script to launch the application.</p>
+                    <p><strong>Troubleshooting Tips:</strong></p>
+                    <ul>
+                        <li>If installation fails, check your internet connection and try running as Administrator</li>
+                        <li>For CUDA errors, install latest NVIDIA drivers or fallback to CPU installation</li>
+                        <li>Generated music files are saved in the output folder</li>
+                    </ul>
                 </div>
             </div>
             
