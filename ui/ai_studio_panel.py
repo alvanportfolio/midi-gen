@@ -16,47 +16,60 @@ from PySide6.QtGui import QFont, QIcon, QPixmap, QDesktopServices, QCursor, QCol
 from ui.custom_widgets import ModernButton, ModernSlider
 from config import theme
 
-# Add AI studio paths for imports
-ai_studio_path = os.path.abspath("ai_studio")
-sys.path.append(ai_studio_path)
-sys.path.append(os.path.join(ai_studio_path, 'tegridy-tools', 'tegridy-tools'))
-sys.path.append(os.path.join(ai_studio_path, 'tegridy-tools', 'tegridy-tools', 'X-Transformer'))
+# AI dependencies should already be set up by utils.ensure_ai_dependencies() in app.py
+try:
+    from utils import ensure_ai_dependencies
+    ensure_ai_dependencies()
+except ImportError:
+    print("⚠️ utils module not available for AI dependency setup")
 
 # Import AI dependencies with error handling
 AI_AVAILABLE = False
 TMIDIX_AVAILABLE = False
 TRANSFORMER_AVAILABLE = False
 
+print("🔍 AI Studio: Starting dependency checks...")
+
 try:
+    print("🔍 Attempting to import PyTorch...")
     import torch
+    print("✅ PyTorch imported successfully")
+    print(f"🔍 PyTorch version: {torch.__version__}")
+    
+    print("🔍 Attempting to import NumPy...")
     import numpy as np
-    print("✅ PyTorch and NumPy loaded successfully")
+    print("✅ NumPy imported successfully")
+    print(f"🔍 NumPy version: {np.__version__}")
     
-    # Try to import TMIDIX
-    try:
-        import TMIDIX
-        TMIDIX_AVAILABLE = True
-        print("✅ TMIDIX loaded successfully")
-    except ImportError as e:
-        print(f"⚠️ TMIDIX not available: {e}")
-        print("ℹ️ AI Studio will use fallback MIDI processing")
+    # Direct imports from site-packages
+    print("🔍 Attempting to import TMIDIX...")
+    import TMIDIX
+    TMIDIX_AVAILABLE = True
+    print("✅ TMIDIX imported successfully")
+    if hasattr(TMIDIX, '__file__'):
+        print(f"🔍 TMIDIX location: {TMIDIX.__file__}")
     
-    # Try to import X-Transformer
-    try:
-        from x_transformer_2_3_1 import *
-        TRANSFORMER_AVAILABLE = True
-        print("✅ X-Transformer loaded successfully")
-    except ImportError as e:
-        print(f"⚠️ X-Transformer not available: {e}")
-        print("ℹ️ AI Studio will use simplified generation")
+    print("🔍 Attempting to import x_transformer_2_3_1...")
+    import x_transformer_2_3_1
+    from x_transformer_2_3_1 import TransformerWrapper, Decoder, AutoregressiveWrapper
+    TRANSFORMER_AVAILABLE = True
+    print("✅ X-Transformer imported successfully")
     
-    # AI is available if we have at least PyTorch
+    # AI is available if we have all dependencies
     AI_AVAILABLE = True
-    print("✅ Basic AI dependencies loaded successfully")
+    print("✅ All AI dependencies loaded successfully")
     
 except ImportError as e:
-    print(f"⚠️ Core AI dependencies not available: {e}")
+    print(f"❌ Core AI dependencies not available: {e}")
     AI_AVAILABLE = False
+except Exception as e:
+    print(f"❌ Unexpected error loading AI dependencies: {e}")
+    AI_AVAILABLE = False
+
+print(f"🔍 Final AI availability status:")
+print(f"   AI_AVAILABLE: {AI_AVAILABLE}")
+print(f"   TMIDIX_AVAILABLE: {TMIDIX_AVAILABLE}")
+print(f"   TRANSFORMER_AVAILABLE: {TRANSFORMER_AVAILABLE}")
 
 class RealAIGenerator:
     """Real AI MIDI Generator using the alex_melody model"""
@@ -68,6 +81,8 @@ class RealAIGenerator:
         self.device = 'auto'
         self.ctx = None
         self.model_loaded = False
+        self.current_model_path = None
+        self.current_model_name = None
         
         # Auto-detect device with better error handling
         self.device = 'cpu'  # Default to CPU
@@ -89,21 +104,59 @@ class RealAIGenerator:
                 print("ℹ️ Falling back to CPU")
                 self.device = 'cpu'
     
-    def load_model(self):
-        """Load the alex_melody.pth model"""
-        if not AI_AVAILABLE:
-            raise ImportError("AI dependencies not available")
+    def get_available_models(self):
+        """Get list of available .pth model files"""
+        model_files = []
+        model_dirs_to_check = []
         
-        # Look for model in external ai_studio folder next to executable when bundled
         if getattr(sys, 'frozen', False):
             # Running in a PyInstaller bundle
             base_dir = os.path.dirname(sys.executable)
-            model_path = os.path.join(base_dir, "ai_studio", "models", "alex_melody.pth")
+            model_dirs_to_check.append(os.path.join(base_dir, "ai_studio", "models"))
+            if hasattr(sys, '_MEIPASS'):
+                model_dirs_to_check.append(os.path.join(sys._MEIPASS, "ai_studio", "models"))
         else:
-            # Running in development mode
-            model_path = "ai_studio/models/alex_melody.pth"
+            # Development mode
+            model_dirs_to_check.append("ai_studio/models")
+        
+        # Scan for .pth files in model directories
+        for model_dir in model_dirs_to_check:
+            if os.path.exists(model_dir):
+                try:
+                    for file in os.listdir(model_dir):
+                        if file.endswith('.pth'):
+                            full_path = os.path.join(model_dir, file)
+                            model_files.append({
+                                'name': file,
+                                'path': full_path,
+                                'size': os.path.getsize(full_path)
+                            })
+                except Exception as e:
+                    print(f"⚠️ Error scanning model directory {model_dir}: {e}")
+        
+        return model_files
+
+    def load_model(self, model_path=None):
+        """Load a specific .pth model file"""
+        if not AI_AVAILABLE:
+            raise ImportError("AI dependencies not available")
+        
+        # If no specific path provided, try to find default models
+        if model_path is None:
+            available_models = self.get_available_models()
+            if not available_models:
+                raise FileNotFoundError("No .pth model files found in ai_studio/models/ directory")
+            
+            # Try to find alex_melody.pth first, otherwise use the first available
+            alex_model = next((m for m in available_models if 'alex_melody' in m['name'].lower()), None)
+            model_path = alex_model['path'] if alex_model else available_models[0]['path']
+        
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
+        
+        print(f"Loading model: {model_path}")
+        self.current_model_path = model_path
+        self.current_model_name = os.path.basename(model_path)
         
         # Create model architecture
         self.model = TransformerWrapper(
@@ -444,22 +497,49 @@ class AIStudioPanel(QDockWidget):
         model_layout = QVBoxLayout(model_group)
         model_layout.setSpacing(theme.PADDING_S)
         
+        # Model selection dropdown
+        model_select_layout = QHBoxLayout()
+        model_select_layout.addWidget(QLabel("Model:"))
+        
+        self.model_combo = QComboBox()
+        self.model_combo.setToolTip("Select an AI model to load")
+        self.model_combo.currentTextChanged.connect(self._on_model_selection_changed)
+        model_select_layout.addWidget(self.model_combo)
+        
+        self.refresh_models_button = QToolButton()
+        self.refresh_models_button.setText("🔄")
+        self.refresh_models_button.setToolTip("Refresh model list")
+        self.refresh_models_button.clicked.connect(self._refresh_model_list)
+        model_select_layout.addWidget(self.refresh_models_button)
+        
+        model_layout.addLayout(model_select_layout)
+        
         # Model status and load button
         model_control_layout = QHBoxLayout()
         
-        self.load_model_button = ModernButton("Load Melody Model", accent=True)
-        self.load_model_button.setToolTip("Load the alex_melody.pth AI model")
+        self.load_model_button = ModernButton("Load Selected Model", accent=True)
+        self.load_model_button.setToolTip("Load the selected AI model")
         self.load_model_button.clicked.connect(self._load_model)
         model_control_layout.addWidget(self.load_model_button)
         
         model_control_layout.addStretch()
         model_layout.addLayout(model_control_layout)
         
-        # Model info
-        self.model_info_label = QLabel("Model not loaded")
+        # Model info with device status
+        self.model_info_label = QLabel("No model loaded")
         self.model_info_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
         self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
         model_layout.addWidget(self.model_info_label)
+        
+        # Device status
+        self.device_info_label = QLabel("Device: Not initialized")
+        self.device_info_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
+        self.device_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        model_layout.addWidget(self.device_info_label)
+        
+        # Initialize model list and device info
+        self._refresh_model_list()
+        self._update_device_info()
         
         main_layout.addWidget(model_group)
     
@@ -659,8 +739,10 @@ class AIStudioPanel(QDockWidget):
         deps_info_layout = QHBoxLayout()
         deps_info_layout.addWidget(QLabel("Dependencies:"))
         
-        if AI_AVAILABLE:
-            deps_status = "🟢 PyTorch & TMIDIX Available"
+        if AI_AVAILABLE and TMIDIX_AVAILABLE and TRANSFORMER_AVAILABLE:
+            deps_status = "🟢 All AI Dependencies Available"
+        elif AI_AVAILABLE:
+            deps_status = "🟡 Partial AI Dependencies Available"
         else:
             deps_status = "🔴 Missing Dependencies"
         
@@ -747,37 +829,183 @@ class AIStudioPanel(QDockWidget):
         """Open Alex's GitHub profile"""
         QDesktopServices.openUrl(QUrl("https://github.com/asigalov61"))
     
+    def _get_device_display_name(self, device):
+        """Get a user-friendly device name"""
+        if device == 'cuda':
+            try:
+                if AI_AVAILABLE and hasattr(torch, 'cuda') and torch.cuda.is_available():
+                    gpu_name = torch.cuda.get_device_name(0)
+                    return f"CUDA GPU ({gpu_name})"
+                else:
+                    return "CUDA GPU"
+            except:
+                return "CUDA GPU"
+        elif device == 'mps':
+            return "Apple MPS (GPU)"
+        else:
+            return "CPU"
+    
+    def _update_device_info(self):
+        """Update device information display"""
+        if hasattr(self, 'ai_generator'):
+            device_name = self._get_device_display_name(self.ai_generator.device)
+            self.device_info_label.setText(f"📱 Available: {device_name}")
+            
+            # Color code based on device type
+            if self.ai_generator.device == 'cuda':
+                self.device_info_label.setStyleSheet(f"color: {theme.ACCENT_PRIMARY_COLOR.name()};")
+            else:
+                self.device_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        else:
+            self.device_info_label.setText("📱 Device: Initializing...")
+    
+    def _refresh_model_list(self):
+        """Refresh the model dropdown list"""
+        try:
+            available_models = self.ai_generator.get_available_models()
+            
+            self.model_combo.clear()
+            if not available_models:
+                self.model_combo.addItem("No models found")
+                self.load_model_button.setEnabled(False)
+                self.model_info_label.setText("❌ No .pth models found in ai_studio/models/")
+            else:
+                for model in available_models:
+                    # Show model name and size
+                    size_mb = model['size'] / (1024 * 1024)
+                    display_text = f"{model['name']} ({size_mb:.1f} MB)"
+                    self.model_combo.addItem(display_text, model['path'])
+                
+                self.load_model_button.setEnabled(True)
+                self.model_info_label.setText(f"Found {len(available_models)} model(s)")
+                
+                # Select alex_melody by default if available
+                alex_index = next((i for i, model in enumerate(available_models) 
+                                 if 'alex_melody' in model['name'].lower()), 0)
+                self.model_combo.setCurrentIndex(alex_index)
+                
+        except Exception as e:
+            print(f"❌ Error refreshing model list: {e}")
+            self.model_combo.clear()
+            self.model_combo.addItem("Error scanning models")
+            self.load_model_button.setEnabled(False)
+            self.model_info_label.setText(f"❌ Error: {e}")
+    
+    def _on_model_selection_changed(self, model_name):
+        """Handle model selection change"""
+        if not model_name or model_name == "No models found" or model_name == "Error scanning models":
+            return
+        
+        # Update button text to show selected model
+        model_name_only = model_name.split(' (')[0]  # Remove size info
+        self.load_model_button.setText(f"Load {model_name_only}")
+        
+        # Reset model info if a different model is selected
+        if hasattr(self, 'ai_generator') and self.ai_generator.model_loaded:
+            current_loaded = self.ai_generator.current_model_name
+            if current_loaded and current_loaded != model_name_only:
+                self.model_info_label.setText(f"🔄 Different model selected ({model_name_only})")
+                self.load_model_button.setEnabled(True)
+    
     def _load_model(self):
         """Load the AI model"""
         try:
+            # Get selected model path
+            selected_model_data = self.model_combo.currentData()
+            if not selected_model_data:
+                # Fallback to first available model
+                selected_model_data = None
+            
             self.load_model_button.setEnabled(False)
             self.load_model_button.setText("Loading...")
             self.model_info_label.setText("Loading model...")
+            self.device_info_label.setText("Initializing device...")
             
-            # This runs in the main thread but should be quick
-            self.ai_generator.load_model()
+            # Add detailed debugging
+            print("🔍 DEBUG: Starting model loading...")
+            print(f"🔍 DEBUG: Selected model: {selected_model_data}")
+            print(f"🔍 DEBUG: AI dependencies available - TMIDIX: {TMIDIX_AVAILABLE}")
+            print(f"🔍 DEBUG: AI dependencies available - Transformer: {TRANSFORMER_AVAILABLE}")
             
-            # Update UI
-            self.load_model_button.setText("✅ Model Loaded")
+            # Load the selected model
+            self.ai_generator.load_model(selected_model_data)
+            
+            # Update UI with success info
+            model_name = self.ai_generator.current_model_name
+            device_info = self._get_device_display_name(self.ai_generator.device)
+            
+            self.load_model_button.setText(f"✅ {model_name} Loaded")
             self.load_model_button.setEnabled(False)  # Don't allow reloading
-            device_info = "GPU" if self.ai_generator.device == 'cuda' else "CPU"
-            self.model_info_label.setText(f"🟢 alex_melody.pth loaded on {device_info}")
+            self.model_info_label.setText(f"🟢 {model_name} loaded successfully")
             self.model_info_label.setStyleSheet(f"color: {theme.ACCENT_PRIMARY_COLOR.name()};")
             
-        except Exception as e:
-            # Show error dialog
+            # Update device info with detailed information
+            self.device_info_label.setText(f"📱 Device: {device_info}")
+            if self.ai_generator.device == 'cuda':
+                self.device_info_label.setStyleSheet(f"color: {theme.ACCENT_PRIMARY_COLOR.name()};")
+            else:
+                self.device_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            
+            print("✅ DEBUG: Model loaded successfully!")
+            
+        except ImportError as e:
+            error_msg = f"Missing dependency: {e}"
+            print(f"❌ DEBUG: Import error during model loading: {e}")
+            
+            # Show specific error dialog
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
-            msg.setWindowTitle("Model Loading Error")
-            msg.setText("Failed to load model. Please install all dependencies and restart the app.")
-            msg.setDetailedText(str(e))
+            msg.setWindowTitle("Dependency Missing")
+            msg.setText(f"Cannot load model due to missing dependency:\n\n{e}")
+            msg.setDetailedText("This usually means TMIDIX or X-Transformer modules are not properly imported. Check the console for details.")
             msg.exec()
             
             # Reset UI
-            self.load_model_button.setText("Load Melody Model")
+            self.load_model_button.setText("Load Selected Model")
+            self.load_model_button.setEnabled(True)
+            self.model_info_label.setText("❌ Missing dependencies")
+            self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            self.device_info_label.setText("Device: Error during initialization")
+            
+        except FileNotFoundError as e:
+            error_msg = f"Model file not found: {e}"
+            print(f"❌ DEBUG: File not found during model loading: {e}")
+            
+            # Show file error dialog
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Model File Missing")
+            msg.setText(f"Cannot find model file:\n\n{e}")
+            msg.setDetailedText("Make sure alex_melody.pth is in the ai_studio/models/ folder next to the executable.")
+            msg.exec()
+            
+            # Reset UI
+            self.load_model_button.setText("Load Selected Model")
+            self.load_model_button.setEnabled(True)
+            self.model_info_label.setText("❌ Model file missing")
+            self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            self.device_info_label.setText("Device: Model loading failed")
+            
+        except Exception as e:
+            error_msg = f"Unknown error: {e}"
+            print(f"❌ DEBUG: Unknown error during model loading: {e}")
+            import traceback
+            print(f"❌ DEBUG: Full traceback:\n{traceback.format_exc()}")
+            
+            # Show generic error dialog with full details
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Model Loading Error")
+            msg.setText(f"Failed to load model:\n\n{e}")
+            msg.setDetailedText(f"Full error details:\n{traceback.format_exc()}")
+            msg.exec()
+            
+            # Reset UI
+            self.load_model_button.setText("Load Selected Model")
             self.load_model_button.setEnabled(True)
             self.model_info_label.setText("❌ Failed to load model")
             self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            self.device_info_label.setText("Device: Loading error")
     
     def _on_input_source_changed(self, state):
         """Handle input source toggle"""

@@ -5,7 +5,13 @@ class DeviceManager:
     """Manages MIDI output device selection and access."""
     def __init__(self):
         if not pygame.midi.get_init():
+            print("🎹 Initializing pygame.midi...")
             pygame.midi.init()
+            
+            # ===== MIDI DEVICE SETTLING DELAY =====
+            # Add delay after pygame.midi.init to allow MIDI subsystem to settle
+            print("🔇 Pygame MIDI initialized, allowing MIDI subsystem to settle...")
+            time.sleep(0.1)
         
         self.output_id = self._get_default_output_id()
         self._log_midi_devices()

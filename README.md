@@ -137,59 +137,30 @@
 
 ---
 
-## 🚀 <span style="color:#81c784;">Getting Started</span>
+## 🚀 <span style="color:#81c784;">Installation</span>
 
-### 💻 <span style="color:#3f51b5;">Windows Users – Install Portable Version</span>
+<div align="center">
+  <h2>📥 <a href="./INSTALLATION.md">📋 Complete Installation Guide</a></h2>
+  <p><strong>Comprehensive step-by-step instructions for all platforms</strong></p>
+</div>
 
-<details open>
-<summary><b>📦 One-Click Installation (Recommended)</b></summary>
+### 🪟 Windows Users (Quick Start)
+1. **Download** the portable ZIP from [Releases](https://github.com/WebChatAppAi/midi-gen/releases)
+2. **Extract** and place `fluidsynth` folder in `C:\tools\`
+3. **Run** `install.bat` and choose CPU or GPU PyTorch
+4. **Launch** `MidiGenV2.exe` or `start.bat`
 
-1. **Download ZIP from Releases**
-   - Visit the [Releases](https://github.com/WebChatAppAi/midi-gen/releases) page
-   - Download the latest Windows portable ZIP package
-
-2. **Extract and run installation**
-   - Extract the ZIP file to your desired location
-   - Run `install.bat` and choose your preferred mode:
-     - **CPU Mode**: Standard processing (works on all systems)
-     - **GPU Mode**: Accelerated AI processing (requires compatible GPU)
-
-3. **Launch the application**
-   - Run `MidiGenApp.exe` from the installation directory
-   - First launch may take a moment to initialize AI models
-
-4. **Start using AI Studio**
-   - Open the Plugin Manager
-   - Select AI-powered generators
-   - Begin creating music with neural networks!
-
-</details>
-
-### 🐍 <span style="color:#ff7043;">Python Installation (All Platforms)</span>
-
-1. **Clone the repository**
+### 🐧🍎 Linux/macOS Users
 ```bash
 git clone https://github.com/WebChatAppAi/midi-gen.git
 cd midi-gen
+chmod +x install.sh && ./install.sh
+./start.sh
 ```
 
-2. **Install dependencies**
-```bash
-pip install PySide6 pretty_midi numpy pygame fluidsynth
-```
-
-3. **Run the app**
-```bash
-python app.py
-```
-
-<details>
-<summary>💡 <b>Tip:</b> Use the startup scripts for convenience</summary>
-<ul>
-<li>Windows: <code>start.bat</code></li>
-<li>Linux/macOS: <code>sh start.sh</code> (or <code>./start.sh</code> after <code>chmod +x start.sh</code>)</li>
-</ul>
-</details>
+<div align="center">
+  <p><em>🔗 For detailed instructions, troubleshooting, and manual installation → <a href="./INSTALLATION.md"><strong>View Full Installation Guide</strong></a></em></p>
+</div>
 
 ---
 

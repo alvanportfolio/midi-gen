@@ -1,6 +1,77 @@
 import os
 import sys
 
+def ensure_ai_dependencies():
+    """
+    Ensure AI dependencies are properly available
+    Since TMIDIX and x_transformer_2_3_1 are now in site-packages,
+    we just need to pre-import core dependencies
+    """
+    try:
+        # Pre-import critical dependencies
+        import struct
+        import traceback
+        import tempfile
+        import threading
+        import time
+        import datetime
+        import collections
+        import itertools
+        import functools
+        import warnings
+        import statistics
+        import abc
+        import typing
+        
+        # Third-party dependencies
+        import tqdm
+        import torch
+        import torch.nn
+        import torch.nn.functional
+        import numpy
+        import random
+        import math
+        import copy
+        import pickle
+        import einops
+        import einx
+        
+        # Make them available in builtins
+        import builtins
+        # Standard library
+        builtins.struct = struct
+        builtins.traceback = traceback
+        builtins.tempfile = tempfile
+        builtins.threading = threading
+        builtins.time = time
+        builtins.datetime = datetime
+        builtins.collections = collections
+        builtins.itertools = itertools
+        builtins.functools = functools
+        builtins.warnings = warnings
+        builtins.statistics = statistics
+        builtins.abc = abc
+        builtins.typing = typing
+        
+        # Third-party
+        builtins.tqdm = tqdm
+        builtins.torch = torch
+        builtins.np = numpy
+        builtins.numpy = numpy
+        builtins.random = random
+        builtins.math = math
+        builtins.copy = copy
+        builtins.pickle = pickle
+        builtins.einops = einops
+        builtins.einx = einx
+        
+        print("✅ Pre-imported AI dependencies successfully")
+        return True
+        
+    except Exception as e:
+        print(f"⚠️ Warning: Could not pre-import some AI dependencies: {e}")
+        return False
+
 def get_resource_path(relative_path: str, app_is_frozen: bool = hasattr(sys, 'frozen'), is_external_to_bundle: bool = False) -> str:
     """
     Get the absolute path to a resource.
@@ -21,8 +92,7 @@ def get_resource_path(relative_path: str, app_is_frozen: bool = hasattr(sys, 'fr
             try:
                 base_path = sys._MEIPASS
             except AttributeError:
-                # Fallback if _MEIPASS is not set for some reason, though it should be for frozen apps.
-                # This might happen in some PyInstaller configurations or if not truly frozen.
+                # Fallback if _MEIPASS is not set for some reason
                 print("Warning: sys._MEIPASS not found in frozen app, falling back to executable directory for bundled resource.")
                 base_path = os.path.dirname(sys.executable)
     else:
@@ -33,30 +103,24 @@ def get_resource_path(relative_path: str, app_is_frozen: bool = hasattr(sys, 'fr
     return os.path.join(base_path, relative_path)
 
 if __name__ == '__main__':
-    # Example usage (assuming this file is in the project root)
-    # Test with paths relative to where this script is located if not bundled.
-    # If bundled, _MEIPASS would be the extraction directory.
-
-    # To test this properly, you'd call it from other modules after import.
-    # For example, from another file:
-    # from utils import get_resource_path
-    # icon_path = get_resource_path("assets/icons/app_icon.png")
-    # print(f"Calculated app_icon.png path: {icon_path}")
-
-    # plugins_dir = get_resource_path("plugins")
-    # print(f"Calculated plugins directory: {plugins_dir}")
-
-    # soundfont_file = get_resource_path("soundbank/soundfont.sf2")
-    # print(f"Calculated soundfont.sf2 path: {soundfont_file}")
+    # Test
+    print("Testing AI dependency setup...")
+    success = ensure_ai_dependencies()
+    print(f"Result: {'✅ Success' if success else '❌ Failed'}")
     
-    # This basic test assumes utils.py is at the project root.
-    # If utils.py is in a subdirectory (e.g., 'src/utils.py'), then
-    # base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    # might be needed for development mode to point to project root.
-    # However, the provided structure has utils.py at the root.
-
-    print(f"Testing get_resource_path from utils.py itself:")
-    print(f"  For 'assets/icons/app_icon.png': {get_resource_path('assets/icons/app_icon.png')}")
-    print(f"  For 'soundbank/soundfont.sf2': {get_resource_path('soundbank/soundfont.sf2')}")
-    print(f"  For 'plugins': {get_resource_path('plugins')}")
-    print(f"  Current sys._MEIPASS (if any): {getattr(sys, '_MEIPASS', 'Not set (running as .py)')}")
+    # Test AI module imports
+    try:
+        import TMIDIX
+        print("✅ TMIDIX can be imported from site-packages")
+        if hasattr(TMIDIX, '__file__'):
+            print(f"   Location: {TMIDIX.__file__}")
+    except ImportError as e:
+        print(f"❌ TMIDIX import failed: {e}")
+    
+    try:
+        import x_transformer_2_3_1
+        print("✅ x_transformer_2_3_1 can be imported from site-packages")
+        if hasattr(x_transformer_2_3_1, '__file__'):
+            print(f"   Location: {x_transformer_2_3_1.__file__}")
+    except ImportError as e:
+        print(f"❌ x_transformer_2_3_1 import failed: {e}")

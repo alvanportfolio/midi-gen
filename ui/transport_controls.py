@@ -1,10 +1,14 @@
 from PySide6.QtWidgets import (
-    QWidget, QHBoxLayout, QLabel, QStyle, QFrame, QComboBox, QButtonGroup
-) # QPushButton and QSlider removed as ModernSlider/Button are used
-from PySide6.QtCore import Qt, Signal, Slot, QSize
-from PySide6.QtGui import QFont, QIcon # Import QFont and QIcon
-from ui.custom_widgets import ModernSlider, ModernIconButton, ModernButton # Use ModernIconButton
+    QWidget, QHBoxLayout, QLabel, QStyle, QFrame, QComboBox, QButtonGroup,
+    QFileDialog, QMessageBox
+) # Added QFileDialog, QMessageBox for export functionality
+from PySide6.QtCore import Qt, Signal, Slot, QSize, QUrl, QMimeData
+from PySide6.QtGui import QFont, QIcon, QDrag
+from ui.custom_widgets import ModernSlider, ModernIconButton, ModernButton, DragExportButton
 from config import theme, constants # Import theme and constants
+import tempfile
+import os
+from export_utils import export_to_midi
 
 class TransportControls(QWidget):
     """Transport controls for MIDI playback (play, stop, BPM, time slider)"""
@@ -23,6 +27,10 @@ class TransportControls(QWidget):
     
     # Signal for clear all notes
     clearNotesClicked = Signal()
+    
+    # Signals for export functionality
+    exportClicked = Signal()  # Signal for export button click
+    exportDragged = Signal()  # Signal for export button drag
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -47,7 +55,8 @@ class TransportControls(QWidget):
         self.pause_icon = QIcon(theme.PAUSE_ICON_PATH)
         self.stop_icon = QIcon(theme.STOP_ICON_PATH)
         self.clear_icon = QIcon(theme.CLEAR_ICON_PATH)
-
+        self.file_icon = QIcon(theme.FILE_ICON_PATH)
+        
         # Play button - Uses ModernIconButton, should pick up its styles
         # Icon size for transport controls might be larger, e.g., ICON_SIZE_L
         button_size = (theme.ICON_SIZE_L + theme.PADDING_S * 2, theme.ICON_SIZE_L + theme.PADDING_S * 2) # Calculate button size based on icon + padding
@@ -249,6 +258,17 @@ class TransportControls(QWidget):
         
         layout.addSpacing(theme.PADDING_S)  # Small spacing before clear button
         
+        # Export Button - Icon only  
+        self.export_button = DragExportButton(
+            icon=self.file_icon,
+            tooltip="Export to MIDI (Click to save, or drag to your DAW/folder)", 
+            fixed_size=button_size
+        )
+        self.export_button.setIconSize(QSize(theme.ICON_SIZE_L, theme.ICON_SIZE_L))
+        self.export_button.clicked.connect(self._handle_export_click)
+        self.export_button.dragInitiated.connect(self._handle_export_drag)
+        layout.addWidget(self.export_button)
+        
         # Clear Notes Button - Icon only
         self.clear_button = ModernIconButton(
             icon=self.clear_icon, 
@@ -262,6 +282,12 @@ class TransportControls(QWidget):
         layout.addStretch(1) # Add stretch at the end to push controls left
 
         self._is_playing = False
+        
+        # Initialize properties for export functionality
+        self.current_notes = []
+        self.temp_files_to_clean = []
+        self.temp_midi_dir = os.path.join(tempfile.gettempdir(), "pianoroll_transport_midi_exports")
+        os.makedirs(self.temp_midi_dir, exist_ok=True)
 
     def _handle_instrument_change(self, instrument_name: str):
         if instrument_name in constants.INSTRUMENT_PRESETS:
@@ -306,6 +332,105 @@ class TransportControls(QWidget):
         """Handle clear all notes button click"""
         print("Transport Controls: Clear all notes button clicked")
         self.clearNotesClicked.emit()
+
+    def _handle_export_click(self):
+        """Handle export button click"""
+        if not self.current_notes:
+            QMessageBox.warning(self, "No Notes", "No notes to export.")
+            return
+        
+        suggested_filename = "exported_melody.mid"
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, 
+            "Export MIDI", 
+            suggested_filename, 
+            "MIDI Files (*.mid);;All Files (*)"
+        )
+        
+        if not file_path: 
+            return
+        
+        if not file_path.lower().endswith('.mid'):
+            file_path += '.mid'
+            
+        try:
+            export_to_midi(self.current_notes, file_path)
+            QMessageBox.information(self, "Export Successful", f"Exported to:\n{file_path}")
+        except Exception as e:
+            QMessageBox.critical(self, "Export Error", f"Error exporting MIDI: {str(e)}")
+        finally:
+            if hasattr(self.export_button, 'clearFocus'):
+                self.export_button.clearFocus()
+
+    def _handle_export_drag(self):
+        """Handle export button drag"""
+        if not self.current_notes:
+            return
+
+        temp_file_path = ""
+        try:
+            with tempfile.NamedTemporaryFile(
+                dir=self.temp_midi_dir,
+                delete=False, 
+                suffix=".mid", 
+                prefix="dragged_"
+            ) as tmp_file:
+                temp_file_path = tmp_file.name
+            
+            export_to_midi(self.current_notes, temp_file_path)
+            self.temp_files_to_clean.append(temp_file_path)
+
+            mime_data = QMimeData()
+            url = QUrl.fromLocalFile(temp_file_path)
+            mime_data.setUrls([url])
+            
+            drag = QDrag(self.export_button)
+            drag.setMimeData(mime_data)
+            
+            result = drag.exec_(Qt.CopyAction)
+
+        except Exception as e:
+            QMessageBox.critical(self, "Drag Export Error", f"Could not prepare MIDI for dragging: {str(e)}")
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.remove(temp_file_path) 
+                    if temp_file_path in self.temp_files_to_clean:
+                        self.temp_files_to_clean.remove(temp_file_path)
+                except OSError:
+                    pass 
+        finally:
+            if hasattr(self.export_button, 'clearFocus'):
+                self.export_button.clearFocus()
+
+    def set_current_notes(self, notes):
+        """Update current notes for export functionality"""
+        self.current_notes = notes
+        # Enable/disable export button based on whether we have notes
+        self.export_button.setEnabled(len(notes) > 0 if notes else False)
+
+    def cleanup_temporary_files(self):
+        """Cleans up temporary MIDI files created during drag operations."""
+        cleaned_count = 0
+        for f_path in list(self.temp_files_to_clean): # Iterate over a copy
+            try:
+                if os.path.exists(f_path):
+                    os.remove(f_path)
+                    cleaned_count += 1
+                if f_path in self.temp_files_to_clean:
+                    self.temp_files_to_clean.remove(f_path)
+            except Exception as e:
+                print(f"Error deleting temporary file {f_path}: {e}")
+        
+        if cleaned_count > 0:
+            print(f"Cleaned up {cleaned_count} temporary MIDI files.")
+
+        try:
+            if os.path.exists(self.temp_midi_dir) and not os.listdir(self.temp_midi_dir):
+                os.rmdir(self.temp_midi_dir)
+                print(f"Removed temporary MIDI directory: {self.temp_midi_dir}")
+        except Exception as e:
+            print(f"Could not remove temporary MIDI directory {self.temp_midi_dir} (it might not be empty or access denied): {e}")
 
     @Slot(bool)
     def set_playing_state(self, playing):

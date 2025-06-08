@@ -13,17 +13,21 @@ import pretty_midi
 import time
 import os
 
-# Import fixes
+# Import fixes - Try absolute imports first, then relative imports
 try:
-    from ..note_display import PianoRollDisplay, PianoRollComposite
-    from ..midi_player import MidiPlayer
-    from ..plugin_manager import PluginManager
-    from ..export_utils import export_to_midi
-except ImportError:
     from note_display import PianoRollDisplay, PianoRollComposite
     from midi_player import MidiPlayer
     from plugin_manager import PluginManager
     from export_utils import export_to_midi
+except ImportError:
+    try:
+        from ..note_display import PianoRollDisplay, PianoRollComposite
+        from ..midi_player import MidiPlayer
+        from ..plugin_manager import PluginManager
+        from ..export_utils import export_to_midi
+    except ImportError as e:
+        print(f"Failed to import modules: {e}")
+        sys.exit(1)
 
 from .custom_widgets import ModernSlider, ModernButton
 from .plugin_dialogs import PluginParameterDialog
@@ -33,9 +37,13 @@ from .transport_controls import TransportControls
 from .event_handlers import MainWindowEventHandlersMixin, GlobalPlaybackHotkeyFilter
 
 try:
-    from ..config import theme
-except ImportError:
     from config import theme
+except ImportError:
+    try:
+        from ..config import theme
+    except ImportError as e:
+        print(f"Failed to import theme config: {e}")
+        sys.exit(1)
 
 
 class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
@@ -43,7 +51,7 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
     
     def __init__(self, midi_notes=None, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Piano Roll with Plugin Manager")
+        self.setWindowTitle("MIDI-GEN V2.0")
         self.setMinimumSize(1000, 600)
         
         # Configure dock options for better drag-and-drop behavior
@@ -301,6 +309,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             self.plugin_manager_panel.set_current_notes(self.midi_notes)
         if hasattr(self, 'ai_studio_panel'):
             self.ai_studio_panel.set_current_notes(self.midi_notes)
+        if hasattr(self, 'transport_controls'):
+            self.transport_controls.set_current_notes(self.midi_notes)
         
         # Recalculate duration and update UI elements
         max_end_time = 0
@@ -334,6 +344,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             self.plugin_manager_panel.set_current_notes(notes)
         if hasattr(self, 'ai_studio_panel'):
             self.ai_studio_panel.set_current_notes(notes)
+        if hasattr(self, 'transport_controls'):
+            self.transport_controls.set_current_notes(notes)
         
         self.transport_controls.set_bpm_value(self.bpm)
 
@@ -379,6 +391,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
                 self.plugin_manager_panel.set_current_notes([])
             if hasattr(self, 'ai_studio_panel'):
                 self.ai_studio_panel.set_current_notes([])
+            if hasattr(self, 'transport_controls'):
+                self.transport_controls.set_current_notes([])
                 
             print(f"✅ Successfully cleared all notes from piano roll.")
         else:
@@ -401,6 +415,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             self.plugin_manager_panel.set_current_notes(self.midi_notes)
         if hasattr(self, 'ai_studio_panel'):
             self.ai_studio_panel.set_current_notes(self.midi_notes)
+        if hasattr(self, 'transport_controls'):
+            self.transport_controls.set_current_notes(self.midi_notes)
     
     def toggle_playback(self):
         print(f"🎮 toggle_playback() called! Current state: {'Playing' if self.midi_player.is_playing else 'Stopped/Paused'}")
@@ -543,6 +559,11 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         if hasattr(self, 'global_hotkey_filter'):
             QApplication.instance().removeEventFilter(self.global_hotkey_filter)
             print("Global spacebar event filter removed.")
+        
+        # Clean up transport controls temporary files
+        if hasattr(self, 'transport_controls') and hasattr(self.transport_controls, 'cleanup_temporary_files'):
+            print("MainWindow: Cleaning up transport controls temporary MIDI files...")
+            self.transport_controls.cleanup_temporary_files()
         
         # Call parent cleanup
         super().closeEvent(event)

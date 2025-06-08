@@ -1,16 +1,76 @@
 import fluidsynth
 import os
+import sys
+import time
+import threading
 import inspect # For inspect.getfile
+import platform
 from config.constants import DEFAULT_MIDI_PROGRAM
 from utils import get_resource_path # Import the new helper
 
 # Default SoundFont path relative to project root
 DEFAULT_SOUNDFONT_RELATIVE_PATH = "soundbank/soundfont.sf2"
 
+def setup_fluidsynth_library_path():
+    """
+    Setup FluidSynth library path for different platforms after PyInstaller build.
+    
+    Platform-specific setup:
+    Windows: Add bundled FluidSynth bin directory to PATH
+    macOS: Set DYLD_LIBRARY_PATH or use bundled libraries
+    Linux: Set LD_LIBRARY_PATH or use bundled libraries
+    """
+    current_platform = platform.system().lower()
+    
+    # Check if we're running as a PyInstaller bundle
+    if hasattr(sys, 'frozen'):
+        # Running as PyInstaller executable
+        if current_platform == "windows":
+            # For Windows standalone: Add bundled FluidSynth bin to PATH
+            fluidsynth_bin_path = get_resource_path("fluidsynth/bin")
+            if os.path.exists(fluidsynth_bin_path):
+                current_path = os.environ.get('PATH', '')
+                if fluidsynth_bin_path not in current_path:
+                    os.environ['PATH'] = fluidsynth_bin_path + os.pathsep + current_path
+                    print(f"✅ Added FluidSynth bin path to PATH: {fluidsynth_bin_path}")
+            else:
+                print(f"⚠️ FluidSynth bin directory not found at: {fluidsynth_bin_path}")
+                
+        elif current_platform == "darwin":  # macOS
+            # For macOS standalone: Set library path for bundled FluidSynth
+            fluidsynth_lib_path = get_resource_path("fluidsynth/lib")
+            if os.path.exists(fluidsynth_lib_path):
+                current_dyld_path = os.environ.get('DYLD_LIBRARY_PATH', '')
+                if fluidsynth_lib_path not in current_dyld_path:
+                    os.environ['DYLD_LIBRARY_PATH'] = fluidsynth_lib_path + os.pathsep + current_dyld_path
+                    print(f"✅ Added FluidSynth lib path to DYLD_LIBRARY_PATH: {fluidsynth_lib_path}")
+            else:
+                print(f"⚠️ FluidSynth lib directory not found at: {fluidsynth_lib_path}")
+                
+        elif current_platform == "linux":
+            # For Linux standalone: Set library path for bundled FluidSynth
+            fluidsynth_lib_path = get_resource_path("fluidsynth/lib")
+            if os.path.exists(fluidsynth_lib_path):
+                current_ld_path = os.environ.get('LD_LIBRARY_PATH', '')
+                if fluidsynth_lib_path not in current_ld_path:
+                    os.environ['LD_LIBRARY_PATH'] = fluidsynth_lib_path + os.pathsep + current_ld_path
+                    print(f"✅ Added FluidSynth lib path to LD_LIBRARY_PATH: {fluidsynth_lib_path}")
+            else:
+                print(f"⚠️ FluidSynth lib directory not found at: {fluidsynth_lib_path}")
+    else:
+        # Development mode - libraries should be in system PATH or project fluidsynth folder
+        print("🔧 Development mode: Ensure FluidSynth is installed on system or in project fluidsynth folder")
+
 class FluidSynthPlayer:
     def __init__(self, soundfont_path_str: str | None = None): # Allow passing a specific path
+        # Setup platform-specific library paths
+        setup_fluidsynth_library_path()
+        
         self.fs = None
         self.soundfont_id = None
+        self._current_gain = 0.0  # Start with zero gain for fade-in
+        self._target_gain = 1.0   # Target gain after fade-in
+        self._fade_in_completed = False
         
         # Determine the soundfont path to use
         if soundfont_path_str:
@@ -21,6 +81,15 @@ class FluidSynthPlayer:
         try:
             # Print the path of the imported fluidsynth module for diagnostics
             print(f"Attempting to use fluidsynth module from: {inspect.getfile(fluidsynth)}")
+            
+            # Platform-specific initialization warnings
+            current_platform = platform.system().lower()
+            if current_platform == "windows":
+                print("🔊 Windows: Using DirectSound or WASAPI audio driver")
+            elif current_platform == "darwin":
+                print("🔊 macOS: Using CoreAudio driver")
+            elif current_platform == "linux":
+                print("🔊 Linux: Using ALSA or PulseAudio driver")
             
             # Note: FluidSynth may show warnings during initialization such as:
             # - "SDL3 not initialized" - This is normal if SDL3 is not used
@@ -37,6 +106,11 @@ class FluidSynthPlayer:
             # For simplicity, I'll rely on the default driver selection by pyfluidsynth.
             # If issues arise, driver selection might need to be exposed or made platform-dependent.
             self.fs.start()
+            
+            # ===== AUDIO DEVICE SETTLING DELAY =====
+            # Add delay after FluidSynth start to allow audio device to settle
+            print("🔇 FluidSynth started, allowing audio device to settle...")
+            time.sleep(0.1)
 
             if not os.path.exists(self.soundfont_path):
                 print(f"ERROR: SoundFont file not found at '{self.soundfont_path}'.")
@@ -55,7 +129,17 @@ class FluidSynthPlayer:
                     # Default instrument for all channels (0-15)
                     for channel in range(16):
                         self.fs.program_select(channel, self.soundfont_id, 0, DEFAULT_MIDI_PROGRAM)
+                    
+                    # ===== FADE-IN INITIALIZATION =====
+                    # Initialize with zero gain and start fade-in to prevent audio pops
+                    print("🎵 Starting FluidSynth fade-in...")
+                    self._initialize_silent_startup()
 
+        except ImportError as e:
+            print(f"FluidSynth library not found: {e}")
+            print(self._get_platform_install_instructions())
+            self.fs = None
+            self.soundfont_id = None
         except Exception as e:
             print(f"Failed to initialize FluidSynth: {e}")
             print("MIDI playback via FluidSynth will not be available.")
@@ -63,6 +147,61 @@ class FluidSynthPlayer:
                 self.fs.delete()
             self.fs = None
             self.soundfont_id = None
+
+    def _get_platform_install_instructions(self):
+        """Return platform-specific installation instructions for FluidSynth."""
+        current_platform = platform.system().lower()
+        
+        if current_platform == "windows":
+            return """
+📋 Windows FluidSynth Setup Instructions:
+For STANDALONE BUILDS:
+1. Ensure 'fluidsynth' folder with bin/, lib/, include/ is next to your .exe
+2. The 'fluidsynth/bin' folder should contain:
+   - libfluidsynth-3.dll
+   - All dependency DLLs (SDL3.dll, sndfile.dll, etc.)
+
+For DEVELOPMENT:
+1. Install FluidSynth: Download from https://github.com/FluidSynth/fluidsynth/releases
+2. Add FluidSynth bin directory to your PATH
+3. Or copy FluidSynth DLLs to your project's fluidsynth/bin folder
+            """
+        elif current_platform == "darwin":
+            return """
+📋 macOS FluidSynth Setup Instructions:
+For STANDALONE BUILDS:
+1. Ensure 'fluidsynth' folder with lib/ is next to your .app bundle
+2. The 'fluidsynth/lib' folder should contain:
+   - libfluidsynth.dylib (or libfluidsynth.3.dylib)
+   - All dependency dylibs
+
+For DEVELOPMENT:
+1. Install FluidSynth via Homebrew: brew install fluid-synth
+2. Or download from https://github.com/FluidSynth/fluidsynth/releases
+3. Or copy FluidSynth dylibs to your project's fluidsynth/lib folder
+
+For Homebrew users, FluidSynth is typically at:
+- Intel Macs: /usr/local/opt/fluid-synth/lib/
+- Apple Silicon: /opt/homebrew/opt/fluid-synth/lib/
+            """
+        elif current_platform == "linux":
+            return """
+📋 Linux FluidSynth Setup Instructions:
+For STANDALONE BUILDS:
+1. Ensure 'fluidsynth' folder with lib/ is next to your executable
+2. The 'fluidsynth/lib' folder should contain:
+   - libfluidsynth.so.3 (or libfluidsynth.so)
+   - All dependency .so files
+
+For DEVELOPMENT:
+1. Install FluidSynth via package manager:
+   - Ubuntu/Debian: sudo apt install libfluidsynth-dev libfluidsynth3
+   - CentOS/RHEL: sudo yum install fluidsynth-devel
+   - Arch: sudo pacman -S fluidsynth
+2. Or copy FluidSynth .so files to your project's fluidsynth/lib folder
+            """
+        else:
+            return f"Unknown platform: {current_platform}. Please install FluidSynth manually."
 
     def set_instrument(self, channel: int, program_num: int):
         if self.fs and self.soundfont_id is not None:
@@ -100,46 +239,75 @@ class FluidSynthPlayer:
     def set_gain(self, gain: float):
         """Sets the master gain of the synthesizer."""
         if self.fs:
-            # FluidSynth gain is typically 0.0 to 10.0.
-            # The task specifies mapping 0-100% to 0.0-1.0 for FluidSynth.
-            # We'll assume the 0.0-1.0 value is directly usable if fs.set_gain handles it,
-            # or scale it if fs.set_gain expects a different range (e.g. 0-10).
-            # For now, let's assume pyfluidsynth's set_gain takes a value that
-            # can be 0.0-1.0 for proportional gain, or we might need to scale it (e.g., gain * 2.0 or gain * 10.0).
-            # Default FluidSynth gain is 0.2. Max is often 10.0.
-            # Let's scale 0.0-1.0 to 0.0-2.0, as 1.0 might be too quiet if it's max.
-            # A common master gain range for FluidSynth is 0.0 to 5.0 or 10.0.
-            # Let's try scaling to 0.0-3.0, where 0.5 (50%) maps to 1.5.
-            # FluidSynth's gain is a property, not a method.
-            # The property range is 0.0-10.0, default 0.2.
-            # Let's try mapping our 0.0-1.0 slider directly to this,
-            # effectively using a smaller portion of the available gain range.
-            # If 1.0 is too quiet, we can increase the multiplier.
             clamped_gain = max(0.0, min(1.0, gain))
-            # Using the 0.0-1.0 value directly. If fs.gain expects 0.0-10.0, then 1.0 will be 10% of max.
-            # This might be too quiet. Let's try scaling to a max of 2.0 for now.
-            # Default is 0.2. 50% slider (0.5 input) -> 1.0 gain. 100% slider (1.0 input) -> 2.0 gain.
-            # Let's try scaling to the full documented range of 0.0-10.0 for fs.gain.
-            # Based on the user-provided attribute list, direct self.fs.gain is not available.
-            # The dir(self.fs) shows a 'setting' method. This is likely the correct way.
-            # The dir(self.fs.settings) output suggests self.fs.settings is not a settings object with methods.
-            # User feedback: 50% slider (gain 5.0) is too loud.
-            # Let's scale 0-1 slider input to 0.0-2.0 for "synth.gain".
-            # So, 50% slider (0.5 input) will result in a gain of 1.0.
-            actual_fs_gain = clamped_gain * 2.0 
-            if hasattr(self.fs, 'setting'):
-                try:
-                    # The 'setting' method might be used for various types.
-                    # For numerical settings, it usually takes name and value.
-                    self.fs.setting("synth.gain", actual_fs_gain)
-                    # print(f"FluidSynthPlayer: Called self.fs.setting('synth.gain', {actual_fs_gain})")
-                except Exception as e:
-                    print(f"FluidSynthPlayer: Error calling self.fs.setting('synth.gain', ...): {e}")
-            else:
-                print(f"FluidSynthPlayer: Could not set 'synth.gain'. self.fs.setting method not available.")
-                # This else block should ideally not be reached if dir(self.fs) was accurate.
+            self._target_gain = clamped_gain
+            
+            # If fade-in is complete, set gain immediately
+            # If fade-in is in progress, it will use the new target
+            if self._fade_in_completed:
+                actual_fs_gain = clamped_gain * 2.0  # Scale for FluidSynth
+                if hasattr(self.fs, 'setting'):
+                    try:
+                        self.fs.setting("synth.gain", actual_fs_gain)
+                        self._current_gain = clamped_gain
+                    except Exception as e:
+                        print(f"FluidSynthPlayer: Error calling self.fs.setting('synth.gain', ...): {e}")
+                else:
+                    print(f"FluidSynthPlayer: Could not set 'synth.gain'. self.fs.setting method not available.")
         else:
             print("FluidSynthPlayer: Cannot set gain, FluidSynth not initialized.")
+
+    def _initialize_silent_startup(self):
+        """Initialize FluidSynth with zero gain and perform fade-in to prevent audio pops."""
+        if self.fs:
+            try:
+                # Set initial gain to 0 to prevent pops
+                self.fs.setting("synth.gain", 0.0)
+                self._current_gain = 0.0
+                print("🔇 FluidSynth gain set to 0 for silent startup")
+                
+                # Start fade-in in background thread
+                fade_thread = threading.Thread(target=self._perform_fade_in, daemon=True)
+                fade_thread.start()
+                
+            except Exception as e:
+                print(f"Error during silent startup initialization: {e}")
+                # If fade-in fails, just set normal gain directly
+                self._fade_in_completed = True
+                try:
+                    self.fs.setting("synth.gain", self._target_gain * 2.0)
+                except:
+                    pass
+
+    def _perform_fade_in(self):
+        """Gradually increase gain from 0 to target over ~100ms to prevent audio pops."""
+        try:
+            fade_duration = 0.1  # 100ms
+            fade_steps = 20
+            step_duration = fade_duration / fade_steps
+            gain_increment = self._target_gain / fade_steps
+            
+            for step in range(fade_steps + 1):
+                if not self.fs:  # Check if FluidSynth was destroyed during fade
+                    break
+                    
+                current_step_gain = min(step * gain_increment, self._target_gain)
+                actual_fs_gain = current_step_gain * 2.0  # Scale for FluidSynth
+                
+                try:
+                    self.fs.setting("synth.gain", actual_fs_gain)
+                    self._current_gain = current_step_gain
+                except:
+                    break  # Exit if setting fails
+                    
+                time.sleep(step_duration)
+            
+            self._fade_in_completed = True
+            print("✅ FluidSynth fade-in completed")
+            
+        except Exception as e:
+            print(f"Error during fade-in: {e}")
+            self._fade_in_completed = True
 
     def cleanup(self):
         if self.fs:

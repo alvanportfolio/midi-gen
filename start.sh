@@ -1,44 +1,62 @@
 #!/bin/bash
-# filepath: c:\Users\Alvan\Documents\00TSANDALONE-PIANOROLL-FOR-MIDIGEN\FINAL-MIDI-WORKING-JULES\midi-gen\start.sh
 
-echo "Checking Python installation..."
+# ===========================================
+# 🎹 MIDI-GEN - Launcher (Unix)
+# ===========================================
 
-if ! command -v python3 &> /dev/null; then
-    echo "Python 3 is not installed or not in PATH."
-    echo "Please install Python 3.8 or higher from https://www.python.org/downloads/"
-    read -p "Press Enter to exit..."
+echo "🎹 Starting MIDI-GEN..."
+
+PYTHON_DIR="pythonpackages"
+
+# Check if pythonpackages environment exists
+if [ ! -d "$PYTHON_DIR" ]; then
+    echo "❌ Python environment not found: $PYTHON_DIR"
+    echo "Please run ./install.sh first to set up the environment."
+    echo "For troubleshooting, check installations.md"
     exit 1
 fi
 
-echo "Checking required modules..."
-MISSING_MODULES=$(python3 -c "
-import sys
-import subprocess
-required_modules = ['PySide6', 'pretty_midi', 'numpy', 'pygame', 'mido', 'python-rtmidi']
-missing = [m for m in required_modules if subprocess.call([sys.executable, '-c', 'import ' + m], 
-           stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) != 0]
-print(','.join(missing) if missing else '')
-")
-
-if [ -n "$MISSING_MODULES" ]; then
-    echo "Missing modules: $MISSING_MODULES"
-    read -p "Install missing modules? (y/n): " INSTALL_MODULES
-    if [ "$INSTALL_MODULES" = "y" ] || [ "$INSTALL_MODULES" = "Y" ]; then
-        echo "Installing required modules..."
-        python3 -m pip install --upgrade pip
-        python3 -m pip install -r requirements.txt
-        if [ $? -ne 0 ]; then
-            echo "Failed to install modules. Please check your internet connection or install them manually."
-            read -p "Press Enter to exit..."
-            exit 1
-        fi
-        echo "Modules installed successfully!"
-    fi
-else
-    echo "All required modules found!"
+if [ ! -f "$PYTHON_DIR/bin/python" ]; then
+    echo "❌ Python executable not found: $PYTHON_DIR/bin/python"
+    echo "The environment appears to be corrupted. Please run ./install.sh to reinstall."
+    echo "For troubleshooting, check installations.md"
+    exit 1
 fi
 
-echo "Starting Piano Roll Application..."
-python3 app.py
-echo "Application closed."
-read -p "Press Enter to exit..."
+# Activate the pythonpackages environment
+echo "🔄 Activating Python environment from $PYTHON_DIR..."
+source "$PYTHON_DIR/bin/activate"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Failed to activate Python environment."
+    echo "The environment may be corrupted. Please run ./install.sh to reinstall."
+    echo "For troubleshooting, check installations.md"
+    exit 1
+fi
+
+echo "✅ Python environment activated successfully"
+
+# Check if app.py exists
+if [ ! -f "app.py" ]; then
+    echo "❌ app.py not found in current directory"
+    echo "Please make sure you're running this script from the project root"
+    echo "For troubleshooting, check installations.md"
+    exit 1
+fi
+
+echo "🚀 Launching MIDI-GEN application..."
+
+# Run the main application
+python app.py
+
+# Check exit code
+if [ $? -ne 0 ]; then
+    echo "❌ Application terminated with an error. Check the log above."
+    echo "For troubleshooting, check installations.md"
+    echo "Press Enter to exit..."
+    read
+    exit 1
+fi
+
+echo "👋 Application closed successfully. Press Enter to exit..."
+read

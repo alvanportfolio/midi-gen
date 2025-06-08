@@ -1,18 +1,16 @@
 import os
-import tempfile # Added
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
     QDockWidget, QListWidget, QListWidgetItem, QFileDialog, QMessageBox, QDialog, QLabel,
     QSizePolicy, QStyle
 )
-from PySide6.QtCore import Qt, Signal, QSize, QUrl, QMimeData, QThread, QTimer # Added QUrl, QMimeData, QThread, QTimer
-from PySide6.QtGui import QFont, QIcon, QPixmap, QFontMetrics, QDrag # Added QDrag
+from PySide6.QtCore import Qt, Signal, QSize, QThread, QTimer
+from PySide6.QtGui import QFont, QIcon, QPixmap, QFontMetrics
 import threading
 
 from plugin_manager import PluginManager
-from export_utils import export_to_midi
 from ui.plugin_dialogs import PluginParameterDialog
-from .custom_widgets import DragExportButton, ModernButton # Added ModernButton
+from .custom_widgets import ModernButton
 from config import theme
 
 class PluginGenerationWorker(QThread):
@@ -106,19 +104,10 @@ class PluginManagerPanel(QDockWidget):
         self.generate_button.clicked.connect(self._generate_notes)
         button_layout.addWidget(self.generate_button)
         
-        self.export_button = DragExportButton("Export MIDI") 
-        self.export_button.setToolTip("Click to export, or drag to your DAW/folder as .mid") 
-        self.export_button.clicked.connect(self._handle_export_click) 
-        self.export_button.dragInitiated.connect(self._handle_export_drag) 
-        button_layout.addWidget(self.export_button)
-        
         main_panel_layout.addLayout(button_layout)
         
         self.plugin_params = {}
         self.current_notes = []
-        self.temp_files_to_clean = [] 
-        self.temp_midi_dir = os.path.join(tempfile.gettempdir(), "pianoroll_midi_exports")
-        os.makedirs(self.temp_midi_dir, exist_ok=True)
         
         # Worker thread for async generation
         self.generation_worker = None
@@ -362,99 +351,7 @@ class PluginManagerPanel(QDockWidget):
             if "Starting" in message:
                 self.generate_button.setText("🚀 Starting...")
             elif "complete" in message.lower():
-                self.generate_button.setText("✨ Finishing...") 
-
-    def _handle_export_click(self): 
-        if not self.current_notes:
-            QMessageBox.warning(self, "No Notes", "No notes to export.")
-            return
-        
-        suggested_filename = "exported_melody.mid"
-        
-        file_path, _ = QFileDialog.getSaveFileName(
-            self, 
-            "Export MIDI", 
-            suggested_filename, 
-            "MIDI Files (*.mid);;All Files (*)"
-        )
-        
-        if not file_path: 
-            return
-        
-        if not file_path.lower().endswith('.mid'):
-            file_path += '.mid'
-            
-        try:
-            export_to_midi(self.current_notes, file_path)
-            QMessageBox.information(self, "Export Successful", f"Exported to:\n{file_path}")
-        except Exception as e:
-            QMessageBox.critical(self, "Export Error", f"Error exporting MIDI: {str(e)}")
-        finally:
-            if hasattr(self.export_button, 'clearFocus'):
-                self.export_button.clearFocus()
-
-    def _handle_export_drag(self):
-        if not self.current_notes:
-            return
-
-        temp_file_path = ""
-        try:
-            with tempfile.NamedTemporaryFile(
-                dir=self.temp_midi_dir,
-                delete=False, 
-                suffix=".mid", 
-                prefix="dragged_"
-            ) as tmp_file:
-                temp_file_path = tmp_file.name
-            
-            export_to_midi(self.current_notes, temp_file_path)
-            self.temp_files_to_clean.append(temp_file_path)
-
-            mime_data = QMimeData()
-            url = QUrl.fromLocalFile(temp_file_path)
-            mime_data.setUrls([url])
-            
-            drag = QDrag(self.export_button)
-            drag.setMimeData(mime_data)
-            
-            result = drag.exec_(Qt.CopyAction)
-
-        except Exception as e:
-            QMessageBox.critical(self, "Drag Export Error", f"Could not prepare MIDI for dragging: {str(e)}")
-            if temp_file_path and os.path.exists(temp_file_path):
-                try:
-                    os.remove(temp_file_path) 
-                    if temp_file_path in self.temp_files_to_clean:
-                        self.temp_files_to_clean.remove(temp_file_path)
-                except OSError:
-                    pass 
-        finally:
-            if hasattr(self.export_button, 'clearFocus'):
-                self.export_button.clearFocus()
-
-
-    def cleanup_temporary_files(self):
-        """Cleans up temporary MIDI files created during drag operations."""
-        cleaned_count = 0
-        for f_path in list(self.temp_files_to_clean): # Iterate over a copy
-            try:
-                if os.path.exists(f_path):
-                    os.remove(f_path)
-                    cleaned_count += 1
-                if f_path in self.temp_files_to_clean:
-                    self.temp_files_to_clean.remove(f_path)
-            except Exception as e:
-                print(f"Error deleting temporary file {f_path}: {e}")
-        
-        if cleaned_count > 0:
-            print(f"Cleaned up {cleaned_count} temporary MIDI files.")
-
-        try:
-            if os.path.exists(self.temp_midi_dir) and not os.listdir(self.temp_midi_dir):
-                os.rmdir(self.temp_midi_dir)
-                print(f"Removed temporary MIDI directory: {self.temp_midi_dir}")
-        except Exception as e:
-            print(f"Could not remove temporary MIDI directory {self.temp_midi_dir} (it might not be empty or access denied): {e}")
+                self.generate_button.setText("✨ Finishing...")
     
     def closeEvent(self, event):
         """Clean up when the panel is closed"""
@@ -465,6 +362,4 @@ class PluginManagerPanel(QDockWidget):
             if self.generation_worker:
                 self.generation_worker.deleteLater()
         
-        # Clean up temporary files
-        self.cleanup_temporary_files()
         super().closeEvent(event)
