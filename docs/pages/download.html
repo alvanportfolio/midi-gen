@@ -1,52 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Cookie Consent -->  
-    <script>
-        window.addEventListener('load', function() {
-            // Check if consent was already given
-            if (!localStorage.getItem('cookieConsent')) {
-                setTimeout(function() {
-                    document.getElementById('cookie-consent-banner').style.display = 'flex';
-                }, 800);
-            } else {
-                // If consent was given, load analytics
-                loadAnalytics();
-            }
-        });
-
-        function acceptCookies() {
-            localStorage.setItem('cookieConsent', 'accepted');
-            document.getElementById('cookie-consent-banner').style.display = 'none';
-            loadAnalytics();
-        }
-
-        function declineCookies() {
-            localStorage.setItem('cookieConsent', 'declined');
-            document.getElementById('cookie-consent-banner').style.display = 'none';
-        }
-
-        function loadAnalytics() {
-            // Google Tag Manager
-            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-            })(window,document,'script','dataLayer','GTM-PSGX9MSF');
-
-            // Google Analytics
-            var gaScript = document.createElement('script');
-            gaScript.async = true;
-            gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-NQXK5B83RN';
-            document.head.appendChild(gaScript);
-
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-NQXK5B83RN');
-        }
-    </script>
-    <!-- End Cookie Consent -->
+    <!-- GoatCounter Analytics -->
+    <script data-goatcounter="https://midi-gen.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+    <!-- End GoatCounter Analytics -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download | MIDI Generator Piano Roll</title>
@@ -263,10 +221,7 @@
     </style>
 </head>
 <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSGX9MSF"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+
     <header>
         <div class="header-container">
             <div class="logo">
@@ -811,15 +766,6 @@ pip install PySide6 pretty_midi numpy pygame fluidsynth</code>
             });
         });
     </script>
-    <!-- Cookie Consent Banner -->
-    <div id="cookie-consent-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background-color:rgba(0,0,0,0.85); color:white; padding:15px 20px; z-index:999; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:15px; box-shadow:0 -2px 10px rgba(0,0,0,0.2);">
-        <div style="flex:1; min-width:280px;">
-            <p style="margin:0; font-size:0.9rem;">We use cookies to improve your experience and analyze site usage. By clicking "Accept", you consent to our use of cookies. <a href="#" style="color:var(--primary-color);">Privacy Policy</a></p>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <button onclick="declineCookies()" style="background:transparent; border:1px solid white; color:white; padding:8px 16px; border-radius:4px; cursor:pointer; font-size:0.9rem;">Decline</button>
-            <button onclick="acceptCookies()" style="background:var(--primary-color); border:none; color:black; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.9rem;">Accept</button>
-        </div>
-    </div>
+
 </body>
 </html>
