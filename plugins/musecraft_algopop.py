@@ -1,4 +1,4 @@
-# plugins/musecraft_piano.py
+# plugins/musecraft_algopop.py
 import os
 import threading
 import time
@@ -45,34 +45,7 @@ except ImportError:
                         time.sleep(2 ** attempt)
                 return None
         
-        class MidiFileHandler:
-            @staticmethod
-            def create_temp_midi_from_notes(notes, tempo=120.0, instrument_program=0):
-                import tempfile
-                pm = pretty_midi.PrettyMIDI(initial_tempo=tempo)
-                instrument = pretty_midi.Instrument(program=instrument_program)
-                for note in notes:
-                    instrument.notes.append(note)
-                pm.instruments.append(instrument)
-                temp_fd, temp_path = tempfile.mkstemp(suffix='.mid', prefix='musecraft_piano_plugin_input_')
-                os.close(temp_fd)
-                pm.write(temp_path)
-                return temp_path
-            @staticmethod
-            def create_primer_midi(prime_note_duration=1.0, prime_note_pitch=72, chordify_prime_note=False):
-                notes = []
-
-                note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch, start=0.0, end=prime_note_duration)
-                notes.append(note)
-                
-                if chordify_prime_note:
-                    note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch-12, start=0.0, end=prime_note_duration)
-                    notes.append(note)                    
-                    note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch-24, start=0.0, end=prime_note_duration)
-                    notes.append(note)
-                    
-                return MidiFileHandler.create_temp_midi_from_notes(notes)
-            
+        class MidiFileHandler:           
             @staticmethod
             def parse_midi_file(midi_path):
                 try:
@@ -143,34 +116,7 @@ except ImportError:
                 current_time += note_duration
             return notes
         
-class MidiFileHandler:
-    @staticmethod
-    def create_temp_midi_from_notes(notes, tempo=120.0, instrument_program=0):
-        import tempfile
-        pm = pretty_midi.PrettyMIDI(initial_tempo=tempo)
-        instrument = pretty_midi.Instrument(program=instrument_program)
-        for note in notes:
-            instrument.notes.append(note)
-        pm.instruments.append(instrument)
-        temp_fd, temp_path = tempfile.mkstemp(suffix='.mid', prefix='musecraft_piano_plugin_input_')
-        os.close(temp_fd)
-        pm.write(temp_path)
-        return temp_path
-    @staticmethod
-    def create_primer_midi(prime_note_duration=1.0, prime_note_pitch=72, chordify_prime_note=False):
-        notes = []
-
-        note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch, start=0.0, end=prime_note_duration)
-        notes.append(note)
-        
-        if chordify_prime_note:
-            note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch-12, start=0.0, end=prime_note_duration)
-            notes.append(note)                    
-            note = pretty_midi.Note(velocity=80, pitch=prime_note_pitch-24, start=0.0, end=prime_note_duration)
-            notes.append(note)
-            
-        return MidiFileHandler.create_temp_midi_from_notes(notes)
-    
+class MidiFileHandler:   
     @staticmethod
     def parse_midi_file(midi_path):
         try:
@@ -184,21 +130,21 @@ class MidiFileHandler:
         except Exception:
             return []
 
-class MuseCraftPiano(PluginBase):
+class MuseCraftAlgoPOP(PluginBase):
     """
-    MIDI generator plugin that uses the MuseCraft-Piano model
-    via Gradio API to generate sophisticated piano melodies
+    MIDI generator plugin that uses the MuseCraft-AlgoPOP Hugging Face space
+    via Gradio API to generate simple POP songs
     """
     
     def __init__(self):
         super().__init__()
-        self.name = "MuseCraft Piano"
-        self.description = "AI-powered piano melody generation using MuseCraft Piano model"
+        self.name = "MuseCraft AlgoPOP"
+        self.description = "Algorithmic POP music generation with MuseCraft"
         self.author = "Alex" 
         self.version = "1.0"
         
         # Gradio API endpoint
-        self.api_endpoint = "projectlosangeles/MuseCraft-Piano"
+        self.api_endpoint = "projectlosangeles/MuseCraft-AlgoPOP"
         self.client = None
         self.connection_manager = ApiConnectionManager(max_retries=3, timeout=60)
         
@@ -209,57 +155,26 @@ class MuseCraftPiano(PluginBase):
                 "default": '',
                 "description": "Hugging Face auth token"
             },
-            "num_prime_tokens": {
+            "song_length": {
                 "type": "int",
-                "min": 512,
-                "max": 8192,
-                "default": 3072,
-                "description": "Number of tokens from input to use as primer"
+                "min": 10,
+                "max": 100,
+                "default": 30,
+                "description": "Song length"
             },
-            "num_gen_tokens": {
+            "song_semitone_key": {
                 "type": "int",
-                "min": 128,
-                "max": 2048,
-                "default": 512,
-                "description": "Number of new tokens to generate"
+                "min": 0,
+                "max": 11,
+                "default": 0,
+                "description": "Song semitone key"
             },
-            "num_mem_tokens": {
+            "song_scale": {
                 "type": "int",
-                "min": 1024,
-                "max": 8192,
-                "default": 4096,
-                "description": "Number of memory tokens for the model"
-            },
-            "model_temperature": {
-                "type": "float",
-                "min": 0.1,
-                "max": 2.0,
-                "default": 0.9,
-                "description": "Creativity/randomness of generation (higher = more creative)"
-            },
-            "use_existing_notes": {
-                "type": "bool",
-                "default": True,
-                "description": "Use existing notes as input primer (if available)"
-            },
-            "prime_note_duration": {
-                "type": "float",
-                "min": 0.1,
-                "max": 4.0,
-                "default": 1.0,
-                "description": "Prime note duration (seconds)"
-            },
-            "prime_note_pitch": {
-                "type": "int",
-                "min": 36,
-                "max": 120,
-                "default": 72,
-                "description": "Prime note MIDI pitch"
-            },
-            "chordify_prime_note": {
-                "type": "bool",
-                "default": False,
-                "description": "Chordify prime note"
+                "min": 0,
+                "max": 1,
+                "default": 1,
+                "description": "Song scale (0) Minor or (1) Major"
             },
             "fallback_on_error": {
                 "type": "bool",
@@ -287,35 +202,12 @@ class MuseCraftPiano(PluginBase):
                 self.client = Client(self.api_endpoint, hf_token=hf_token)
             return self.client
         except Exception as e:
-            print(f"Failed to connect to MuseCraft-Piano API: {e}")
+            print(f"Failed to connect to MuseCraft-AlgoPOP API: {e}")
             return None
-    
-    def _create_temp_midi_file(self, notes: List[pretty_midi.Note] = None, **kwargs) -> str:
-        """
-        Create a temporary MIDI file from existing notes or a simple primer
-        
-        Args:
-            notes: List of existing notes to convert to MIDI
-            **kwargs: Additional parameters for primer creation
-            
-        Returns:
-            Path to temporary MIDI file
-        """
-        if notes and len(notes) > 0:
-            return MidiFileHandler.create_temp_midi_from_notes(notes)
-        else:
-            prime_note_duration = kwargs.get("prime_note_duration", 1.0)
-            prime_note_pitch = kwargs.get("prime_note_pitch", 72)
-            chordify_prime_note = kwargs.get("chordify_prime_note", False)
-            return MidiFileHandler.create_primer_midi(
-                prime_note_duration=prime_note_duration, 
-                prime_note_pitch=prime_note_pitch, 
-                chordify_prime_note=chordify_prime_note
-            )
     
     def _call_musecraft_api_async(self, input_midi_path: str, result_container: dict, **kwargs):
         """
-        Call the MuseCraft-Piano API asynchronously with progress updates
+        Call the MuseCraft-AlgoPOP API asynchronously with progress updates
         
         Args:
             input_midi_path: Path to input MIDI file
@@ -329,30 +221,26 @@ class MuseCraftPiano(PluginBase):
                 if client is None:
                     raise Exception("Could not connect to API client")
                 
-                print("🔌 Connecting to MuseCraft-Piano...")
+                print("🔌 Connecting to MuseCraft-AlgoPOP...")
                 result_container['status'] = 'connected'
                 
                 # Validate parameters
                 validated_params = validate_api_parameters(kwargs, self.parameters)
                 
                 result_container['status'] = 'generating'
-                print(f"🎵 Generating melody with MuseCraft-Piano:")
-                print(f"   Prime tokens: {validated_params.get('num_prime_tokens', 3072)}")
-                print(f"   Generation tokens: {validated_params.get('num_gen_tokens', 512)}")
-                print(f"   Memory tokens: {validated_params.get('num_mem_tokens', 4096)}")
-                print(f"   Temperature: {validated_params.get('model_temperature', 0.9)}")
-                print("   ⏳ This may take 1-2 minutes, please wait...")
+                print(f"🎵 Generating chords progression with MuseCraft:")
+                print(f"   Song length: {validated_params.get('song_length', 30)}")
+                print(f"   Song semitone key: {validated_params.get('song_semitone_key', 0)}")
+                print(f"   Song scale: {validated_params.get('song_scale', 1)}")
                 
-                # Call the generation API (single endpoint, simpler than Godzilla)
+                # Call the generation API (single endpoint, simpler than Godzilla)                
                 result = client.predict(
-                    input_midi=handle_file(input_midi_path),
-                    num_prime_tokens=validated_params.get("num_prime_tokens", 3072),
-                    num_gen_tokens=validated_params.get("num_gen_tokens", 512),
-                    num_mem_tokens=validated_params.get("num_mem_tokens", 4096),
-                    model_temperature=validated_params.get("model_temperature", 0.9),
-                    api_name="/generate_music"
+                        song_length=validated_params.get('song_length', 30),
+                        song_semitone_key=validated_params.get('song_semitone_key', 0),
+                        song_scale=validated_params.get('song_scale', 1),
+                        output_as_solo_piano=True,
+                        api_name="/Generate_POP"
                 )
-                
                 # The API returns a single filepath directly
                 if result and isinstance(result, str):
                     midi_file_path = result
@@ -394,7 +282,7 @@ class MuseCraftPiano(PluginBase):
             # Print status updates
             if current_status != last_status:
                 if current_status == 'connecting':
-                    print("🔌 Connecting to MuseCraft-Piano AI...")
+                    print("🔌 Connecting to MuseCraft-AlgoPOP HF space...")
                 elif current_status == 'connected':
                     print("✅ Connected successfully!")
                 elif current_status == 'generating':
@@ -432,7 +320,7 @@ class MuseCraftPiano(PluginBase):
     
     def generate(self, existing_notes: Optional[List[pretty_midi.Note]] = None, **kwargs) -> List[pretty_midi.Note]:
         """
-        Generate MIDI notes using MuseCraft-Piano
+        Generate MIDI notes using MuseCraft-AlgoPOP
         
         Args:
             existing_notes: Optional list of existing notes to build upon
@@ -441,40 +329,27 @@ class MuseCraftPiano(PluginBase):
         Returns:
             List of generated pretty_midi.Note objects
         """
-        print("Starting MuseCraft-Piano generation...")
+        print("Starting MuseCraft-AlgoPOP generation...")
         
         # Extract parameters
-        use_existing_notes = kwargs.get("use_existing_notes", True)
         fallback_on_error = kwargs.get("fallback_on_error", True)
         
         with TempFileManager() as temp_manager:
             try:
-                # Create input MIDI file
-                if use_existing_notes and existing_notes:
-                    print(f"Using {len(existing_notes)} existing notes as input primer")
-                    input_midi_path = self._create_temp_midi_file(existing_notes)
-                else:
-                    prime_note_duration = kwargs.get("prime_note_duration", 1.0)
-                    prime_note_pitch = kwargs.get("prime_note_pitch", 72)
-                    chordify_prime_note = kwargs.get("chordify_prime_note", False)
-                    print(f"Prime note: MIDI pitch {prime_note_pitch} with duration ({prime_note_duration}s)")
-                    input_midi_path = self._create_temp_midi_file(None, **kwargs)
-                
-                temp_manager.add_temp_file(input_midi_path)
                 
                 # Call the API asynchronously to keep UI responsive
-                print("🚀 Starting MuseCraft-Piano generation...")
+                print("🚀 Starting MuseCraft AlgoPOP generation...")
                 print("   💡 The app will remain responsive during generation")
                 
                 result_container = {}
-                api_thread = self._call_musecraft_api_async(input_midi_path, result_container, **kwargs)
+                api_thread = self._call_musecraft_api_async(None, result_container, **kwargs)
                 
                 # Wait for completion with progress updates
                 timeout = kwargs.get("timeout_seconds", 180)
                 generated_midi_path = self._wait_for_api_with_progress(api_thread, result_container, timeout)
                 
                 if generated_midi_path and os.path.exists(generated_midi_path):
-                    print("Successfully generated melody! Parsing results...")
+                    print("Successfully generated chords progression! Parsing results...")
                     temp_manager.add_temp_file(generated_midi_path)
                     
                     # Check file size for debugging
@@ -484,7 +359,7 @@ class MuseCraftPiano(PluginBase):
                     generated_notes = MidiFileHandler.parse_midi_file(generated_midi_path)
                     
                     if generated_notes:
-                        print(f"Generated {len(generated_notes)} notes from MuseCraft-Piano AI")
+                        print(f"Generated {len(generated_notes)} notes from MuseCraft-Chords-Progressions")
                         return generated_notes
                     else:
                         print("Generated MIDI file was empty")
