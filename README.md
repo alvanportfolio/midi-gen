@@ -148,7 +148,7 @@
 1. **Download** the portable ZIP from [Releases](https://github.com/WebChatAppAi/midi-gen/releases)
 2. **Extract** and place `fluidsynth` folder in `C:\tools\`
 3. **Run** `install.bat` and choose CPU or GPU PyTorch
-4. **Launch** `MidiGenV2.exe` or `start.bat`
+4. **Read** `Important.txt` Then Launch App
 
 ### 🐧🍎 Linux/macOS Users
 ```bash
