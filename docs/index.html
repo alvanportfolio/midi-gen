@@ -1,14 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PSGX9MSF');</script>
+    <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MIDI Generator Piano Roll | A Modern MIDI Generation Tool</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/styles.css">
+    <style>
+        /* Additional modern styles for homepage */
+        .version-tag {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.9);
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            padding: 6px 14px;
+            display: inline-block;
+        }
+        
+        .version-tag span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .features-grid {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        
+        .feature-icon {
+            background: linear-gradient(135deg, var(--primary-color), #8e56ff);
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 18px;
+            font-size: 1.8rem;
+        }
+        
+        .version-note {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 12px;
+        }
+        
+        .hero-content h1 {
+            font-size: 2.8rem;
+            letter-spacing: -0.5px;
+            margin-bottom: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSGX9MSF"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <header>
         <div class="header-container">
             <div class="logo">
@@ -33,11 +107,14 @@
     <section class="hero">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <h1>Generate MIDI with Ease</h1>
-            <p>A plugin-powered standalone piano roll app written in Python</p>
+            <h1>Generate MIDI with AI-Powered Tools</h1>
+            <p>A plugin-powered standalone piano roll app with neural network capabilities</p>
             <div class="hero-buttons">
-                <a href="pages/download.html" class="btn primary-btn"><i class="fas fa-download"></i> Download</a>
+                <a href="pages/download.html" class="btn primary-btn"><i class="fas fa-download"></i> Download v2.0</a>
                 <a href="https://github.com/WebChatAppAi/midi-gen" class="btn secondary-btn"><i class="fab fa-github"></i> View on GitHub</a>
+            </div>
+            <div class="version-tag">
+                <span><i class="fas fa-calendar-alt"></i> Latest Release: June 8, 2025</span>
             </div>
         </div>
     </section>
@@ -64,6 +141,13 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>AI-Powered Generation</h3>
+                    <p>Neural network models from Melody Model and X-Transformer</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
                         <i class="fas fa-puzzle-piece"></i>
                     </div>
                     <h3>Plugin Manager</h3>
@@ -74,7 +158,7 @@
                         <i class="fas fa-file-export"></i>
                     </div>
                     <h3>Export to MIDI</h3>
-                    <p>Save with velocity/pitch embedded for use in any DAW</p>
+                    <p>Save with velocity/pitch embedded for any DAW</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -82,6 +166,13 @@
                     </div>
                     <h3>Playback Controls</h3>
                     <p>Beat-synced transport with FluidSynth integration</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3>Drop-in Python Plugins</h3>
+                    <p>Extend functionality with custom .py files</p>
                 </div>
             </div>
             <div class="more-features">
@@ -138,9 +229,10 @@
 
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Generate MIDI?</h2>
-            <p>Download now and start creating with our powerful piano roll application</p>
-            <a href="pages/download.html" class="btn primary-btn"><i class="fas fa-download"></i> Download</a>
+            <h2>Ready to Create with AI?</h2>
+            <p>Download now and start composing with our powerful piano roll application</p>
+            <a href="https://github.com/WebChatAppAi/midi-gen/releases/download/v2.0-WIN-PORTABLE/MidiGenV2.zip" class="btn primary-btn"><i class="fas fa-download"></i> Download Windows Portable</a>
+            <p class="version-note">Version 2.0 – <a href="pages/download.html">See all platforms & instructions</a></p>
         </div>
     </section>
 

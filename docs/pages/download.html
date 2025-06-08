@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PSGX9MSF');</script>
+    <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Download | MIDI Generator Piano Roll</title>
@@ -217,6 +224,10 @@
     </style>
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSGX9MSF"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     <header>
         <div class="header-container">
             <div class="logo">
@@ -249,7 +260,7 @@
         <div class="container">
             <div class="release-info">
                 <h3><i class="fas fa-tags"></i> Latest Release <span class="version-badge">v2.0</span></h3>
-                <p class="release-date">Released on June 7, 2025</p>
+                <p class="release-date">Released on June 8, 2025</p>
                 <p>This release includes volume control & FluidSynth integration, enhanced transport controls, and various bug fixes for improved stability.</p>
                 <div class="platform-badges">
                     <span class="platform-badge"><i class="fab fa-windows"></i> Windows</span>
@@ -271,9 +282,9 @@
                         <div class="download-icon">
                             <i class="fas fa-file-archive"></i>
                         </div>
-                        <h3>MIDI-GEN PROFESSIONAL v2.0 - Portable</h3>
+                        <h3>MIDI-GEN v2.0 - Portable</h3>
                         <p>AI-Powered Music Generation Tool. No installation required - portable application with built-in Python runtime.</p>
-                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/download/v2.0-WIN-PORTABLE/Midi-Gen-Portable-App.zip" class="btn primary-btn">Download Portable ZIP</a>
+                        <a href="https://github.com/WebChatAppAi/midi-gen/releases/download/v2.0-WIN-PORTABLE/MidiGenV2.zip" class="btn primary-btn"><i class="fas fa-download"></i> Download Portable ZIP</a>
                         
                         <div class="system-requirements">
                             <h4>Minimum Requirements:</h4>
@@ -297,38 +308,49 @@
                     <h3>Installation Instructions</h3>
                     <ol>
                         <li><strong>Download the portable application</strong>
-                            <p>Download the <code>Midi-Gen-Portable-App.zip</code> file from the link above.</p>
+                            <p>Download the <code>MidiGenV2.zip</code> file from the link above.</p>
                         </li>
                         <li><strong>Extract the application</strong>
-                            <p>Extract the ZIP file to any location on your computer.</p>
-                            <p>Keep all files in the same folder structure - this is a portable application.</p>
+                            <p>Extract the ZIP file to your desired location on your computer.</p>
+                            <p>Keep all files in the same folder structure.</p>
                         </li>
-                        <li><strong>Install AI dependencies (REQUIRED BEFORE FIRST RUN)</strong>
-                            <p>Before starting the application, double-click <code>install.bat</code> to run the installer.</p>
+                        <li><strong>Setup FluidSynth</strong>
+                            <p><i class="fas fa-folder-plus"></i> Create a directory: <code>C:\tools\</code></p>
+                            <p><i class="fas fa-copy"></i> Copy the <code>fluidsynth</code> folder from the extracted package</p>
+                            <p><i class="fas fa-paste"></i> Paste it into <code>C:\tools\</code> (final path should be <code>C:\tools\fluidsynth\</code>)</p>
+                        </li>
+                        <li><strong>Install PyTorch Dependencies</strong>
+                            <p><i class="fas fa-terminal"></i> Double-click <code>install.bat</code> to run the installer</p>
                             <p>Choose your preferred option when prompted:</p>
                             <div class="code-block">
                                 <code>[1] CPU Installation - Works on any computer (Universal compatibility)
-[2] GPU Installation - For NVIDIA graphics cards only (5-10x faster AI processing)</code>
+[2] GPU Installation - For NVIDIA graphics cards only (Requires compatible NVIDIA GPU)</code>
                             </div>
-                            <p><strong>Wait for installation to complete</strong> - This process may take 5-15 minutes depending on your choice.</p>
+                            <p><strong>Wait for installation to complete</strong> - This process may take 5-15 minutes depending on your internet speed.</p>
+                        </li>
+                        <li><strong>Read Important Notes</strong>
+                            <p><i class="fas fa-info-circle"></i> Open and read <code>IMPORTANT.txt</code> for additional setup details</p>
                         </li>
                         <li><strong>Launch the application</strong>
-                            <p>After successful dependency installation, run <code>MidiGenApp.exe</code></p>
-                            <p>Begin creating your music with AI assistance!</p>
+                            <p><i class="fas fa-play-circle"></i> Double-click <code>MidiGenV2.exe</code> to start the application</p>
+                            <p>Begin creating music with AI assistance!</p>
                         </li>
                     </ol>
                 </div>
                 
                 <div class="warning-box">
-                    <p><strong>Important:</strong> You MUST run <code>install.bat</code> before using the application for the first time. This installs the required AI/ML dependencies (PyTorch) for music generation.</p>
+                    <p><i class="fas fa-exclamation-triangle"></i> <strong>Important:</strong> You MUST run <code>install.bat</code> before using the application for the first time. This installs the required AI/ML dependencies (PyTorch) for music generation.</p>
+                    <p><strong>FluidSynth location is critical!</strong> The application expects FluidSynth to be installed at <code>C:\tools\fluidsynth\</code> for proper audio playback.</p>
                 </div>
                 
                 <div class="tip-box">
-                    <p><strong>Troubleshooting Tips:</strong></p>
+                    <p><i class="fas fa-lightbulb"></i> <strong>Troubleshooting Tips:</strong></p>
                     <ul>
                         <li>If installation fails, check your internet connection and try running as Administrator</li>
                         <li>For CUDA errors, install latest NVIDIA drivers or fallback to CPU installation</li>
-                        <li>Generated music files are saved in the output folder</li>
+                        <li>First launch may take longer as AI models initialize</li>
+                        <li>Generated MIDI files are saved in the output folder</li>
+                        <li>Check <code>IMPORTANT.txt</code> for additional troubleshooting steps</li>
                     </ul>
                 </div>
             </div>
