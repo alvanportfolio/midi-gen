@@ -8,6 +8,7 @@ from ui.custom_widgets import ModernSlider, ModernIconButton, ModernButton, Drag
 from config import theme, constants # Import theme and constants
 import tempfile
 import os
+from datetime import datetime
 from export_utils import export_to_midi
 
 class TransportControls(QWidget):
@@ -339,7 +340,7 @@ class TransportControls(QWidget):
             QMessageBox.warning(self, "No Notes", "No notes to export.")
             return
         
-        suggested_filename = "exported_melody.mid"
+        suggested_filename = "midi-gen_exported_melody.mid"
         
         file_path, _ = QFileDialog.getSaveFileName(
             self, 
@@ -370,11 +371,14 @@ class TransportControls(QWidget):
 
         temp_file_path = ""
         try:
+            # Create timestamp for filename
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
             with tempfile.NamedTemporaryFile(
                 dir=self.temp_midi_dir,
                 delete=False, 
                 suffix=".mid", 
-                prefix="dragged_"
+                prefix=f"midi-gen_{timestamp}_"
             ) as tmp_file:
                 temp_file_path = tmp_file.name
             
