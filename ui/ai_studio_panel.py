@@ -72,9 +72,10 @@ print(f"   TMIDIX_AVAILABLE: {TMIDIX_AVAILABLE}")
 print(f"   TRANSFORMER_AVAILABLE: {TRANSFORMER_AVAILABLE}")
 
 class RealAIGenerator:
-    """Real AI MIDI Generator using the alex_melody model"""
+    """Real AI MIDI Generator with dynamic model parameter support"""
     
     def __init__(self):
+        # Default parameters (will be overridden by model)
         self.SEQ_LEN = 194
         self.PAD_IDX = 386
         self.model = None
@@ -83,6 +84,7 @@ class RealAIGenerator:
         self.model_loaded = False
         self.current_model_path = None
         self.current_model_name = None
+        self.use_enhanced_encoding = False  # Toggle for encoding method
         
         # Auto-detect device with better error handling
         self.device = 'cpu'  # Default to CPU
@@ -186,6 +188,32 @@ class RealAIGenerator:
         self.model.to(self.device)
         self.model.eval()
         
+        # Dynamically detect model parameters after loading
+        try:
+            if hasattr(self.model, 'net') and hasattr(self.model.net, 'max_seq_len'):
+                detected_seq_len = self.model.net.max_seq_len
+                print(f"🔍 Detected SEQ_LEN from model: {detected_seq_len}")
+                self.SEQ_LEN = detected_seq_len
+            
+            if hasattr(self.model, 'pad_value'):
+                detected_pad_idx = self.model.pad_value
+                print(f"🔍 Detected PAD_IDX from model: {detected_pad_idx}")
+                self.PAD_IDX = detected_pad_idx
+            
+            # Auto-detect encoding method based on sequence length
+            if self.SEQ_LEN >= 500:
+                self.use_enhanced_encoding = True
+                print(f"🔍 Using enhanced encoding for long sequences (SEQ_LEN={self.SEQ_LEN})")
+            else:
+                self.use_enhanced_encoding = False
+                print(f"🔍 Using standard encoding for shorter sequences (SEQ_LEN={self.SEQ_LEN})")
+                
+            print(f"✅ Model parameters: SEQ_LEN={self.SEQ_LEN}, PAD_IDX={self.PAD_IDX}")
+            
+        except Exception as e:
+            print(f"⚠️ Could not detect dynamic parameters, using defaults: {e}")
+            print(f"ℹ️ Using default parameters: SEQ_LEN={self.SEQ_LEN}, PAD_IDX={self.PAD_IDX}")
+        
         # Setup autocast context with better error handling
         try:
             if self.device == 'cuda':
@@ -229,35 +257,11 @@ class RealAIGenerator:
             midi.instruments.append(piano)
             midi.write(temp_midi)
             
-            # Process with TMIDIX
-            raw_score = TMIDIX.midi2single_track_ms_score(temp_midi)
-            escore_notes = TMIDIX.advanced_score_processor(
-                raw_score, 
-                return_enhanced_score_notes=True, 
-                apply_sustain=True
-            )[0]
-            
-            sp_escore_notes = TMIDIX.solo_piano_escore_notes(escore_notes)
-            zscore = TMIDIX.recalculate_score_timings(sp_escore_notes)
-            escore = TMIDIX.augment_enhanced_score_notes(zscore, timings_divider=32)
-            escore = TMIDIX.fix_escore_notes_durations(escore)
-            cscore = TMIDIX.chordify_score([1000, escore])
-            
-            # Convert to tokens
-            score = []
-            pc = cscore[0]
-            
-            for c in cscore:
-                score.append(max(0, min(127, c[0][1] - pc[0][1])))
-                for n in c:
-                    score.extend([
-                        max(1, min(127, n[2])) + 128,  # Duration token
-                        max(1, min(127, n[4])) + 256   # Pitch token
-                    ])
-                    break
-                pc = c
-            
-            return score
+            # Use enhanced or standard encoding based on model
+            if self.use_enhanced_encoding:
+                return self._enhanced_encoding(temp_midi)
+            else:
+                return self._standard_encoding(temp_midi)
             
         finally:
             # Cleanup
@@ -266,6 +270,70 @@ class RealAIGenerator:
                 os.rmdir(temp_dir)
             except:
                 pass
+    
+    def _enhanced_encoding(self, temp_midi):
+        """Enhanced encoding method for models with longer sequences"""
+        print("🔍 Using enhanced encoding...")
+        
+        raw_score = TMIDIX.midi2single_track_ms_score(temp_midi)
+        escore_notes = TMIDIX.advanced_score_processor(raw_score, return_enhanced_score_notes=True)
+        
+        if escore_notes:
+            escore_notes = TMIDIX.augment_enhanced_score_notes(escore_notes[0], timings_divider=32)
+            escore_notes = TMIDIX.solo_piano_escore_notes(escore_notes)
+            escore_notes = TMIDIX.recalculate_score_timings(escore_notes)
+            
+            # Use delta scoring as in your provided code
+            dscore = TMIDIX.delta_score_notes(escore_notes, timings_clip_value=127)
+            
+            score = [0]  # Start token
+            
+            for e in dscore:
+                dtime = e[1]
+                
+                if dtime != 0:
+                    # Time + duration + pitch for notes with time
+                    score.extend([dtime, e[2]+128, e[4]+256])
+                else:
+                    # Duration + pitch for chord notes (no time tokens)
+                    score.extend([e[2]+128, e[4]+256])
+            
+            return score
+        
+        return []
+    
+    def _standard_encoding(self, temp_midi):
+        """Standard encoding method for shorter sequence models"""
+        print("🔍 Using standard encoding...")
+        
+        raw_score = TMIDIX.midi2single_track_ms_score(temp_midi)
+        escore_notes = TMIDIX.advanced_score_processor(
+            raw_score, 
+            return_enhanced_score_notes=True, 
+            apply_sustain=True
+        )[0]
+        
+        sp_escore_notes = TMIDIX.solo_piano_escore_notes(escore_notes)
+        zscore = TMIDIX.recalculate_score_timings(sp_escore_notes)
+        escore = TMIDIX.augment_enhanced_score_notes(zscore, timings_divider=32)
+        escore = TMIDIX.fix_escore_notes_durations(escore)
+        cscore = TMIDIX.chordify_score([1000, escore])
+        
+        # Convert to tokens
+        score = []
+        pc = cscore[0]
+        
+        for c in cscore:
+            score.append(max(0, min(127, c[0][1] - pc[0][1])))
+            for n in c:
+                score.extend([
+                    max(1, min(127, n[2])) + 128,  # Duration token
+                    max(1, min(127, n[4])) + 256   # Pitch token
+                ])
+                break
+            pc = c
+        
+        return score
     
     def generate_tokens(self, mode='from_seed', seed_tokens=None, temperature=0.9, 
                        seed_length=16, prime_duration=10, prime_pitch=72):
@@ -934,9 +1002,14 @@ class AIStudioPanel(QDockWidget):
             model_name = self.ai_generator.current_model_name
             device_info = self._get_device_display_name(self.ai_generator.device)
             
+            # Show model parameters
+            seq_len = self.ai_generator.SEQ_LEN
+            pad_idx = self.ai_generator.PAD_IDX
+            encoding_type = "Enhanced" if self.ai_generator.use_enhanced_encoding else "Standard"
+            
             self.load_model_button.setText(f"✅ {model_name} Loaded")
             self.load_model_button.setEnabled(False)  # Don't allow reloading
-            self.model_info_label.setText(f"🟢 {model_name} loaded successfully")
+            self.model_info_label.setText(f"🟢 {model_name} | SEQ: {seq_len} | PAD: {pad_idx} | {encoding_type}")
             self.model_info_label.setStyleSheet(f"color: {theme.ACCENT_PRIMARY_COLOR.name()};")
             
             # Update device info with detailed information
