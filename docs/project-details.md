@@ -418,7 +418,7 @@ Core dependencies are managed through `requirements.txt` and the automated insta
 
 ## 📝 Installation
 
-For complete installation instructions, please refer to **[INSTALLATION.md](INSTALLATION.md)** which covers:
+For complete installation instructions, please refer to **[INSTALLATION.md](../INSTALLATION.md)** which covers:
 - Windows Portable Version (Recommended)
 - Source Installation (All Platforms)
 - Manual Installation
@@ -449,7 +449,7 @@ For complete installation instructions, please refer to **[INSTALLATION.md](INST
 
 ## 🔧 Technical Notes
 
-For installation, setup, and troubleshooting information, please refer to **[INSTALLATION.md](INSTALLATION.md)**.
+For installation, setup, and troubleshooting information, please refer to **[INSTALLATION.md](../INSTALLATION.md)**.
 
 ### Key Technical Points
 - **FluidSynth Integration**: Advanced audio synthesis with SoundFont support
@@ -513,7 +513,7 @@ This project is licensed under a custom Non-Commercial Software License. See the
 
 ### Contributing Guidelines
 1. **Fork** the repository at [https://github.com/WebChatAppAi/midi-gen](https://github.com/WebChatAppAi/midi-gen)
-2. **Setup** development environment following **[INSTALLATION.md](INSTALLATION.md)**
+2. **Setup** development environment following **[INSTALLATION.md](../INSTALLATION.md)**
 3. **Create** a feature branch
 4. **Implement** your changes with tests
 5. **Document** your changes thoroughly
@@ -541,4 +541,4 @@ This project is licensed under a custom Non-Commercial Software License. See the
 
 ---
 
-> **Note**: This document focuses on technical project details and architecture. For installation instructions, setup guides, and troubleshooting, please refer to [INSTALLATION.md](INSTALLATION.md).
+> **Note**: This document focuses on technical project details and architecture. For installation instructions, setup guides, and troubleshooting, please refer to [INSTALLATION.md](../INSTALLATION.md).
