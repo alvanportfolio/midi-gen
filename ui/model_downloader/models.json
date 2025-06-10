@@ -1,0 +1,73 @@
+{
+  "_comment": "Add new models here following the same structure. Set 'size' to 'TBD' to auto-fetch from server, or specify manually like '250 MB'",
+  "_example": {
+    "name": "Your Model Name",
+    "description": "Description of what the model does",
+    "size": "TBD",
+    "version": "v1.0",
+    "category": "Category",
+    "download_url": "https://your-download-url.com/model.pth",
+    "filename": "exact_filename_to_save.pth"
+  },
+  "available_models": [
+    {
+      "name": "POP909 Transformer",
+      "description": "Specialized model for generating POP music compositions with modern pop arrangements and structures",
+      "size": "TBD",
+      "version": "v1.0",
+      "category": "Pop",
+      "download_url": "https://huggingface.co/projectlosangeles/MuseCraft/resolve/main/POP909_Transformer_Trained_Model_2531_steps_0.2682_loss_0.9298_acc.pth",
+      "filename": "POP909_Transformer_Trained_Model_2531_steps_0.2682_loss_0.9298_acc.pth"
+    },
+    {
+      "name": "Piano Hands Transformer",
+      "description": "Advanced model for generating classical music compositions with authentic piano hand coordination",
+      "size": "TBD",
+      "version": "v1.0",
+      "category": "Classical",
+      "download_url": "https://huggingface.co/projectlosangeles/MuseCraft/resolve/main/Piano_Hands_Transformer_Trained_Model_2942_steps_0.2362_loss_0.9315_acc.pth",
+      "filename": "Piano_Hands_Transformer_Trained_Model_2942_steps_0.2362_loss_0.9315_acc.pth"
+    },
+    {
+      "name": "PiJAMA Jazz Transformer",
+      "description": "Performance Jazz music model specialized in generating authentic jazz compositions with complex harmonies",
+      "size": "TBD",
+      "version": "v1.0",
+      "category": "Jazz",
+      "download_url": "https://huggingface.co/projectlosangeles/MuseCraft/resolve/main/PiJAMA_Transformer_Trained_Model_11229_steps_1.299_loss_0.6088_acc.pth",
+      "filename": "PiJAMA_Transformer_Trained_Model_11229_steps_1.299_loss_0.6088_acc.pth"
+    },
+    {
+      "name": "Orchestral Composer",
+      "description": "Multi-instrument orchestral composition with advanced harmonic understanding",
+      "size": "500 MB",
+      "version": "v3.0",
+      "category": "Orchestral",
+      "download_url": "https://example.com/orchestral_v3.pth"
+    },
+    {
+      "name": "Electronic Beat Maker",
+      "description": "Modern electronic music patterns and synthetic melody generation",
+      "size": "120 MB",
+      "version": "v1.0",
+      "category": "Electronic",
+      "download_url": "https://example.com/electronic_v1.pth"
+    },
+    {
+      "name": "Folk Song Generator",
+      "description": "Traditional folk melodies from various cultural backgrounds worldwide",
+      "size": "95 MB",
+      "version": "v2.0",
+      "category": "Folk",
+      "download_url": "https://example.com/folk_v2.pth"
+    },
+    {
+      "name": "Ambient Soundscape",
+      "description": "Atmospheric ambient music generation for relaxation and meditation",
+      "size": "75 MB",
+      "version": "v1.5",
+      "category": "Ambient",
+      "download_url": "https://example.com/ambient_v1.pth"
+    }
+  ]
+} 

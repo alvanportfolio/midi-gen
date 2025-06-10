@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
     QDockWidget, QComboBox, QSpinBox, QGroupBox, QRadioButton,
     QButtonGroup, QSlider, QFrame, QProgressBar, QTextEdit,
-    QCheckBox, QMessageBox, QToolButton
+    QCheckBox, QMessageBox, QToolButton, QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, QSize, QThread, QTimer, QUrl
 from PySide6.QtGui import QFont, QIcon, QPixmap, QDesktopServices, QCursor, QColor
@@ -236,6 +236,30 @@ class RealAIGenerator:
             self.ctx = torch.amp.autocast(device_type='cpu', enabled=False)
         
         self.model_loaded = True
+    
+    def unload_model(self):
+        """Unload the current model and free memory"""
+        if self.model_loaded:
+            # Clear model references
+            self.model = None
+            self.ctx = None
+            self.model_loaded = False
+            self.current_model_path = None
+            self.current_model_name = None
+            
+            # Force garbage collection to free GPU/CPU memory
+            import gc
+            gc.collect()
+            
+            # Clear CUDA cache if using GPU
+            if AI_AVAILABLE and hasattr(torch, 'cuda') and torch.cuda.is_available():
+                try:
+                    torch.cuda.empty_cache()
+                    print("✅ CUDA cache cleared")
+                except:
+                    pass
+            
+            print("✅ Model unloaded and memory freed")
     
     def convert_notes_to_tokens(self, notes):
         """Convert pretty_midi notes to tokens for the model"""
@@ -529,6 +553,11 @@ class AIStudioPanel(QDockWidget):
             QDockWidget.DockWidgetClosable
         )
         
+        # Set fixed width constraints to prevent panel expansion
+        self.setMinimumWidth(300)
+        self.setMaximumWidth(400)  # Prevent excessive expansion
+        self.setFixedWidth(350)    # Fixed width for consistency
+        
         self.dock_content = QWidget()
         self.setWidget(self.dock_content)
         self.dock_content.setStyleSheet(f"background-color: {theme.PANEL_BG_COLOR.name()};")
@@ -570,8 +599,52 @@ class AIStudioPanel(QDockWidget):
         model_select_layout.addWidget(QLabel("Model:"))
         
         self.model_combo = QComboBox()
+        self.model_combo.setMaximumWidth(180)  # Limit dropdown width
+        self.model_combo.setMinimumWidth(150)
+        self.model_combo.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self.model_combo.setToolTip("Select an AI model to load")
         self.model_combo.currentTextChanged.connect(self._on_model_selection_changed)
+        
+        # Style the combo box to handle long text with elision
+        self.model_combo.setStyleSheet(f"""
+            QComboBox {{
+                background-color: {theme.STANDARD_BUTTON_BG_COLOR.name()};
+                color: {theme.STANDARD_BUTTON_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_NORMAL.name()};
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                padding: {theme.PADDING_XS}px {theme.PADDING_S}px;
+                min-height: {theme.ICON_SIZE_M + theme.PADDING_XS * 2}px;
+            }}
+            QComboBox:hover {{
+                background-color: {theme.STANDARD_BUTTON_HOVER_BG_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
+            }}
+            QComboBox::drop-down {{
+                subcontrol-origin: padding;
+                subcontrol-position: top right;
+                width: {theme.ICON_SIZE_M}px;
+                border-left-width: 1px;
+                border-left-color: {theme.BORDER_COLOR_NORMAL.name()};
+                border-left-style: solid;
+                border-top-right-radius: {theme.BORDER_RADIUS_M}px;
+                border-bottom-right-radius: {theme.BORDER_RADIUS_M}px;
+            }}
+            QComboBox::down-arrow {{
+                image: url({theme.DROPDOWN_ICON_PATH});
+                width: {theme.ICON_SIZE_S}px;
+                height: {theme.ICON_SIZE_S}px;
+            }}
+            QComboBox QAbstractItemView {{
+                background-color: {theme.PANEL_BG_COLOR.name()};
+                color: {theme.PRIMARY_TEXT_COLOR.name()};
+                border: 1px solid {theme.BORDER_COLOR_HOVER.name()};
+                selection-background-color: {theme.ACCENT_PRIMARY_COLOR.name()};
+                selection-color: {theme.ACCENT_TEXT_COLOR.name()};
+                outline: 0px;
+                min-width: 300px; /* Wider dropdown for full names */
+            }}
+        """)
+        
         model_select_layout.addWidget(self.model_combo)
         
         self.refresh_models_button = QToolButton()
@@ -587,7 +660,8 @@ class AIStudioPanel(QDockWidget):
         
         self.load_model_button = ModernButton("Load Selected Model", accent=True)
         self.load_model_button.setToolTip("Load the selected AI model")
-        self.load_model_button.clicked.connect(self._load_model)
+        self.load_model_button.setMaximumWidth(280)  # Prevent button expansion
+        self.load_model_button.clicked.connect(self._toggle_model)
         model_control_layout.addWidget(self.load_model_button)
         
         model_control_layout.addStretch()
@@ -597,17 +671,25 @@ class AIStudioPanel(QDockWidget):
         self.model_info_label = QLabel("No model loaded")
         self.model_info_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
         self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        self.model_info_label.setWordWrap(True)  # Enable word wrapping
+        self.model_info_label.setMaximumWidth(320)  # Prevent expansion
+        self.model_info_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         model_layout.addWidget(self.model_info_label)
         
         # Device status
         self.device_info_label = QLabel("Device: Not initialized")
         self.device_info_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
         self.device_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        self.device_info_label.setWordWrap(True)  # Enable word wrapping
+        self.device_info_label.setMaximumWidth(320)  # Prevent expansion
         model_layout.addWidget(self.device_info_label)
         
         # Initialize model list and device info
         self._refresh_model_list()
         self._update_device_info()
+        
+        # Set initial button style to green/blue
+        self._reset_load_button_style()
         
         main_layout.addWidget(model_group)
     
@@ -801,6 +883,8 @@ class AIStudioPanel(QDockWidget):
         self.status_label = QLabel("Ready to generate")
         self.status_label.setFont(QFont(theme.FONT_FAMILY_PRIMARY, theme.FONT_SIZE_S))
         self.status_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+        self.status_label.setWordWrap(True)  # Enable word wrapping
+        self.status_label.setMaximumWidth(320)  # Prevent expansion
         status_layout.addWidget(self.status_label)
         
         # Dependencies info
@@ -939,10 +1023,32 @@ class AIStudioPanel(QDockWidget):
                 self.model_info_label.setText("❌ No .pth models found in ai_studio/models/")
             else:
                 for model in available_models:
-                    # Show model name and size
+                    # Create shorter display name for dropdown
+                    model_name = model['name']
                     size_mb = model['size'] / (1024 * 1024)
-                    display_text = f"{model['name']} ({size_mb:.1f} MB)"
+                    
+                    # Truncate long model names for display
+                    if len(model_name) > 25:
+                        # Try to get a meaningful short name
+                        if 'alex_melody' in model_name.lower():
+                            short_name = "alex_melody.pth"
+                        elif 'piano' in model_name.lower() and 'transformer' in model_name.lower():
+                            short_name = "Piano_Transformer.pth"
+                        else:
+                            # Generic truncation
+                            short_name = model_name[:22] + "..."
+                    else:
+                        short_name = model_name
+                    
+                    display_text = f"{short_name} ({size_mb:.1f} MB)"
+                    
+                    # Add item with full name in tooltip
                     self.model_combo.addItem(display_text, model['path'])
+                    self.model_combo.setItemData(
+                        self.model_combo.count() - 1, 
+                        f"Full name: {model_name}\nSize: {size_mb:.1f} MB\nPath: {model['path']}", 
+                        Qt.ToolTipRole
+                    )
                 
                 self.load_model_button.setEnabled(True)
                 self.model_info_label.setText(f"Found {len(available_models)} model(s)")
@@ -959,21 +1065,95 @@ class AIStudioPanel(QDockWidget):
             self.load_model_button.setEnabled(False)
             self.model_info_label.setText(f"❌ Error: {e}")
     
+
     def _on_model_selection_changed(self, model_name):
         """Handle model selection change"""
         if not model_name or model_name == "No models found" or model_name == "Error scanning models":
             return
         
-        # Update button text to show selected model
-        model_name_only = model_name.split(' (')[0]  # Remove size info
-        self.load_model_button.setText(f"Load {model_name_only}")
+        # Update button text to show selected model (keep it short)
+        short_name = model_name.split(' (')[0]  # Remove size info
+        if len(short_name) > 15:
+            short_name = short_name[:12] + "..."
+        self.load_model_button.setText(f"Load {short_name}")
+        
+        # Get the actual model path to compare with loaded model
+        selected_model_path = self.model_combo.currentData()
         
         # Reset model info if a different model is selected
         if hasattr(self, 'ai_generator') and self.ai_generator.model_loaded:
-            current_loaded = self.ai_generator.current_model_name
-            if current_loaded and current_loaded != model_name_only:
-                self.model_info_label.setText(f"🔄 Different model selected ({model_name_only})")
+            current_loaded_path = self.ai_generator.current_model_path
+            if current_loaded_path and current_loaded_path != selected_model_path:
+                self.model_info_label.setText(f"🔄 Different model selected")
                 self.load_model_button.setEnabled(True)
+    
+    def _reset_load_button_style(self):
+        """Reset load button to default green/blue accent style"""
+        self.load_model_button.setStyleSheet(f"""
+            QPushButton {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 {theme.ACCENT_PRIMARY_COLOR.name()},
+                    stop: 1 {theme.ACCENT_PRIMARY_COLOR.darker(120).name()}
+                );
+                color: {theme.ACCENT_TEXT_COLOR.name()};
+                border: 1px solid {theme.ACCENT_PRIMARY_COLOR.darker(130).name()};
+                border-radius: {theme.BORDER_RADIUS_M}px;
+                padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                font-weight: bold;
+                font-size: {theme.FONT_SIZE_S}pt;
+            }}
+            QPushButton:hover {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 {theme.ACCENT_HOVER_COLOR.name()},
+                    stop: 1 {theme.ACCENT_HOVER_COLOR.darker(120).name()}
+                );
+                border: 1px solid {theme.ACCENT_HOVER_COLOR.darker(130).name()};
+            }}
+            QPushButton:pressed {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 {theme.ACCENT_PRIMARY_COLOR.darker(130).name()},
+                    stop: 1 {theme.ACCENT_PRIMARY_COLOR.darker(150).name()}
+                );
+            }}
+        """)
+    
+    def _toggle_model(self):
+        """Toggle between loading and unloading the AI model"""
+        if self.ai_generator.model_loaded:
+            self._unload_model()
+        else:
+            self._load_model()
+    
+    def _unload_model(self):
+        """Unload the current AI model"""
+        try:
+            # Unload the model
+            self.ai_generator.unload_model()
+            
+            # Reset UI to initial state
+            self.load_model_button.setText("Load Selected Model")
+            self.load_model_button.setToolTip("Load the selected AI model")
+            self.load_model_button.setEnabled(True)
+            
+            # Reset button style to accent (green/blue)
+            self._reset_load_button_style()
+            
+            self.model_info_label.setText("Model unloaded")
+            self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            
+            self.device_info_label.setText(f"📱 Available: {self._get_device_display_name(self.ai_generator.device)}")
+            self.device_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
+            
+            self.status_label.setText("Model unloaded - Ready to load")
+            
+            print("✅ Model unloaded successfully")
+            
+        except Exception as e:
+            print(f"❌ Error unloading model: {e}")
+            QMessageBox.critical(self, "Unload Error", f"Failed to unload model:\n{str(e)}")
     
     def _load_model(self):
         """Load the AI model"""
@@ -1007,9 +1187,59 @@ class AIStudioPanel(QDockWidget):
             pad_idx = self.ai_generator.PAD_IDX
             encoding_type = "Enhanced" if self.ai_generator.use_enhanced_encoding else "Standard"
             
-            self.load_model_button.setText(f"✅ {model_name} Loaded")
-            self.load_model_button.setEnabled(False)  # Don't allow reloading
-            self.model_info_label.setText(f"🟢 {model_name} | SEQ: {seq_len} | PAD: {pad_idx} | {encoding_type}")
+            # Create short model name for button
+            short_model_name = model_name
+            if len(short_model_name) > 20:
+                if 'alex_melody' in short_model_name.lower():
+                    short_model_name = "alex_melody.pth"
+                elif 'piano' in short_model_name.lower():
+                    short_model_name = "Piano_Hands..."
+                elif 'pop909' in short_model_name.lower():
+                    short_model_name = "POP909..."
+                elif 'pijama' in short_model_name.lower():
+                    short_model_name = "PiJAMA..."
+                else:
+                    short_model_name = short_model_name[:17] + "..."
+            
+            # Change button to red unload button
+            self.load_model_button.setText("🗑️ Unload")
+            self.load_model_button.setToolTip("Unload the current AI model")
+            self.load_model_button.setEnabled(True)
+            
+            # Apply red styling for unload button
+            self.load_model_button.setStyleSheet(f"""
+                QPushButton {{
+                    background: qlineargradient(
+                        x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 #e74c3c,
+                        stop: 1 #c0392b
+                    );
+                    color: white;
+                    border: 1px solid #a93226;
+                    border-radius: {theme.BORDER_RADIUS_M}px;
+                    padding: {theme.PADDING_S}px {theme.PADDING_M}px;
+                    font-weight: bold;
+                    font-size: {theme.FONT_SIZE_S}pt;
+                }}
+                QPushButton:hover {{
+                    background: qlineargradient(
+                        x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 #ec7063,
+                        stop: 1 #e74c3c
+                    );
+                    border: 1px solid #cb4335;
+                }}
+                QPushButton:pressed {{
+                    background: qlineargradient(
+                        x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 #c0392b,
+                        stop: 1 #a93226
+                    );
+                }}
+            """)
+            
+            # Create compact model info that wraps nicely
+            self.model_info_label.setText(f"🟢 {short_model_name} Loaded\nSEQ: {seq_len} | PAD: {pad_idx} | {encoding_type}")
             self.model_info_label.setStyleSheet(f"color: {theme.ACCENT_PRIMARY_COLOR.name()};")
             
             # Update device info with detailed information
@@ -1035,6 +1265,7 @@ class AIStudioPanel(QDockWidget):
             
             # Reset UI
             self.load_model_button.setText("Load Selected Model")
+            self._reset_load_button_style()
             self.load_model_button.setEnabled(True)
             self.model_info_label.setText("❌ Missing dependencies")
             self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
@@ -1054,6 +1285,7 @@ class AIStudioPanel(QDockWidget):
             
             # Reset UI
             self.load_model_button.setText("Load Selected Model")
+            self._reset_load_button_style()
             self.load_model_button.setEnabled(True)
             self.model_info_label.setText("❌ Model file missing")
             self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")
@@ -1075,6 +1307,7 @@ class AIStudioPanel(QDockWidget):
             
             # Reset UI
             self.load_model_button.setText("Load Selected Model")
+            self._reset_load_button_style()
             self.load_model_button.setEnabled(True)
             self.model_info_label.setText("❌ Failed to load model")
             self.model_info_label.setStyleSheet(f"color: {theme.SECONDARY_TEXT_COLOR.name()};")

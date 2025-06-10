@@ -1,3 +1,17 @@
+"""
+Piano Roll Display Module
+
+Mouse Wheel Controls:
+- Ctrl+Scroll: Horizontal zoom (time axis)
+- Shift+Scroll: Horizontal panning (never affects piano keys column)
+- Alt+Scroll: Vertical zoom (pitch axis, affects piano keys column)
+- Regular Scroll: Default vertical scrolling
+
+Keyboard Shortcuts:
+- Ctrl+Plus/Minus: Horizontal zoom
+- Ctrl+Shift+Plus/Minus: Vertical zoom
+"""
+
 import sys
 import os # For file extension check
 from PySide6.QtWidgets import QWidget, QApplication, QSizePolicy, QMessageBox, QHBoxLayout, QScrollArea
@@ -362,7 +376,33 @@ class PianoRollDisplay(QWidget):
             
             self.update() # Redraw with new zoom and scroll
             event.accept()
-        elif event.modifiers() == Qt.KeyboardModifier.ShiftModifier: # Vertical zoom
+        elif event.modifiers() == Qt.KeyboardModifier.ShiftModifier: # Horizontal panning
+            # Shift+scroll should always pan horizontally, never affect piano keys column
+            delta = event.angleDelta().y()
+            
+            # Find the parent scroll area
+            parent_scroll_area = self.parentWidget()
+            while parent_scroll_area and not hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                parent_scroll_area = parent_scroll_area.parentWidget()
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                # Pan horizontally - convert vertical scroll delta to horizontal movement
+                scroll_speed = 50  # Pixels per scroll step
+                current_scroll_x = parent_scroll_area.horizontalScrollBar().value()
+                
+                if delta > 0:  # Scroll up = pan left
+                    new_scroll_x = current_scroll_x - scroll_speed
+                elif delta < 0:  # Scroll down = pan right
+                    new_scroll_x = current_scroll_x + scroll_speed
+                else:
+                    event.accept()
+                    return
+                
+                # Apply the horizontal scroll
+                parent_scroll_area.horizontalScrollBar().setValue(int(new_scroll_x))
+            
+            event.accept()
+        elif event.modifiers() == Qt.KeyboardModifier.AltModifier: # Vertical zoom
             mouse_y = event.position().y()
             old_scroll_y = 0
             parent_scroll_area = self.parentWidget()
@@ -869,7 +909,32 @@ class PianoRollNoteArea(PianoRollDisplay):
             self.update()
             event.accept()
         elif event.modifiers() == Qt.KeyboardModifier.ShiftModifier:
-            # Vertical zoom handling
+            # Horizontal panning - never affect piano keys column
+            delta = event.angleDelta().y()
+            
+            # Find the parent scroll area  
+            parent_scroll_area = self.parentWidget()
+            while parent_scroll_area and not hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                parent_scroll_area = parent_scroll_area.parentWidget()
+            
+            if parent_scroll_area and hasattr(parent_scroll_area, 'horizontalScrollBar'):
+                # Pan horizontally - convert vertical scroll delta to horizontal movement
+                scroll_speed = 50  # Pixels per scroll step
+                current_scroll_x = parent_scroll_area.horizontalScrollBar().value()
+                
+                if delta > 0:  # Scroll up = pan left
+                    new_scroll_x = current_scroll_x - scroll_speed
+                elif delta < 0:  # Scroll down = pan right
+                    new_scroll_x = current_scroll_x + scroll_speed
+                else:
+                    event.accept()
+                    return
+                
+                # Apply the horizontal scroll
+                parent_scroll_area.horizontalScrollBar().setValue(int(new_scroll_x))
+            
+            event.accept()
+        elif event.modifiers() == Qt.KeyboardModifier.AltModifier: # Vertical zoom
             mouse_y = event.position().y()
             old_scroll_y = 0
             parent_scroll_area = self.parentWidget()

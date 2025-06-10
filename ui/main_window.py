@@ -60,7 +60,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             QMainWindow.AllowNestedDocks |        # Allow dock widgets to be nested
             QMainWindow.AllowTabbedDocks |        # Allow dock widgets to be tabbed
             QMainWindow.GroupedDragging |         # Enable grouped dragging
-            QMainWindow.VerticalTabs              # Enable vertical tabs
+            QMainWindow.VerticalTabs |            # Enable vertical tabs
+            QMainWindow.ForceTabbedDocks          # Force tabbed docks for better behavior
         )
         
         # Enable all dock areas
@@ -96,6 +97,9 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         self.global_hotkey_filter = GlobalPlaybackHotkeyFilter(self.toggle_playback)
         QApplication.instance().installEventFilter(self.global_hotkey_filter)
         print("Global spacebar event filter installed for playback control.")
+        
+        # Enable focus on main window to receive key events for debug shortcuts
+        self.setFocusPolicy(Qt.StrongFocus)
             
         self.playback_timer = QTimer(self)
         self.update_timer_interval()
@@ -109,6 +113,8 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
         print(f"Dock options enabled: {self.dockOptions()}")
         print(f"Plugin Manager allowed areas: {self.plugin_manager_panel.allowedAreas()}")
         print(f"AI Studio allowed areas: {self.ai_studio_panel.allowedAreas()}")
+        
+        # Note: Dock detection zones are now provided by 5px margins around central widget
 
     def _apply_stylesheet(self):
         # Global stylesheet using constants from theme.py
@@ -246,21 +252,40 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
 
     def _setup_central_widget(self):
         self.central_widget = QWidget()
+        # Add a small layout margin to give space for dock detection
+        central_layout = QVBoxLayout(self.central_widget)
+        central_layout.setContentsMargins(5, 5, 5, 5)  # Small margins for dock zones
+        central_layout.setSpacing(0)
+        self.inner_content_widget = QWidget()  # Create an inner widget
+        central_layout.addWidget(self.inner_content_widget)
         self.setCentralWidget(self.central_widget)
 
     def _setup_main_layout(self):
-        self.main_layout = QVBoxLayout(self.central_widget)
+        # Now use inner_content_widget instead of central_widget for main content
+        self.main_layout = QVBoxLayout(self.inner_content_widget)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
     
     def create_plugin_manager(self):
         self.plugin_manager_panel = PluginManagerPanel(self)
+        # Ensure proper dock widget features for better docking behavior
+        self.plugin_manager_panel.setFeatures(
+            QDockWidget.DockWidgetMovable | 
+            QDockWidget.DockWidgetFloatable | 
+            QDockWidget.DockWidgetClosable
+        )
         self.addDockWidget(Qt.LeftDockWidgetArea, self.plugin_manager_panel)
         self.plugin_manager_panel.notesGenerated.connect(self.set_midi_notes)
         self.plugin_manager_panel.set_current_notes(self.midi_notes)
 
     def create_ai_studio_panel(self):
         self.ai_studio_panel = AIStudioPanel(self)
+        # Ensure proper dock widget features for better docking behavior
+        self.ai_studio_panel.setFeatures(
+            QDockWidget.DockWidgetMovable | 
+            QDockWidget.DockWidgetFloatable | 
+            QDockWidget.DockWidgetClosable
+        )
         # Start AI Studio in right dock area for better testing
         self.addDockWidget(Qt.RightDockWidgetArea, self.ai_studio_panel)
         self.ai_studio_panel.notesGenerated.connect(self.set_midi_notes)
@@ -552,6 +577,43 @@ class PianoRollMainWindow(QMainWindow, MainWindowEventHandlersMixin):
             scaled_duration_ms = int(self.total_duration * 1000)
             if hasattr(self, 'transport_controls'):
                 self.transport_controls.update_time_slider_maximum(scaled_duration_ms)
+
+    def toggle_dock_margins_debug(self, enable=None):
+        """
+        Toggle visual highlighting of dock detection margins.
+        
+        Args:
+            enable (bool, optional): Force enable (True) or disable (False). 
+                                   If None, toggles current state.
+        """
+        if enable is None:
+            # Toggle current state based on central widget background
+            current_style = self.central_widget.styleSheet()
+            enable = "background-color" not in current_style
+        
+        if enable:
+            # Highlight the dock margins with a subtle color
+            self.central_widget.setStyleSheet("""
+                QWidget {
+                    background-color: rgba(100, 150, 255, 30);
+                    border: 1px solid rgba(100, 150, 255, 100);
+                }
+            """)
+            print("Dock margins debug: enabled (blue highlighting)")
+        else:
+            self.central_widget.setStyleSheet("")
+            print("Dock margins debug: disabled")
+
+    def keyPressEvent(self, event):
+        """Handle keyboard shortcuts for the main window."""
+        # Debug shortcut: Ctrl+Shift+D to toggle dock margin debug visuals
+        if event.modifiers() == (Qt.ControlModifier | Qt.ShiftModifier) and event.key() == Qt.Key_D:
+            self.toggle_dock_margins_debug()
+            event.accept()
+            return
+        
+        # Call parent implementation for other key events
+        super().keyPressEvent(event)
 
     def closeEvent(self, event):
         """Clean up resources when window is closed."""
