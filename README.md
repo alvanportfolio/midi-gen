@@ -123,16 +123,22 @@
 
 ---
 
-## 🖼️ <span style="color:#6ec6ff;">Screenshots</span>
+## 🖼️ <span style="color:#6ec6ff;">App Preview</span>
 
 <div align="center">
-  <img src="./image1.png" alt="Piano Roll Screenshot 1" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
+  <img src="./image1.png" alt="Piano Roll Main Interface" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
   <br/>
-  <sub><strong>🎼 Generated MIDI using Motif Generator</strong></sub>
+  <sub><strong>🎼 Main Piano Roll Interface</strong></sub>
   <br/><br/>
-  <img src="./image2.png" alt="Piano Roll Screenshot 2" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
+  <img src="./image2.png" alt="AI Studio Interface" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
   <br/>
   <sub><strong>🤖 AI Studio – Using Melody Model via TMIDIX + X-Transformer</strong></sub>
+  <br/><br/>
+  <img src="./image3.png" alt="AI Model Downloader" width="70%" style="border-radius:12px;box-shadow:0 4px 24px #0002;"/>
+  <br/>
+  <sub><strong>🔽 AI Model Downloader - Automatically discovers and fetches AI models to your local model directory</strong></sub>
+  <br/>
+  <p><em><strong>⚠️ Important Note:</strong> The AI Model Downloader is not available in the portable build yet. It will be available in the next portable release.</em></p>
 </div>
 
 ---
